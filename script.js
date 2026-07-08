@@ -49,7 +49,7 @@ async function loadCategory(category, activeBtn) {
         loadingIndicator.classList.add('hidden');
 
         if (data.status === 'ok') {
-            displayArticles(data.items);
+            displayArticles(data.items, category);
         } else {
             articleGrid.innerHTML = `<p>Error loading feed. Try again later.</p>`;
         }
@@ -61,19 +61,50 @@ async function loadCategory(category, activeBtn) {
 }
 
 // Render articles to the DOM
-function displayArticles(articles) {
+// Render articles to the DOM
+function displayArticles(articles, currentCategory) {
     // Only show the top 12 articles
     const topArticles = articles.slice(0, 12);
 
-    topArticles.forEach(article => {
-        // Clean up descriptions (some RSS feeds put full HTML in the description)
+    topArticles.forEach((article, index) => {
+        // Clean up descriptions
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = article.description;
         const cleanText = tempDiv.textContent || tempDiv.innerText || "";
         const shortDesc = cleanText.substring(0, 150) + "...";
 
-        // Fallback image if the feed doesn't provide one
-        const imgUrl = article.thumbnail || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=400";
+        // 1. Start by checking for a standard thumbnail
+        let imgUrl = article.thumbnail;
+
+        // 2. If missing, try to scrape an image from the article's HTML content
+        if (!imgUrl) {
+            const imgSearchDiv = document.createElement("div");
+            imgSearchDiv.innerHTML = article.content || article.description;
+            const embeddedImg = imgSearchDiv.querySelector("img");
+            
+            if (embeddedImg) {
+                imgUrl = embeddedImg.src;
+            }
+        }
+
+        // 3. If it STILL can't find an image, fetch a RANDOM image matching the category.
+        if (!imgUrl) {
+            // Map each category to a good search term for LoremFlickr.
+            // (e.g. "Weightlifting" gets better results searching for "gym,fitness")
+            const searchTerms = {
+                "Science": "science,laboratory",
+                "Technology": "technology,computer",
+                "Literature": "books,library",
+                "History": "history,ancient",
+                "Weightlifting": "gym,fitness,barbell"
+            };
+
+            const tag = searchTerms[currentCategory] || "newspaper";
+
+            // The `lock` value forces LoremFlickr to serve a DIFFERENT image per article,
+            // otherwise every card would collapse to the same cached image.
+            imgUrl = `https://loremflickr.com/400/300/${tag}?lock=${index + 1}`;
+        }
 
         // Format the date
         const dateObj = new Date(article.pubDate);
