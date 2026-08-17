@@ -186,7 +186,11 @@ function articleCard(viewModel, handlers) {
   const perform = async (action, { undoEligible = false, source = card } = {}) => {
     const controls = [dismissButton, openButton, saveButton];
     controls.forEach((control) => { control.disabled = true; });
-    const result = await actionResult(handlers, { action, articleId: article.id }, source);
+    const result = await actionResult(handlers, {
+      action,
+      articleId: article.id,
+      undoable: undoEligible,
+    }, source);
     if (actionFailed(result)) {
       controls.forEach((control) => { control.disabled = false; });
       announceStatus(actionMessage(result, "Your change could not be saved. The article has been restored."));

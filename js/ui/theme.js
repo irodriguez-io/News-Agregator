@@ -1,5 +1,7 @@
 const ALLOWED_APPEARANCES = new Set(["light", "dark", "system"]);
-const systemQuery = window.matchMedia("(prefers-color-scheme: dark)");
+const systemQuery = typeof window !== "undefined" && typeof window.matchMedia === "function"
+  ? window.matchMedia("(prefers-color-scheme: dark)")
+  : { matches: false, addEventListener() {} };
 let activeAppearance = "system";
 let listenerAttached = false;
 
@@ -8,6 +10,7 @@ function resolvedTheme(appearance) {
 }
 
 function applyResolvedTheme() {
+  if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.appearance = activeAppearance;
   root.dataset.theme = resolvedTheme(activeAppearance);

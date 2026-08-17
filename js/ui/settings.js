@@ -263,7 +263,14 @@ export function renderSettings(viewModel = {}, handlers = {}, target = "#setting
     if (dialog.open) dialog.close();
   };
   close.addEventListener("click", closeDialog, { signal });
-  dialog.addEventListener("keydown", (event) => trapTabKey(dialog, event), { signal });
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeDialog();
+      return;
+    }
+    trapTabKey(dialog, event);
+  }, { signal });
   dialog.addEventListener("close", () => {
     if (returnFocus instanceof HTMLElement) returnFocus.focus();
     returnFocus = null;
