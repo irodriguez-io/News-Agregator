@@ -1598,6 +1598,10 @@ The release gate must pass the npm audit threshold and must fail for any known P
 
 Live checks are separate from deterministic tests. They verify that enabled endpoints remain reachable and parsable and report source-specific changes. A publisher outage does not justify weakening local parser fixtures or acceptance tests.
 
+For initial-release review, Amendment 4 permits the release decision to remain acceptable when live validation reports failures only for `n8n_release_notes` and/or `ietf_scim`, but only after verifying each still-present failure exactly matches its documented upstream condition in `03-content-sources.md` and `07-pipeline-deployment.md`. The command result remains a failure and must be reported truthfully; the release decision is evaluated separately.
+
+Normal catastrophic dataset gates must pass, and the reviewer must find no implementation regression. Any other failed source or materially different failure mode is outside Amendment 4 and requires investigation. The previously observed diagnostic state was 20 of 22 successful sources and 221 retained Articles; it is evidence, not a permanently required count.
+
 ---
 
 # 81. Manual Product Acceptance

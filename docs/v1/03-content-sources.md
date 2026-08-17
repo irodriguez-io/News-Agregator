@@ -779,6 +779,18 @@ V1 deliberately does **not** require an identity-specific topic match for n8n.
 
 Learning how the automation platform itself evolves is considered useful within the Identity Automation category.
 
+### Amendment 4 upstream condition
+
+The canonical page currently returns HTTP 200 and advertises:
+
+```text
+https://docs.n8n.io/changelog/release-notes/rss.xml
+```
+
+That publisher-advertised feed currently returns HTTP 404, and the canonical page advertises no alternative RSS/Atom endpoint. This exact investigated condition is accepted as a publisher-side V1 limitation for the initial release.
+
+While it persists, `n8n_release_notes` remains enabled and is reported as a failed source. Do not disable, remove, substitute, or change it to `html_listing` merely to make live validation green. If the feed recovers, normal ingestion should recover automatically. A materially different failure is not covered by Amendment 4.
+
 ---
 
 ## 12.3 Microsoft Entra Releases
@@ -849,6 +861,12 @@ Forced tags must not satisfy this filter.
 Use the **Significant** document-change feed.
 
 The forced `scim` tag does not count as an organic taxonomy match.
+
+### Amendment 4 upstream condition
+
+The approved endpoint currently returns HTTP 200 and valid Atom 1.0 with no parse error, but contains zero `<entry>` elements. This exact investigated condition is accepted as a publisher-side V1 limitation for the initial release.
+
+While it persists, `ietf_scim` remains enabled and remains a failed source under the frozen empty-parse success semantics. Do not fabricate success or disable, remove, or substitute it. If entries return upstream, normal ingestion should recover automatically. A materially different failure is not covered by Amendment 4.
 
 ---
 

@@ -1157,6 +1157,8 @@ Review all 22 sources.
 
 A broken source at initial release must be investigated rather than ignored simply because degraded deployment thresholds would permit it.
 
+Under approved Amendment 4, the initial-release decision may proceed with failures for `n8n_release_notes` and/or `ietf_scim` only when each still matches the exact investigated upstream condition documented in `03-content-sources.md` and `07-pipeline-deployment.md`, normal catastrophic dataset gates pass, and there is no implementation regression. Keep both sources enabled and report the non-zero live-validation result truthfully. Do not extend the amendment to another source or a materially changed failure mode without investigation and an approved amendment.
+
 ---
 
 ## 58. Live Dataset Generation

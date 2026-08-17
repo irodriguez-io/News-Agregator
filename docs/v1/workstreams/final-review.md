@@ -707,6 +707,7 @@ python -m pipeline.main --validate-sources
 for initial release.
 Record all 22 sources.
 Any failure must be explicitly resolved or accepted via a source-spec amendment before first V1 release.
+Approved Amendment 4 accepts only the specifically investigated upstream conditions for `n8n_release_notes` and `ietf_scim`. For each still-present failure, verify the exact HTTP/discovery/Atom condition documented in `03-content-sources.md` and `07-pipeline-deployment.md`, confirm normal catastrophic dataset gates pass, and confirm there is no implementation regression. The command remains failed and must be reported as such; only the release decision may be acceptable. Any additional source failure or materially changed failure mode is not covered.
 70. Real Dataset Generation
 Generate the release-candidate dataset and record:
 enabled sources
