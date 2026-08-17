@@ -57,6 +57,7 @@ test("exploration follows every exact source/topic table entry and final +3 cap"
 test("candidate pre-sort uses total, base, date unknown-last, source, then Article ID", () => {
   const candidates = [
     { article: makeArticle({ id: "00000000000000000005", source: { id: "b" }, publishedAt: null }), score: { total: 90, base: 90 } },
+    { article: makeArticle({ id: "00000000000000000006", source: { id: "a" }, publishedAt: null }), score: { total: 90, base: 90 } },
     { article: makeArticle({ id: "00000000000000000004", source: { id: "b" }, publishedAt: "2026-08-15T00:00:00Z" }), score: { total: 90, base: 90 } },
     { article: makeArticle({ id: "00000000000000000003", source: { id: "a" }, publishedAt: "2026-08-15T00:00:00Z" }), score: { total: 90, base: 90 } },
     { article: makeArticle({ id: "00000000000000000002", source: { id: "a" }, publishedAt: "2026-08-15T00:00:00Z" }), score: { total: 90, base: 90 } },
@@ -66,6 +67,7 @@ test("candidate pre-sort uses total, base, date unknown-last, source, then Artic
     "00000000000000000002",
     "00000000000000000003",
     "00000000000000000004",
+    "00000000000000000006",
     "00000000000000000005",
     "00000000000000000001",
   ]);
@@ -116,6 +118,15 @@ test("All view applies third-consecutive-category -5 and category views disable 
   const category = buildDeck({ articles, state: createDefaultState(), category: "technology" });
   assert.deepEqual(category.map((entry) => entry.article.id), [articles[0].id, articles[1].id, articles[2].id]);
   assert.equal(category.every((entry) => entry.sequencing.categoryPenalty === 0), true);
+
+  const stronglyHigherThird = articles.map((article) => structuredClone(article));
+  stronglyHigherThird[2].score = { base: 100, sourceQuality: 50, contentType: 20, freshness: 15, topicSignal: 10, metadata: 5 };
+  stronglyHigherThird[0].score = { base: 99, sourceQuality: 50, contentType: 20, freshness: 15, topicSignal: 10, metadata: 4 };
+  stronglyHigherThird[1].score = { base: 98, sourceQuality: 50, contentType: 20, freshness: 15, topicSignal: 10, metadata: 3 };
+  stronglyHigherThird[3].score = { base: 90, sourceQuality: 48, contentType: 18, freshness: 10, topicSignal: 10, metadata: 4 };
+  const strong = buildDeck({ articles: stronglyHigherThird, state: createDefaultState(), category: "all" });
+  assert.equal(strong[2].article.category, "technology");
+  assert.equal(strong[2].sequencing.categoryPenalty, -5);
 });
 
 test("diversity penalties are temporary and deck construction is deterministic and mutation-free", () => {
