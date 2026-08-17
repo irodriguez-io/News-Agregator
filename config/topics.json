@@ -1,0 +1,1182 @@
+{
+  "topics": [
+    {
+      "id": "physics_quantum",
+      "label": "Physics & Quantum",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "physics",
+        "quantum",
+        "quantum physics",
+        "quantum mechanics",
+        "particle physics",
+        "particle physicist",
+        "condensed matter",
+        "quantum field theory"
+      ]
+    },
+    {
+      "id": "space_cosmology",
+      "label": "Astronomy & Cosmology",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "astronomy",
+        "astronomer",
+        "astrophysics",
+        "astrophysicist",
+        "cosmology",
+        "cosmologist",
+        "black hole",
+        "black holes",
+        "exoplanet",
+        "exoplanets",
+        "galaxy",
+        "galaxies",
+        "neutron star",
+        "neutron stars"
+      ]
+    },
+    {
+      "id": "mathematics",
+      "label": "Mathematics",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "mathematics",
+        "mathematician",
+        "mathematicians",
+        "theorem",
+        "topology",
+        "geometry",
+        "number theory",
+        "combinatorics",
+        "algebra",
+        "mathematical proof"
+      ]
+    },
+    {
+      "id": "biology_evolution",
+      "label": "Biology & Evolution",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "biology",
+        "biologist",
+        "evolution",
+        "evolutionary",
+        "genetics",
+        "genetic",
+        "genome",
+        "genomics",
+        "ecology",
+        "microbiology",
+        "microbe",
+        "microbes"
+      ]
+    },
+    {
+      "id": "neuroscience",
+      "label": "Neuroscience & Cognition",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "neuroscience",
+        "neuroscientist",
+        "neuron",
+        "neurons",
+        "cognition",
+        "cognitive science",
+        "brain science"
+      ]
+    },
+    {
+      "id": "earth_climate",
+      "label": "Earth & Climate",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "climate science",
+        "climate scientist",
+        "geology",
+        "geologist",
+        "oceanography",
+        "oceanographer",
+        "atmosphere",
+        "atmospheric science",
+        "earth science",
+        "paleoclimate"
+      ]
+    },
+    {
+      "id": "scientific_method",
+      "label": "Scientific Method",
+      "categories": [
+        "science"
+      ],
+      "aliases": [
+        "reproducibility",
+        "replication",
+        "peer review",
+        "scientific method",
+        "research methodology",
+        "meta analysis",
+        "systematic review"
+      ]
+    },
+    {
+      "id": "software_architecture",
+      "label": "Software Architecture",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "software architecture",
+        "system architecture",
+        "software design",
+        "architectural pattern",
+        "codebase architecture",
+        "application architecture"
+      ]
+    },
+    {
+      "id": "distributed_systems",
+      "label": "Distributed Systems",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "distributed system",
+        "distributed systems",
+        "consensus algorithm",
+        "replication",
+        "distributed database",
+        "distributed computing",
+        "raft consensus",
+        "paxos"
+      ]
+    },
+    {
+      "id": "cloud_infrastructure",
+      "label": "Cloud & Infrastructure",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "cloud infrastructure",
+        "cloud computing",
+        "serverless",
+        "edge computing",
+        "cloud platform",
+        "infrastructure as code"
+      ]
+    },
+    {
+      "id": "networking",
+      "label": "Networking",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "networking",
+        "network protocol",
+        "network protocols",
+        "dns",
+        "bgp",
+        "tcp",
+        "quic",
+        "http 2",
+        "http 3",
+        "routing protocol"
+      ]
+    },
+    {
+      "id": "cybersecurity",
+      "label": "Cybersecurity",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "cybersecurity",
+        "cyber security",
+        "vulnerability",
+        "vulnerabilities",
+        "exploit",
+        "exploits",
+        "cryptography",
+        "cryptographic",
+        "zero trust",
+        "security architecture",
+        "supply chain attack"
+      ]
+    },
+    {
+      "id": "ai_ml",
+      "label": "AI & Machine Learning",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "ai",
+        "artificial intelligence",
+        "machine learning",
+        "ml",
+        "large language model",
+        "large language models",
+        "llm",
+        "llms",
+        "neural network",
+        "neural networks",
+        "foundation model",
+        "foundation models",
+        "generative ai"
+      ]
+    },
+    {
+      "id": "programming_languages",
+      "label": "Languages & Runtimes",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "programming language",
+        "programming languages",
+        "compiler",
+        "compilers",
+        "runtime",
+        "runtimes",
+        "webassembly",
+        "wasm",
+        "garbage collector",
+        "garbage collection"
+      ]
+    },
+    {
+      "id": "data_systems",
+      "label": "Databases & Data Systems",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "database",
+        "databases",
+        "data storage",
+        "query engine",
+        "query engines",
+        "sql",
+        "data platform",
+        "data platforms",
+        "database engine"
+      ]
+    },
+    {
+      "id": "devops_sre",
+      "label": "DevOps & SRE",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "devops",
+        "site reliability",
+        "site reliability engineering",
+        "sre",
+        "observability",
+        "incident response",
+        "production incident",
+        "production outage",
+        "reliability engineering"
+      ]
+    },
+    {
+      "id": "hardware",
+      "label": "Hardware & Semiconductors",
+      "categories": [
+        "technology"
+      ],
+      "aliases": [
+        "semiconductor",
+        "semiconductors",
+        "processor",
+        "processors",
+        "cpu",
+        "gpu",
+        "chip architecture",
+        "microarchitecture",
+        "integrated circuit"
+      ]
+    },
+    {
+      "id": "fiction",
+      "label": "Fiction",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "fiction",
+        "novel",
+        "novels",
+        "novelist",
+        "novelists",
+        "short story",
+        "short stories"
+      ]
+    },
+    {
+      "id": "poetry",
+      "label": "Poetry",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "poetry",
+        "poem",
+        "poems",
+        "poet",
+        "poets"
+      ]
+    },
+    {
+      "id": "literary_criticism",
+      "label": "Literary Criticism",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "literary criticism",
+        "literary critic",
+        "literary critics",
+        "close reading",
+        "critical essay"
+      ]
+    },
+    {
+      "id": "writing_craft",
+      "label": "Writing Craft",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "writing craft",
+        "narrative technique",
+        "prose style",
+        "storytelling craft",
+        "craft of writing",
+        "narrative voice"
+      ]
+    },
+    {
+      "id": "author_interviews",
+      "label": "Author Interviews",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "author interview",
+        "author interviews",
+        "writer interview",
+        "writer interviews",
+        "writers at work",
+        "conversation with"
+      ]
+    },
+    {
+      "id": "translation",
+      "label": "Translation",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "literary translation",
+        "translated literature",
+        "translator",
+        "translators",
+        "translation"
+      ]
+    },
+    {
+      "id": "literary_history",
+      "label": "Literary History",
+      "categories": [
+        "literature"
+      ],
+      "aliases": [
+        "literary history",
+        "literary movement",
+        "literary movements",
+        "literary tradition",
+        "literary traditions",
+        "history of literature"
+      ]
+    },
+    {
+      "id": "ancient_history",
+      "label": "Ancient History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "ancient history",
+        "antiquity",
+        "ancient rome",
+        "roman empire",
+        "roman republic",
+        "ancient greece",
+        "mesopotamia",
+        "ancient egypt",
+        "ancient world"
+      ]
+    },
+    {
+      "id": "medieval_history",
+      "label": "Medieval History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "medieval",
+        "medieval history",
+        "middle ages",
+        "middle age"
+      ]
+    },
+    {
+      "id": "early_modern_history",
+      "label": "Early Modern",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "early modern",
+        "renaissance",
+        "reformation",
+        "sixteenth century",
+        "seventeenth century"
+      ]
+    },
+    {
+      "id": "modern_history",
+      "label": "Modern History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "modern history",
+        "nineteenth century",
+        "twentieth century",
+        "19th century",
+        "20th century"
+      ]
+    },
+    {
+      "id": "archaeology",
+      "label": "Archaeology",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "archaeology",
+        "archaeological",
+        "archaeologist",
+        "archaeologists",
+        "excavation",
+        "excavations"
+      ]
+    },
+    {
+      "id": "social_cultural_history",
+      "label": "Social & Cultural History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "social history",
+        "cultural history",
+        "history of everyday life",
+        "everyday life",
+        "material culture"
+      ]
+    },
+    {
+      "id": "science_technology_history",
+      "label": "History of Science & Technology",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "history of science",
+        "history of technology",
+        "industrial revolution",
+        "scientific revolution",
+        "technological history"
+      ]
+    },
+    {
+      "id": "economic_history",
+      "label": "Economic & Trade History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "economic history",
+        "trade history",
+        "history of trade",
+        "commerce",
+        "labor history",
+        "labour history",
+        "history of labor",
+        "history of labour"
+      ]
+    },
+    {
+      "id": "military_history",
+      "label": "Military History",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "military history",
+        "warfare",
+        "battlefield",
+        "battlefields",
+        "history of war",
+        "military campaign",
+        "military campaigns"
+      ]
+    },
+    {
+      "id": "primary_sources",
+      "label": "Archives & Primary Sources",
+      "categories": [
+        "history"
+      ],
+      "aliases": [
+        "primary source",
+        "primary sources",
+        "archive",
+        "archives",
+        "archival",
+        "manuscript",
+        "manuscripts",
+        "historical letters",
+        "historical diary",
+        "historical diaries"
+      ]
+    },
+    {
+      "id": "strength",
+      "label": "Strength",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "strength training",
+        "maximal strength",
+        "maximum strength",
+        "one rep max",
+        "1rm",
+        "strength adaptation"
+      ]
+    },
+    {
+      "id": "hypertrophy",
+      "label": "Hypertrophy",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "hypertrophy",
+        "muscle growth",
+        "muscle mass",
+        "muscular hypertrophy"
+      ]
+    },
+    {
+      "id": "programming",
+      "label": "Training Programming",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "periodization",
+        "training volume",
+        "training frequency",
+        "training intensity",
+        "training program",
+        "training programming",
+        "programming"
+      ]
+    },
+    {
+      "id": "technique",
+      "label": "Technique",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "lifting technique",
+        "exercise technique",
+        "range of motion",
+        "lifting form",
+        "exercise form",
+        "bar path"
+      ]
+    },
+    {
+      "id": "powerlifting",
+      "label": "Powerlifting",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "powerlifting",
+        "powerlifter",
+        "powerlifters",
+        "squat",
+        "bench press",
+        "deadlift"
+      ]
+    },
+    {
+      "id": "olympic_weightlifting",
+      "label": "Olympic Weightlifting",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "olympic weightlifting",
+        "weightlifting",
+        "snatch",
+        "clean and jerk",
+        "clean & jerk",
+        "weightlifter"
+      ]
+    },
+    {
+      "id": "recovery",
+      "label": "Recovery & Fatigue",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "recovery",
+        "fatigue management",
+        "training fatigue",
+        "detraining",
+        "deload",
+        "deloading"
+      ]
+    },
+    {
+      "id": "nutrition",
+      "label": "Sports Nutrition",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "sports nutrition",
+        "protein intake",
+        "energy balance",
+        "calorie intake",
+        "caloric intake",
+        "nutrition for strength",
+        "nutrition for hypertrophy"
+      ]
+    },
+    {
+      "id": "injury_rehab",
+      "label": "Injury & Rehab",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "injury management",
+        "injury rehabilitation",
+        "rehabilitation",
+        "rehab",
+        "tendinopathy",
+        "return to training",
+        "pain management"
+      ]
+    },
+    {
+      "id": "conditioning",
+      "label": "Conditioning",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "conditioning",
+        "aerobic training",
+        "cardiovascular training",
+        "cardio",
+        "work capacity",
+        "aerobic fitness"
+      ]
+    },
+    {
+      "id": "research_methods",
+      "label": "Exercise Science Research",
+      "categories": [
+        "weightlifting"
+      ],
+      "aliases": [
+        "systematic review",
+        "meta analysis",
+        "randomized trial",
+        "randomised trial",
+        "randomized controlled trial",
+        "randomised controlled trial",
+        "effect size",
+        "exercise science research"
+      ]
+    },
+    {
+      "id": "authentication",
+      "label": "Authentication",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "authentication",
+        "authenticator",
+        "authenticators",
+        "sign in",
+        "signin",
+        "user authentication"
+      ]
+    },
+    {
+      "id": "authorization",
+      "label": "Authorization",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "authorization",
+        "authorisation",
+        "access control",
+        "policy enforcement",
+        "authorization policy",
+        "permission model"
+      ]
+    },
+    {
+      "id": "oauth",
+      "label": "OAuth",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "oauth",
+        "oauth 2",
+        "oauth 2 0",
+        "oauth 2 1",
+        "pkce",
+        "dpop",
+        "token exchange",
+        "authorization code flow",
+        "client credentials"
+      ]
+    },
+    {
+      "id": "oidc",
+      "label": "OpenID Connect",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "oidc",
+        "openid connect",
+        "id token",
+        "id tokens",
+        "userinfo endpoint"
+      ]
+    },
+    {
+      "id": "saml",
+      "label": "SAML",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "saml",
+        "security assertion markup language",
+        "saml 2",
+        "saml 2 0"
+      ]
+    },
+    {
+      "id": "passkeys_webauthn",
+      "label": "Passkeys / WebAuthn",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "passkey",
+        "passkeys",
+        "webauthn",
+        "web authentication",
+        "fido2",
+        "fido 2",
+        "phishing resistant authentication"
+      ]
+    },
+    {
+      "id": "mfa",
+      "label": "MFA",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "mfa",
+        "2fa",
+        "multi factor authentication",
+        "multifactor authentication",
+        "two factor authentication",
+        "two factor"
+      ]
+    },
+    {
+      "id": "federation",
+      "label": "Federation",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "identity federation",
+        "federated identity",
+        "federation",
+        "identity provider",
+        "relying party",
+        "federation protocol"
+      ]
+    },
+    {
+      "id": "identity_proofing",
+      "label": "Identity Proofing",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "identity proofing",
+        "identity verification",
+        "identity assurance",
+        "proofing",
+        "identity evidence"
+      ]
+    },
+    {
+      "id": "identity_governance",
+      "label": "Identity Governance",
+      "categories": [
+        "iam",
+        "identity_automation"
+      ],
+      "aliases": [
+        "identity governance",
+        "iga",
+        "entitlement management",
+        "access certification",
+        "access certifications",
+        "access review",
+        "access reviews",
+        "entitlement review",
+        "entitlement reviews"
+      ]
+    },
+    {
+      "id": "privileged_access",
+      "label": "Privileged Access",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "privileged access",
+        "pam",
+        "privileged access management",
+        "just in time access",
+        "jit access",
+        "privileged account",
+        "privileged accounts"
+      ]
+    },
+    {
+      "id": "identity_security",
+      "label": "Identity Security",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "identity security",
+        "identity threat",
+        "identity threats",
+        "credential attack",
+        "credential attacks",
+        "compromised credential",
+        "compromised credentials",
+        "credential theft",
+        "device assurance"
+      ]
+    },
+    {
+      "id": "workload_identity",
+      "label": "Workload & Machine Identity",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "workload identity",
+        "workload identities",
+        "machine identity",
+        "machine identities",
+        "service account",
+        "service accounts",
+        "non human identity",
+        "non human identities",
+        "nhi"
+      ]
+    },
+    {
+      "id": "agent_identity",
+      "label": "Agent Identity",
+      "categories": [
+        "iam",
+        "identity_automation"
+      ],
+      "aliases": [
+        "agent identity",
+        "agent identities",
+        "ai agent identity",
+        "ai agent identities",
+        "agent authorization",
+        "agent authorisation",
+        "agent delegation",
+        "agent credential",
+        "agent credentials"
+      ]
+    },
+    {
+      "id": "tokens_jwt",
+      "label": "Tokens & JWT",
+      "categories": [
+        "iam"
+      ],
+      "aliases": [
+        "jwt",
+        "json web token",
+        "json web tokens",
+        "access token",
+        "access tokens",
+        "refresh token",
+        "refresh tokens",
+        "security event token",
+        "security event tokens"
+      ]
+    },
+    {
+      "id": "provisioning",
+      "label": "Provisioning",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "provisioning",
+        "deprovisioning",
+        "account provisioning",
+        "account deprovisioning",
+        "user provisioning",
+        "user deprovisioning"
+      ]
+    },
+    {
+      "id": "scim",
+      "label": "SCIM",
+      "categories": [
+        "iam",
+        "identity_automation"
+      ],
+      "aliases": [
+        "scim",
+        "system for cross domain identity management",
+        "scim protocol",
+        "scim provisioning"
+      ]
+    },
+    {
+      "id": "lifecycle_jml",
+      "label": "Joiner / Mover / Leaver",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "joiner mover leaver",
+        "joiner",
+        "mover",
+        "leaver",
+        "jml",
+        "identity lifecycle",
+        "user lifecycle",
+        "employee lifecycle",
+        "lifecycle management"
+      ]
+    },
+    {
+      "id": "workflow_orchestration",
+      "label": "Workflow Orchestration",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "workflow",
+        "workflows",
+        "workflow orchestration",
+        "orchestration",
+        "identity orchestration",
+        "automation workflow",
+        "automation workflows"
+      ]
+    },
+    {
+      "id": "api_automation",
+      "label": "API Automation",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "api automation",
+        "rest api",
+        "api request",
+        "api requests",
+        "api workflow",
+        "api workflows",
+        "http request",
+        "http requests"
+      ]
+    },
+    {
+      "id": "connectors_integrations",
+      "label": "Connectors & Integrations",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "connector",
+        "connectors",
+        "integration",
+        "integrations",
+        "app integration",
+        "app integrations",
+        "integration builder"
+      ]
+    },
+    {
+      "id": "event_driven",
+      "label": "Event-Driven Automation",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "event driven",
+        "event driven automation",
+        "webhook",
+        "webhooks",
+        "event hook",
+        "event hooks",
+        "event trigger",
+        "event triggers"
+      ]
+    },
+    {
+      "id": "access_requests",
+      "label": "Access Requests & Approval",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "access request",
+        "access requests",
+        "entitlement request",
+        "entitlement requests",
+        "approval workflow",
+        "approval workflows",
+        "access approval",
+        "access approvals"
+      ]
+    },
+    {
+      "id": "data_transformation",
+      "label": "Data Transformation",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "data mapping",
+        "data transformation",
+        "data transformations",
+        "json transformation",
+        "json transformations",
+        "field mapping",
+        "attribute mapping"
+      ]
+    },
+    {
+      "id": "observability_audit",
+      "label": "Automation Observability",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "execution history",
+        "workflow history",
+        "audit log",
+        "audit logs",
+        "system log",
+        "system logs",
+        "telemetry",
+        "workflow telemetry",
+        "execution log",
+        "execution logs"
+      ]
+    },
+    {
+      "id": "identity_sources",
+      "label": "Identity Sources",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "identity source",
+        "identity sources",
+        "source of truth",
+        "authoritative source",
+        "hris",
+        "hr source",
+        "human resources system"
+      ]
+    },
+    {
+      "id": "agent_automation",
+      "label": "Agent Automation",
+      "categories": [
+        "identity_automation"
+      ],
+      "aliases": [
+        "ai agent",
+        "ai agents",
+        "agent workflow",
+        "agent workflows",
+        "agent orchestration",
+        "mcp",
+        "model context protocol",
+        "agent automation"
+      ]
+    }
+  ]
+}
