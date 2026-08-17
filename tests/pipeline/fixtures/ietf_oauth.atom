@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>IETF OAuth Fixture</title>
+  <entry>
+    <title>Document update without an organic OAuth alias</title>
+    <link rel="alternate" href="https://datatracker.example/doc/draft-one/"/>
+    <updated>2026-08-15T12:00:00Z</updated>
+    <author><name>Fixture Editor</name></author>
+    <summary>Significant working group document revision.</summary>
+  </entry>
+</feed>
