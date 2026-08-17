@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>IETF SCIM Fixture</title>
+  <entry>
+    <title>Working group document revision</title>
+    <link rel="alternate" href="https://datatracker.example/doc/draft-scim/"/>
+    <updated>2026-08-15T13:00:00Z</updated>
+    <summary>A significant document revision.</summary>
+  </entry>
+</feed>

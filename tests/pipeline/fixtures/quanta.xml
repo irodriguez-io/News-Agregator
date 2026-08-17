@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Fixture Science Feed</title>
+    <item>
+      <title><![CDATA[<strong>Quantum Geometry</strong> Explained]]></title>
+      <link>https://example.com/quantum-geometry?utm_source=rss</link>
+      <author>Fixture Author</author>
+      <pubDate>Sat, 15 Aug 2026 18:30:00 +0000</pubDate>
+      <description><![CDATA[A physics report about quantum mechanics and geometry.]]></description>
+    </item>
+  </channel>
+</rss>
