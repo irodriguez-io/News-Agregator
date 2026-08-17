@@ -122,6 +122,8 @@ Contract Amendment 1 is incorporated:
 
 > Every emitted Article must have a usable canonical HTTP/HTTPS URL. No GUID-, title-, or publication-date-derived fallback identity exists in V1.
 
+Approved Amendment 4, **Initial Release Upstream Source Failure Acceptance**, is also incorporated. It permits the initial V1 release to proceed while the specifically investigated upstream conditions for `n8n_release_notes` and `ietf_scim` persist, provided those conditions still match their documented failure modes, normal catastrophic dataset gates pass, and there is no implementation regression. Both sources remain enabled and continue to be reported as failed; this amendment does not make `--validate-sources` pass or accept unrelated or changed failures.
+
 ---
 
 ### `03-content-sources.md`

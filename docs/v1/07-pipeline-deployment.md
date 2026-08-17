@@ -166,6 +166,17 @@ process exit code ≠ 0
 
 This command is primarily an operational/developer diagnostic and is not itself the scheduled deployment gate.
 
+## Amendment 4 — initial-release live validation
+
+The initial V1 release may accept a non-zero `--validate-sources` result only for these specifically investigated upstream conditions:
+
+- `n8n_release_notes`: the configured canonical page returns HTTP 200, advertises `https://docs.n8n.io/changelog/release-notes/rss.xml`, that advertised feed returns HTTP 404, and no alternative RSS/Atom feed is advertised;
+- `ietf_scim`: the approved endpoint returns HTTP 200 and valid Atom 1.0 without a parse error, but contains zero `<entry>` elements.
+
+Both sources remain enabled and must remain reported as failed while those exact conditions persist. Release acceptance additionally requires the normal catastrophic dataset gates to pass and no evidence of an implementation regression. The investigated diagnostic baseline was 20 of 22 sources successful with 221 retained Articles.
+
+This is not a general allowance for two failed sources. Any additional source failure, or any materially changed failure mode for either listed source, requires investigation and is not covered automatically. Upstream recovery should restore normal ingestion without another amendment.
+
 ---
 
 # 6. Generation Timestamp
