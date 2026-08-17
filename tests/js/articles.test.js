@@ -75,6 +75,8 @@ test("dataset loader rejects structurally unusable top-level and Article data", 
     { ...makeDataset(), pipeline: { ...makeDataset().pipeline, articleCount: 4 } },
     makeDataset([{ ...makeArticle(), url: "javascript:alert(1)" }]),
     makeDataset([{ ...makeArticle(), id: "not-an-id" }]),
+    makeDataset([{ ...makeArticle(), source: { id: "constructor", name: "Unsafe" } }]),
+    makeDataset([{ ...makeArticle(), publishedAt: "2026-02-30T12:00:00Z" }]),
     makeDataset([{ ...makeArticle(), score: { ...makeArticle().score, base: 89 } }]),
   ];
 

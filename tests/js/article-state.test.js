@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  commitUndo,
   commitArticleAction,
   createUndoManager,
   transitionArticle,
@@ -196,6 +197,36 @@ test("Save and Dismiss Undo exactly restore unseen/opened state and preferences"
   }
 });
 
+test("Undo reverses only its own preference signal and preserves later unrelated learning", () => {
+  const savedArticle = makeArticle();
+  const laterArticle = makeArticle({
+    id: "00000000000000000002",
+    source: { id: "source_two", name: "Source Two" },
+    tags: [{ id: "oauth", label: "OAuth" }],
+  });
+  const saved = transitionArticle(createDefaultState(), savedArticle, "save", { now: TIMES.first, undoable: true });
+  const withLaterOpen = transitionArticle(saved.state, laterArticle, "open", { now: TIMES.second }).state;
+  const undone = undoArticleAction(withLaterOpen, saved.undo);
+  assert.equal(undone.state.articles[savedArticle.id], undefined);
+  assert.deepEqual(undone.state.preferences.sources.source_two, { weight: 0.1, interactions: 1 });
+  assert.deepEqual(undone.state.preferences.topics.oauth, { weight: 0.05, interactions: 1 });
+});
+
+test("an existing persisted snapshot remains authoritative for later learning", () => {
+  const original = makeArticle({ tags: [{ id: "oauth", label: "OAuth" }] });
+  const refreshed = makeArticle({
+    source: { id: "changed_source", name: "Changed Source" },
+    tags: [{ id: "scim", label: "SCIM" }],
+  });
+  const opened = transitionArticle(createDefaultState(), original, "open", { now: TIMES.first }).state;
+  const saved = transitionArticle(opened, refreshed, "save", { now: TIMES.second }).state;
+  assert.deepEqual(saved.articles[original.id].article, original);
+  assert.equal(saved.preferences.sources.source_one.weight, 0.55);
+  assert.equal(saved.preferences.sources.changed_source, undefined);
+  assert.equal(saved.preferences.topics.oauth.weight, 0.35);
+  assert.equal(saved.preferences.topics.scim, undefined);
+});
+
 test("Undo manager is single-action and in-memory only", () => {
   const manager = createUndoManager();
   assert.equal(manager.peek(), null);
@@ -214,12 +245,19 @@ test("transaction wrapper commits UI state only on persistence success; Open may
   const failingStorage = new MemoryStorage();
   failingStorage.failSet = true;
 
-  for (const action of ["save", "dismiss", "mark_read"]) {
-    const result = commitArticleAction({ state, article: makeArticle(), action, now: TIMES.first, storage: failingStorage });
+  const failureCases = [
+    [state, "save"],
+    [state, "dismiss"],
+    [state, "mark_read"],
+    [transitionArticle(state, makeArticle(), "mark_read", { now: TIMES.first }).state, "mark_unread"],
+    [transitionArticle(state, makeArticle(), "save", { now: TIMES.first }).state, "remove"],
+  ];
+  for (const [startingState, action] of failureCases) {
+    const result = commitArticleAction({ state: startingState, article: makeArticle(), action, now: TIMES.second, storage: failingStorage });
     assert.equal(result.ok, false);
     assert.equal(result.persisted, false);
     assert.equal(result.allowNavigation, false);
-    assert.equal(result.state, state);
+    assert.equal(result.state, startingState);
   }
   const open = commitArticleAction({ state, article: makeArticle(), action: "open", now: TIMES.first, storage: failingStorage });
   assert.equal(open.ok, false);
@@ -234,4 +272,43 @@ test("transaction wrapper commits UI state only on persistence success; Open may
   assert.equal(saved.persisted, true);
   assert.equal(saved.state.articles[makeArticle().id].status, "saved");
   assert.equal(manager.peek().action, "save");
+});
+
+test("an unsafe external URL cannot produce a successful Open or navigation permission", () => {
+  const result = commitArticleAction({
+    state: createDefaultState(),
+    article: makeArticle({ url: "javascript:alert(1)" }),
+    action: "open",
+    now: TIMES.first,
+    storage: new MemoryStorage(),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "INVALID_ARTICLE");
+  assert.equal(result.allowNavigation, false);
+});
+
+test("transactional Undo retains the active action on persistence failure and clears it on success", () => {
+  const manager = createUndoManager();
+  const initialStorage = new MemoryStorage();
+  const saved = commitArticleAction({
+    state: createDefaultState(),
+    article: makeArticle(),
+    action: "save",
+    now: TIMES.first,
+    storage: initialStorage,
+    undoable: true,
+    undoManager: manager,
+  });
+
+  const failingStorage = new MemoryStorage();
+  failingStorage.failSet = true;
+  const failedUndo = commitUndo({ state: saved.state, undoManager: manager, storage: failingStorage });
+  assert.equal(failedUndo.ok, false);
+  assert.equal(failedUndo.state, saved.state);
+  assert.equal(manager.peek().action, "save");
+
+  const successfulUndo = commitUndo({ state: saved.state, undoManager: manager, storage: initialStorage });
+  assert.equal(successfulUndo.ok, true);
+  assert.deepEqual(successfulUndo.state, createDefaultState());
+  assert.equal(manager.peek(), null);
 });

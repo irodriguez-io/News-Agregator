@@ -122,9 +122,16 @@ test("import rejects all required unsafe candidates atomically", async (t) => {
     ["negative interactions", { ...base, preferences: { ...base.preferences, topics: { x: { weight: 0, interactions: -1 } } } }],
     ["invalid timestamp", { ...base, articles: { [makeArticle().id]: { ...record, firstSeenAt: "today" } } }],
     ["invalid signal", { ...base, articles: { [makeArticle().id]: { ...record, signalsApplied: { ...record.signalsApplied, saved: 1 } } } }],
-    ["constructor", JSON.stringify(base).replace('"sources":{}', '"sources":{"constructor":{"weight":0,"interactions":0}}')],
-    ["prototype", JSON.stringify(base).replace('"sources":{}', '"sources":{"prototype":{"weight":0,"interactions":0}}')],
-    ["__proto__", JSON.stringify(base).replace('"sources":{}', '"sources":{"__proto__":{"weight":0,"interactions":0}}')],
+    ["missing Read signal", (() => {
+      const readState = transitionArticle(createDefaultState(), makeArticle(), "mark_read", { now: TIMES.first }).state;
+      const readRecord = readState.articles[makeArticle().id];
+      return { ...readState, articles: { [makeArticle().id]: { ...readRecord, signalsApplied: { ...readRecord.signalsApplied, read: false } } } };
+    })()],
+    ["inconsistent Open signal", { ...base, articles: { [makeArticle().id]: { ...record, openedAt: TIMES.second, signalsApplied: { ...record.signalsApplied, opened: false } } } }],
+    ["timestamp before first seen", { ...base, articles: { [makeArticle().id]: { ...record, savedAt: "2026-08-17T11:00:00.000Z" } } }],
+    ["constructor", JSON.stringify(createDefaultState()).replace('"sources":{}', '"sources":{"constructor":{"weight":0,"interactions":0}}')],
+    ["prototype", JSON.stringify(createDefaultState()).replace('"sources":{}', '"sources":{"prototype":{"weight":0,"interactions":0}}')],
+    ["__proto__", JSON.stringify(createDefaultState()).replace('"sources":{}', '"sources":{"__proto__":{"weight":0,"interactions":0}}')],
   ]);
 
   for (const [name, candidate] of cases) {
@@ -136,6 +143,14 @@ test("import rejects all required unsafe candidates atomically", async (t) => {
       assert.equal(storage.values.get(LOCAL_STORAGE_KEY), existingRaw);
     });
   }
+});
+
+test("import enforces the 5 MiB defensive size boundary before parsing", () => {
+  const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: JSON.stringify(createDefaultState()) });
+  const result = importState(" ".repeat((5 * 1024 * 1024) + 1), { storage });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "IMPORT_TOO_LARGE");
+  assert.deepEqual(loadState({ storage }).state, createDefaultState());
 });
 
 test("complete validation enforces appearance/category enums and excludes category preferences", () => {
