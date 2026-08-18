@@ -612,20 +612,6 @@ Forced tags must:
 
 # 23. Admission Filter Tests
 
-### OpenAI
-
-Article with approved technical topic:
-
-```text
-PASS
-```
-
-Article with only unrelated product announcement content:
-
-```text
-REJECT
-```
-
 ### Barbell Medicine
 
 Training-related article:

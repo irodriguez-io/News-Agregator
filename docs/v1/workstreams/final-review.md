@@ -317,7 +317,7 @@ No unauthorized publisher additions.
 Verify `openai_release_notes` and `okta_workflows` are absent from V1 configuration, constants, adapters, fixtures, live validation, generation, and dataset source/count output. No V1 fallback, disabled placeholder, accepted failure, or network request may remain for either source.
 26. Anthropic Filter Review
 Verify Anthropic Engineering remains unfiltered beyond normal source validity.
-Do not accidentally apply the OpenAI admission model to Anthropic.
+Do not add an admission filter to Anthropic.
 27. Broad-Source Filter Review
 Verify:
 barbell_medicine
