@@ -1,0 +1,361 @@
+{
+  "sources": [
+    {
+      "id": "quanta",
+      "name": "Quanta Magazine",
+      "category": "science",
+      "adapter": "rss",
+      "url": "https://www.quantamagazine.org/feed/",
+      "quality": 48,
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science",
+        "score": 18
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "science_aaas",
+      "name": "Science / AAAS",
+      "category": "science",
+      "adapter": "rss",
+      "url": "https://feeds.science.org/rss/science.xml",
+      "quality": 49,
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science",
+        "score": 19
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "acm_queue",
+      "name": "ACM Queue",
+      "category": "technology",
+      "adapter": "rss",
+      "url": "https://queue.acm.org/rss/feeds/queuecontent.xml",
+      "quality": 49,
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive",
+        "score": 18
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "ieee_spectrum",
+      "name": "IEEE Spectrum",
+      "category": "technology",
+      "adapter": "rss_autodiscovery",
+      "url": "https://spectrum.ieee.org/",
+      "quality": 46,
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism",
+        "score": 16
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "ars_features",
+      "name": "Ars Technica",
+      "category": "technology",
+      "adapter": "rss_autodiscovery",
+      "url": "https://arstechnica.com/features/",
+      "quality": 44,
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism",
+        "score": 14
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "cloudflare_blog",
+      "name": "Cloudflare Blog",
+      "category": "technology",
+      "adapter": "rss",
+      "url": "https://blog.cloudflare.com/rss/",
+      "quality": 45,
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive",
+        "score": 18
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "anthropic_engineering",
+      "name": "Anthropic Engineering",
+      "category": "technology",
+      "adapter": "html_listing",
+      "url": "https://www.anthropic.com/engineering",
+      "quality": 47,
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive",
+        "score": 18
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "paris_review",
+      "name": "The Paris Review",
+      "category": "literature",
+      "adapter": "rss",
+      "url": "https://www.theparisreview.org/blog/feed/",
+      "quality": 47,
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay",
+        "score": 15
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "public_books",
+      "name": "Public Books",
+      "category": "literature",
+      "adapter": "rss_autodiscovery",
+      "url": "https://www.publicbooks.org/",
+      "quality": 46,
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay",
+        "score": 15
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "jstor_daily",
+      "name": "JSTOR Daily",
+      "category": "history",
+      "adapter": "rss",
+      "url": "https://daily.jstor.org/feed/",
+      "quality": 47,
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay",
+        "score": 16
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "public_domain_review",
+      "name": "The Public Domain Review",
+      "category": "history",
+      "adapter": "rss_autodiscovery",
+      "url": "https://publicdomainreview.org/",
+      "quality": 46,
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay",
+        "score": 16
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "stronger_by_science",
+      "name": "Stronger by Science",
+      "category": "weightlifting",
+      "adapter": "rss_autodiscovery",
+      "url": "https://www.strongerbyscience.com/",
+      "quality": 47,
+      "contentType": {
+        "id": "evidence_based_training",
+        "label": "Evidence-Based Training",
+        "score": 17
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "barbell_medicine",
+      "name": "Barbell Medicine",
+      "category": "weightlifting",
+      "adapter": "html_listing",
+      "url": "https://www.barbellmedicine.com/articles/articles-training/",
+      "quality": 46,
+      "contentType": {
+        "id": "evidence_based_training",
+        "label": "Evidence-Based Training",
+        "score": 17
+      },
+      "enabled": true,
+      "minTopicMatches": 1,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "ietf_oauth",
+      "name": "IETF OAuth WG",
+      "category": "iam",
+      "adapter": "atom",
+      "url": "https://datatracker.ietf.org/group/oauth/documents/feed/?significant=1",
+      "quality": 50,
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update",
+        "score": 20
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": [
+        "oauth"
+      ]
+    },
+    {
+      "id": "openid_specs",
+      "name": "OpenID Foundation",
+      "category": "iam",
+      "adapter": "rss",
+      "url": "https://openid.net/category/specs/feed/",
+      "quality": 50,
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update",
+        "score": 20
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "w3c_webauthn",
+      "name": "W3C Web Authentication WG",
+      "category": "iam",
+      "adapter": "rss_autodiscovery",
+      "url": "https://www.w3.org/groups/wg/webauthn/",
+      "quality": 50,
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update",
+        "score": 20
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": [
+        "passkeys_webauthn"
+      ]
+    },
+    {
+      "id": "okta_identity_engine",
+      "name": "Okta Identity Engine",
+      "category": "iam",
+      "adapter": "rss",
+      "url": "https://developer.okta.com/rss/identity-engine.xml",
+      "quality": 48,
+      "contentType": {
+        "id": "official_release_notes",
+        "label": "Official Release Notes",
+        "score": 19
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "n8n_release_notes",
+      "name": "n8n Release Notes",
+      "category": "identity_automation",
+      "adapter": "rss_autodiscovery",
+      "url": "https://docs.n8n.io/changelog/release-notes",
+      "quality": 48,
+      "contentType": {
+        "id": "official_release_notes",
+        "label": "Official Release Notes",
+        "score": 19
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": []
+    },
+    {
+      "id": "entra_releases",
+      "name": "Microsoft Entra",
+      "category": "identity_automation",
+      "adapter": "rss",
+      "url": "https://learn.microsoft.com/api/search/rss?search=%22Release+notes+-+Azure+Active+Directory%22&locale=en-us",
+      "quality": 47,
+      "contentType": {
+        "id": "official_release_notes",
+        "label": "Official Release Notes",
+        "score": 19
+      },
+      "enabled": true,
+      "minTopicMatches": 1,
+      "admissionTopicIds": [
+        "provisioning",
+        "scim",
+        "lifecycle_jml",
+        "workflow_orchestration",
+        "access_requests",
+        "identity_governance",
+        "identity_sources",
+        "agent_identity",
+        "agent_automation",
+        "connectors_integrations"
+      ],
+      "forcedTags": []
+    },
+    {
+      "id": "ietf_scim",
+      "name": "IETF SCIM WG",
+      "category": "identity_automation",
+      "adapter": "atom",
+      "url": "https://datatracker.ietf.org/group/scim/documents/feed/?significant=1",
+      "quality": 50,
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update",
+        "score": 20
+      },
+      "enabled": true,
+      "minTopicMatches": 0,
+      "admissionTopicIds": [],
+      "forcedTags": [
+        "scim"
+      ]
+    }
+  ]
+}
