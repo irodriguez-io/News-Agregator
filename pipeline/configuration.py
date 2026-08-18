@@ -170,16 +170,16 @@ def validate_sources(
         by_id[source_id] = source
 
     if require_approved_catalog:
-        if set(by_id) != APPROVED_SOURCE_IDS or len(by_id) != 22:
-            raise ConfigurationError("source catalog must contain exactly the 22 approved IDs")
+        if set(by_id) != APPROVED_SOURCE_IDS or len(by_id) != 20:
+            raise ConfigurationError("source catalog must contain exactly the 20 approved IDs")
         if any(not source["enabled"] for source in sources):
             raise ConfigurationError("all approved V1 sources must be enabled")
         html_ids = {source["id"] for source in sources if source["adapter"] == "html_listing"}
         if html_ids != HTML_SOURCE_IDS:
-            raise ConfigurationError("HTML adapters are limited to the three approved sources")
+            raise ConfigurationError("HTML adapters are limited to the two approved sources")
         filtered = {source["id"] for source in sources if source["minTopicMatches"] > 0}
         if filtered != FILTERED_SOURCE_IDS:
-            raise ConfigurationError("admission filtering must apply to exactly three sources")
+            raise ConfigurationError("admission filtering must apply to exactly two sources")
         forced = {source["id"]: source["forcedTags"] for source in sources if source["forcedTags"]}
         if forced != FORCED_TAGS:
             raise ConfigurationError("forced tags do not match the frozen V1 catalog")
