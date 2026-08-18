@@ -13,7 +13,7 @@ import {
   saveState,
   validateState,
 } from "../../js/state/storage.js";
-import { transitionArticle } from "../../js/state/article-state.js";
+import { commitArticleAction, transitionArticle } from "../../js/state/article-state.js";
 import { makeArticle, MemoryStorage, TIMES } from "./helpers.js";
 
 test("default state and key exactly match Local State v1", () => {
@@ -57,6 +57,80 @@ test("malformed and unsupported stored state return recoverable errors and prese
       assert.equal(storage.calls.some(([operation]) => operation !== "getItem"), false);
     });
   }
+});
+
+test("corrupt startup state rejects ordinary application mutations without replacing raw bytes", async (t) => {
+  for (const [name, raw] of [
+    ["malformed", "{not json"],
+    ["unsupported", JSON.stringify({ ...createDefaultState(), schemaVersion: 2 })],
+  ]) {
+    await t.test(name, () => {
+      const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: raw });
+      const loaded = loadState({ storage });
+
+      const result = commitArticleAction({
+        state: loaded.state,
+        article: makeArticle(),
+        action: "save",
+        now: TIMES.first,
+        storage,
+      });
+
+      assert.equal(result.ok, false);
+      assert.equal(result.persisted, false);
+      assert.equal(result.error.code, "RECOVERY_REQUIRED");
+      assert.equal(result.state, loaded.state);
+      assert.equal(storage.values.get(LOCAL_STORAGE_KEY), raw);
+    });
+  }
+});
+
+test("only explicit Reset or a valid replacement import releases corrupt-state recovery", async (t) => {
+  await t.test("valid replacement import", () => {
+    const raw = "{not json";
+    const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: raw });
+    const loaded = loadState({ storage });
+
+    const invalidImport = importState("{", { storage });
+    assert.equal(invalidImport.ok, false);
+    assert.equal(storage.values.get(LOCAL_STORAGE_KEY), raw);
+
+    const replacement = createDefaultState();
+    const imported = importState(JSON.stringify(replacement), { storage });
+    assert.equal(imported.ok, true);
+    assert.deepEqual(loadState({ storage }), { ok: true, state: replacement, source: "storage" });
+
+    const saved = commitArticleAction({
+      state: imported.state,
+      article: makeArticle(),
+      action: "save",
+      now: TIMES.first,
+      storage,
+    });
+    assert.equal(saved.ok, true);
+    assert.equal(saved.persisted, true);
+    assert.equal(saved.state.articles[makeArticle().id].status, "saved");
+    assert.equal(loaded.ok, false);
+  });
+
+  await t.test("Reset", () => {
+    const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: "{not json" });
+    const loaded = loadState({ storage });
+    assert.equal(loaded.ok, false);
+
+    const reset = resetState({ storage });
+    assert.equal(reset.ok, true);
+
+    const saved = commitArticleAction({
+      state: reset.state,
+      article: makeArticle(),
+      action: "save",
+      now: TIMES.first,
+      storage,
+    });
+    assert.equal(saved.ok, true);
+    assert.equal(saved.persisted, true);
+  });
 });
 
 test("migration is centralized and refuses unsupported paths", () => {
