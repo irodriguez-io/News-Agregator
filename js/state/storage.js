@@ -20,6 +20,7 @@ const RECORD_KEYS = [
   "article", "status", "firstSeenAt", "openedAt", "savedAt", "dismissedAt", "readAt", "signalsApplied",
 ];
 const SIGNAL_KEYS = ["opened", "saved", "dismissed", "read"];
+const recoveryLockedStorage = new WeakSet();
 
 export class StateStorageError extends Error {
   constructor(code, message) {
@@ -185,6 +186,31 @@ function resolveStorage(storage) {
   throw storageError("STORAGE_UNAVAILABLE", "Browser local storage is unavailable");
 }
 
+function recoveryRequired(adapter) {
+  recoveryLockedStorage.add(adapter);
+}
+
+function persistValidatedState(validated, adapter, { explicitRecovery = false } = {}) {
+  if (recoveryLockedStorage.has(adapter) && !explicitRecovery) {
+    return {
+      ok: false,
+      state: null,
+      error: storageError(
+        "RECOVERY_REQUIRED",
+        "Stored local state must be reset or replaced by a valid import before changes can be persisted",
+      ),
+    };
+  }
+
+  try {
+    adapter.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validated));
+  } catch {
+    return { ok: false, state: null, error: storageError("WRITE_FAILED", "Local state could not be persisted") };
+  }
+  if (explicitRecovery) recoveryLockedStorage.delete(adapter);
+  return { ok: true, state: validated };
+}
+
 export function loadState({ storage } = {}) {
   let adapter;
   try {
@@ -205,6 +231,7 @@ export function loadState({ storage } = {}) {
   try {
     parsed = JSON.parse(rawValue);
   } catch {
+    recoveryRequired(adapter);
     return {
       ok: false,
       state: createDefaultState(),
@@ -214,6 +241,7 @@ export function loadState({ storage } = {}) {
   }
 
   if (!isPlainObject(parsed)) {
+    recoveryRequired(adapter);
     return {
       ok: false,
       state: createDefaultState(),
@@ -222,6 +250,7 @@ export function loadState({ storage } = {}) {
     };
   }
   if (parsed.schemaVersion !== LOCAL_STATE_SCHEMA_VERSION) {
+    recoveryRequired(adapter);
     return {
       ok: false,
       state: createDefaultState(),
@@ -233,6 +262,7 @@ export function loadState({ storage } = {}) {
   try {
     return { ok: true, state: migrateState(parsed, parsed.schemaVersion), source: "storage" };
   } catch (error) {
+    recoveryRequired(adapter);
     return {
       ok: false,
       state: createDefaultState(),
@@ -255,11 +285,10 @@ export function saveState(state, { storage } = {}) {
   let adapter;
   try {
     adapter = resolveStorage(storage);
-    adapter.setItem(LOCAL_STORAGE_KEY, JSON.stringify(validated));
   } catch {
     return { ok: false, state: null, error: storageError("WRITE_FAILED", "Local state could not be persisted") };
   }
-  return { ok: true, state: validated };
+  return persistValidatedState(validated, adapter);
 }
 
 export function resetState({ storage } = {}) {
@@ -270,6 +299,7 @@ export function resetState({ storage } = {}) {
   } catch {
     return { ok: false, state: null, error: storageError("WRITE_FAILED", "Local state could not be reset") };
   }
+  recoveryLockedStorage.delete(adapter);
   return { ok: true, state: createDefaultState() };
 }
 
@@ -304,7 +334,14 @@ export function importState(serializedState, { storage } = {}) {
   } catch {
     return { ok: false, state: null, error: storageError("INVALID_IMPORT", "Imported local state is structurally invalid") };
   }
-  return saveState(validated, { storage });
+
+  let adapter;
+  try {
+    adapter = resolveStorage(storage);
+  } catch {
+    return { ok: false, state: null, error: storageError("WRITE_FAILED", "Local state could not be persisted") };
+  }
+  return persistValidatedState(validated, adapter, { explicitRecovery: true });
 }
 
 export function cloneState(state) {
