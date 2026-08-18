@@ -165,6 +165,7 @@ test("corrupt startup state stays locked until explicit valid import or Reset", 
   for (const [name, corruptRaw, recoveryAction] of corruptCases) {
     await t.test(name, async () => {
       const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: corruptRaw });
+      const navigated = [];
       const { ui } = createUiRecorder();
       const app = createApplication({
         storage,
@@ -172,10 +173,18 @@ test("corrupt startup state stays locked until explicit valid import or Reset", 
         locationObject: { hash: "#discover", search: "" },
         windowObject: createWindowStub(),
         loadDataset: async () => makeDataset([article]),
+        navigateExternal: (url) => { navigated.push(url); return true; },
+        schedule: (callback) => callback(),
         now: () => TIMES.first,
       });
       await app.start();
 
+      assert.deepEqual(
+        app.handleAction({ action: "open", articleId: article.id }),
+        { ok: true, persisted: false, navigationOpened: true },
+      );
+      assert.deepEqual(navigated, [article.url]);
+      assert.equal(app.handleAction({ action: "import_data", serialized: "{" }).ok, false);
       assert.equal(app.handleAction({ action: "save", articleId: article.id }).ok, false);
       assert.equal(app.handleAction({ action: "appearance_change", appearance: "dark" }).ok, false);
       assert.equal(storage.values.get(LOCAL_STORAGE_KEY), corruptRaw);
