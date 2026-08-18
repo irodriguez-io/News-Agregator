@@ -173,9 +173,15 @@ The initial V1 release may accept a non-zero `--validate-sources` result only fo
 - `n8n_release_notes`: the configured canonical page returns HTTP 200, advertises `https://docs.n8n.io/changelog/release-notes/rss.xml`, that advertised feed returns HTTP 404, and no alternative RSS/Atom feed is advertised;
 - `ietf_scim`: the approved endpoint returns HTTP 200 and valid Atom 1.0 without a parse error, but contains zero `<entry>` elements.
 
-Both sources remain enabled and must remain reported as failed while those exact conditions persist. Release acceptance additionally requires the normal catastrophic dataset gates to pass and no evidence of an implementation regression. The investigated diagnostic baseline was 20 of 22 sources successful with 221 retained Articles.
+Both sources remain enabled and must remain reported as failed while those exact conditions persist. Release acceptance additionally requires the normal catastrophic dataset gates to pass and no evidence of an implementation regression.
 
 This is not a general allowance for two failed sources. Any additional source failure, or any materially changed failure mode for either listed source, requires investigation and is not covered automatically. Upstream recovery should restore normal ingestion without another amendment.
+
+## Amendment 5 — OpenAI and Okta Workflows deferral to V2
+
+`openai_release_notes` and `okta_workflows` are not V1 sources. They are absent from `config/sources.json`, are never fetched by V1 validation or generation, and do not contribute to enabled, successful, failed, raw-entry, accepted, or retained counts.
+
+This deferral preserves the existing HTTP client, retry, canonical-URL, and URL-derived identity contracts. V1 must not add a managed-challenge workaround for OpenAI or a fallback identity/rolling Article for Okta Workflows. Reintroduction requires a future V2 source-catalog amendment.
 
 ---
 
@@ -213,7 +219,7 @@ V1 does not require parallel source fetching.
 
 Sequential retrieval is preferred because:
 
-- there are only 22 configured sources;
+- there are only 20 configured sources;
 - implementation is simpler;
 - logs remain easier to interpret;
 - it avoids unnecessary request bursts toward publishers.
@@ -563,8 +569,8 @@ The generated output must contain:
   "schemaVersion": 1,
   "generatedAt": "...",
   "pipeline": {
-    "enabledSourceCount": 22,
-    "successfulSourceCount": 21,
+    "enabledSourceCount": 20,
+    "successfulSourceCount": 19,
     "failedSourceCount": 1,
     "articleCount": 214
   },
@@ -791,10 +797,10 @@ Calculate:
 successfulSourceCount >= ceil(enabledSourceCount * 0.50)
 ```
 
-For 22 enabled V1 sources:
+For 20 enabled V1 sources:
 
 ```text
-minimum successful sources = 11
+minimum successful sources = 10
 ```
 
 If this threshold fails:
@@ -951,8 +957,8 @@ FAILED
 Reason: listing parse produced 0 entries
 
 --------------------------------------------------
-Enabled sources:     22
-Successful:          21
+Enabled sources:     20
+Successful:          19
 Failed:               1
 Raw entries:        287
 Accepted:           238

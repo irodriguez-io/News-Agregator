@@ -310,16 +310,11 @@ restores previous record exactly;
 preserves earlier Open signal;
 disappears after reload.
 24. Source Catalog Review
-Verify exactly 22 V1 sources exist in config/sources.json.
+Verify exactly 20 V1 sources exist in config/sources.json under Amendment 5.
 Compare IDs, categories, adapters, URLs, quality scores, content types, admission rules, and forced tags to 03-content-sources.md.
 No unauthorized publisher additions.
-25. OpenAI Filter Review
-Verify OpenAI Release Notes require at least one organic match from:
-ai_ml
-software_architecture
-cybersecurity
-devops_sre
-Forced tags must not satisfy admission.
+25. Amendment 5 Deferred-Source Review
+Verify `openai_release_notes` and `okta_workflows` are absent from V1 configuration, constants, adapters, fixtures, live validation, generation, and dataset source/count output. No V1 fallback, disabled placeholder, accepted failure, or network request may remain for either source.
 26. Anthropic Filter Review
 Verify Anthropic Engineering remains unfiltered beyond normal source validity.
 Do not accidentally apply the OpenAI admission model to Anthropic.
@@ -389,8 +384,8 @@ Verify deployment blocks when:
 articleCount < 20
 or:
 successful sources < 50% enabled
-For 22 enabled:
-minimum = 11
+For 20 enabled:
+minimum = 10
 35. Frontend Trust Boundary
 Inspect render paths for Article-derived:
 title
@@ -705,7 +700,7 @@ Do not rely solely on Integration's reported results.
 Run/review:
 python -m pipeline.main --validate-sources
 for initial release.
-Record all 22 sources.
+Record all 20 Amendment 5 V1 sources.
 Any failure must be explicitly resolved or accepted via a source-spec amendment before first V1 release.
 Approved Amendment 4 accepts only the specifically investigated upstream conditions for `n8n_release_notes` and `ietf_scim`. For each still-present failure, verify the exact HTTP/discovery/Atom condition documented in `03-content-sources.md` and `07-pipeline-deployment.md`, confirm normal catastrophic dataset gates pass, and confirm there is no implementation regression. The command remains failed and must be reported as such; only the release decision may be acceptable. Any additional source failure or materially changed failure mode is not covered.
 70. Real Dataset Generation
@@ -808,7 +803,7 @@ PASS / FAIL
 
 Live source validation:
 PASS / FAIL
-<22-source summary>
+<20-source summary>
 
 Generated dataset:
 <successful sources / retained Articles>

@@ -20,7 +20,7 @@ The objective is:
 
 > A small set of consistently high-value sources whose content is worth competing for the user's finite attention.
 
-V1 contains **22 configured sources** across seven categories.
+V1 contains **20 configured sources** across seven categories under Amendment 5.
 
 ---
 
@@ -337,47 +337,13 @@ all valid Engineering publication entries
 
 ---
 
-## 7.6 OpenAI Release Notes
+## 7.6 Deferred to V2 — OpenAI Release Notes
 
-```json
-{
-  "id": "openai_release_notes",
-  "name": "OpenAI Release Notes",
-  "category": "technology",
-  "adapter": "rss",
-  "url": "https://openai.com/products/release-notes/rss.xml",
-  "quality": 46,
-  "contentType": {
-    "id": "official_release_notes",
-    "label": "Official Release Notes",
-    "score": 19
-  },
-  "enabled": true,
-  "minTopicMatches": 1,
-  "admissionTopicIds": [
-    "ai_ml",
-    "software_architecture",
-    "cybersecurity",
-    "devops_sre"
-  ],
-  "forcedTags": []
-}
-```
+Amendment 5 removes OpenAI Release Notes from the V1 source whitelist. Initial-release diagnostics found that the approved RSS endpoint can alternate between a valid feed and an OpenAI-hosted managed JavaScript/cookie challenge returning HTTP 403 to the unmodified project client.
 
-OpenAI's release stream covers a wider product surface than the intended Technology reading feed.
+V1 must not work around that condition with browser impersonation, automatic 403 retries, challenge solving, credentials, API keys, or third-party feed proxies. The former `openai_release_notes` entry is absent from `config/sources.json`, is not fetched or counted, and is not an accepted V1 live-source failure.
 
-Therefore V1 admits an OpenAI release-note entry only when it organically matches at least one approved Technology topic in:
-
-```text
-ai_ml
-software_architecture
-cybersecurity
-devops_sre
-```
-
-Forced tags must not be used to satisfy this admission rule.
-
-This filter is intended to reduce generic product/UI announcement noise while retaining technically relevant AI and platform material.
+OpenAI Release Notes is scheduled for reconsideration in V2 only after a future amendment approves a stable mechanically ingestible publisher surface and its admission behavior.
 
 ---
 
@@ -709,37 +675,11 @@ Source identity and article topic are separate concepts.
 
 # 12. Identity Automation Sources
 
-## 12.1 Okta Workflows Production Releases
+## 12.1 Deferred to V2 — Okta Workflows Production Releases
 
-```json
-{
-  "id": "okta_workflows",
-  "name": "Okta Workflows",
-  "category": "identity_automation",
-  "adapter": "html_listing",
-  "url": "https://help.okta.com/wf/en-us/Content/Topics/ReleaseNotes/Workflows/production.htm",
-  "quality": 49,
-  "contentType": {
-    "id": "official_release_notes",
-    "label": "Official Release Notes",
-    "score": 19
-  },
-  "enabled": true,
-  "minTopicMatches": 0,
-  "admissionTopicIds": [],
-  "forcedTags": []
-}
-```
+Amendment 5 removes Okta Workflows Production Releases from the V1 source whitelist. Initial-release diagnostics found many distinct release headings on one rolling official page, but no usable entry-specific publisher URLs or anchors. Emitting those headings would collapse them to one URL-derived Article ID; inventing fragment, query-string, title, date, or GUID identity would violate the canonical Article identity contract.
 
-The adapter must parse only the official Production release-history page.
-
-It must not crawl unrelated Okta Help content.
-
-Admission:
-
-```text
-all distinct production-release entries
-```
+The former `okta_workflows` entry is absent from `config/sources.json`, is not fetched or counted, and must not emit a rolling or fallback V1 Article. It is scheduled for reconsideration in V2 only after Okta publishes usable entry-specific URLs or a future amendment deliberately defines a different contract-compatible representation.
 
 ---
 
@@ -875,13 +815,13 @@ While it persists, `ietf_scim` remains enabled and remains a failed source under
 | Category | Source Count |
 |---|---:|
 | Science | 2 |
-| Technology | 6 |
+| Technology | 5 |
 | Literature | 2 |
 | History | 2 |
 | Weightlifting | 2 |
 | IAM | 4 |
-| Identity Automation | 4 |
-| **Total** | **22** |
+| Identity Automation | 3 |
+| **Total** | **20** |
 
 ---
 
@@ -892,17 +832,8 @@ Most sources admit all valid normalized entries.
 V1 source-specific admission filtering applies to exactly:
 
 ```text
-openai_release_notes
 barbell_medicine
 entra_releases
-```
-
-### OpenAI Release Notes
-
-Requires:
-
-```text
-≥1 approved technical Technology topic
 ```
 
 ### Barbell Medicine
@@ -952,7 +883,6 @@ For example:
 ```text
 Okta source ≠ authentication topic
 n8n source  ≠ workflow topic
-OpenAI source ≠ AI/ML topic
 ```
 
 Topic classification must remain content-driven unless explicitly forced above.
@@ -993,7 +923,6 @@ The approved HTML-listing sources are:
 ```text
 anthropic_engineering
 barbell_medicine
-okta_workflows
 ```
 
 ---
@@ -1041,4 +970,4 @@ Before any network retrieval, configuration validation must reject:
 
 # 22. Source-Catalog Completion Criteria
 
-The source catalog is correctly implemented when all 22 entries are represented exactly once, the three filtered sources enforce their approved organic-topic admission rules, the three forced tags retain their non-scoring semantics, and every adapter is verified with local fixtures plus bounded live diagnostics.
+The source catalog is correctly implemented when all 20 entries are represented exactly once, `openai_release_notes` and `okta_workflows` are absent under Amendment 5, the two filtered sources enforce their approved organic-topic admission rules, the three forced tags retain their non-scoring semantics, and every adapter is verified with local fixtures plus bounded live diagnostics.
