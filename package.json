@@ -1,0 +1,11 @@
+{
+  "name": "intentional-reading",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "node --test tests/js/*.test.js"
+  }
+}
