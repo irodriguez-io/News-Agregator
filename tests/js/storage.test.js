@@ -94,6 +94,16 @@ test("only explicit Reset or a valid replacement import releases corrupt-state r
     const invalidImport = importState("{", { storage });
     assert.equal(invalidImport.ok, false);
     assert.equal(storage.values.get(LOCAL_STORAGE_KEY), raw);
+    const stillBlocked = commitArticleAction({
+      state: loaded.state,
+      article: makeArticle(),
+      action: "save",
+      now: TIMES.first,
+      storage,
+    });
+    assert.equal(stillBlocked.ok, false);
+    assert.equal(stillBlocked.error.code, "RECOVERY_REQUIRED");
+    assert.equal(storage.values.get(LOCAL_STORAGE_KEY), raw);
 
     const replacement = createDefaultState();
     const imported = importState(JSON.stringify(replacement), { storage });
@@ -110,7 +120,6 @@ test("only explicit Reset or a valid replacement import releases corrupt-state r
     assert.equal(saved.ok, true);
     assert.equal(saved.persisted, true);
     assert.equal(saved.state.articles[makeArticle().id].status, "saved");
-    assert.equal(loaded.ok, false);
   });
 
   await t.test("Reset", () => {
@@ -130,6 +139,27 @@ test("only explicit Reset or a valid replacement import releases corrupt-state r
     });
     assert.equal(saved.ok, true);
     assert.equal(saved.persisted, true);
+  });
+
+  await t.test("failed Reset", () => {
+    const raw = "{not json";
+    const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: raw });
+    const loaded = loadState({ storage });
+    storage.failRemove = true;
+
+    const reset = resetState({ storage });
+    assert.equal(reset.ok, false);
+
+    const stillBlocked = commitArticleAction({
+      state: loaded.state,
+      article: makeArticle(),
+      action: "save",
+      now: TIMES.first,
+      storage,
+    });
+    assert.equal(stillBlocked.ok, false);
+    assert.equal(stillBlocked.error.code, "RECOVERY_REQUIRED");
+    assert.equal(storage.values.get(LOCAL_STORAGE_KEY), raw);
   });
 });
 
