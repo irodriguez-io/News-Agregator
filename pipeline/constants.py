@@ -24,14 +24,14 @@ CONTENT_TYPES = {
 }
 APPROVED_SOURCE_IDS = {
     "quanta", "science_aaas", "acm_queue", "ieee_spectrum", "ars_features",
-    "cloudflare_blog", "anthropic_engineering", "openai_release_notes",
+    "cloudflare_blog", "anthropic_engineering",
     "paris_review", "public_books", "jstor_daily", "public_domain_review",
     "stronger_by_science", "barbell_medicine", "ietf_oauth", "openid_specs",
-    "w3c_webauthn", "okta_identity_engine", "okta_workflows",
+    "w3c_webauthn", "okta_identity_engine",
     "n8n_release_notes", "entra_releases", "ietf_scim",
 }
-HTML_SOURCE_IDS = {"anthropic_engineering", "barbell_medicine", "okta_workflows"}
-FILTERED_SOURCE_IDS = {"openai_release_notes", "barbell_medicine", "entra_releases"}
+HTML_SOURCE_IDS = {"anthropic_engineering", "barbell_medicine"}
+FILTERED_SOURCE_IDS = {"barbell_medicine", "entra_releases"}
 FORCED_TAGS = {
     "ietf_oauth": ["oauth"],
     "w3c_webauthn": ["passkeys_webauthn"],
@@ -44,7 +44,7 @@ MAX_REDIRECTS = 5
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 RETRY_DELAY_SECONDS = 2
 TRANSIENT_STATUS_CODES = {408, 429, 500, 502, 503, 504}
-SOURCE_CATALOG_SHA256 = "bfde3fe6a7704d7e1b72d28691530f3b901e8acae73b7d3de150cd1c73142a45"
+SOURCE_CATALOG_SHA256 = "3d400fcfebb92d802869b98e069175303f5423004ecbcaa0812bae82f8c6edbe"
 TOPIC_TAXONOMY_SHA256 = "3d09f64ae47eb205361466d3b3f1cb8df1d10f7f077054aa41c8f8fb291d284a"
 TITLE_MAX_CHARS = 500
 AUTHOR_MAX_CHARS = 200
