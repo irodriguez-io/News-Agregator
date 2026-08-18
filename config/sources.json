@@ -120,28 +120,6 @@
       "forcedTags": []
     },
     {
-      "id": "openai_release_notes",
-      "name": "OpenAI Release Notes",
-      "category": "technology",
-      "adapter": "rss",
-      "url": "https://openai.com/products/release-notes/rss.xml",
-      "quality": 46,
-      "contentType": {
-        "id": "official_release_notes",
-        "label": "Official Release Notes",
-        "score": 19
-      },
-      "enabled": true,
-      "minTopicMatches": 1,
-      "admissionTopicIds": [
-        "ai_ml",
-        "software_architecture",
-        "cybersecurity",
-        "devops_sre"
-      ],
-      "forcedTags": []
-    },
-    {
       "id": "paris_review",
       "name": "The Paris Review",
       "category": "literature",
@@ -305,23 +283,6 @@
       "adapter": "rss",
       "url": "https://developer.okta.com/rss/identity-engine.xml",
       "quality": 48,
-      "contentType": {
-        "id": "official_release_notes",
-        "label": "Official Release Notes",
-        "score": 19
-      },
-      "enabled": true,
-      "minTopicMatches": 0,
-      "admissionTopicIds": [],
-      "forcedTags": []
-    },
-    {
-      "id": "okta_workflows",
-      "name": "Okta Workflows",
-      "category": "identity_automation",
-      "adapter": "html_listing",
-      "url": "https://help.okta.com/wf/en-us/Content/Topics/ReleaseNotes/Workflows/production.htm",
-      "quality": 49,
       "contentType": {
         "id": "official_release_notes",
         "label": "Official Release Notes",
