@@ -15,11 +15,11 @@ def test_matching_text_uses_nfkc_casefold_and_punctuation_spaces():
 
 
 def test_whole_token_ai_matches_agents_but_not_substrings(sources, topics):
-    article = make_article(sources["openai_release_notes"], title="AI agents", summary="")
+    article = make_article(sources["cloudflare_blog"], title="AI agents", summary="")
     match_topics(article, topics)
     assert "ai_ml" in article["_organicTopicIds"]
     for title in ("mail systems", "chair design", "said plainly"):
-        article = make_article(sources["openai_release_notes"], title=title, summary="")
+        article = make_article(sources["cloudflare_blog"], title=title, summary="")
         match_topics(article, topics)
         assert "ai_ml" not in article["_organicTopicIds"]
 
@@ -122,16 +122,6 @@ def test_forced_tag_cannot_satisfy_admission(sources, topics):
     match_topics(article, topics)
     apply_forced_tags(article, source, {topic["id"]: topic for topic in topics})
     assert not passes_admission(article, source)
-
-
-def test_openai_admission_passes_technical_and_rejects_product_noise(sources, topics):
-    source = sources["openai_release_notes"]
-    technical = make_article(source, title="AI model architecture update", summary="")
-    unrelated = make_article(source, title="New sidebar colors", summary="Product interface improvements")
-    match_topics(technical, topics)
-    match_topics(unrelated, topics)
-    assert passes_admission(technical, source)
-    assert not passes_admission(unrelated, source)
 
 
 def test_barbell_admission_passes_training_and_rejects_unrelated_medicine(sources, topics):

@@ -11,28 +11,44 @@ from pipeline.configuration import (
     validate_sources,
     validate_topics,
 )
+from pipeline.constants import APPROVED_SOURCE_IDS, FILTERED_SOURCE_IDS, HTML_SOURCE_IDS
+
+
+DEFERRED_SOURCE_IDS = {"openai_release_notes", "okta_workflows"}
 
 
 def test_frozen_configuration_loads_with_exact_counts(configuration):
     sources, topics = configuration
-    assert len(sources) == 22
+    source_ids = {source["id"] for source in sources}
+    assert len(sources) == 20
     assert len(topics) == 72
     assert all(source["enabled"] for source in sources)
+    assert source_ids == APPROVED_SOURCE_IDS
+    assert source_ids.isdisjoint(DEFERRED_SOURCE_IDS)
     assert {source["id"] for source in sources if source["adapter"] == "html_listing"} == {
-        "anthropic_engineering", "barbell_medicine", "okta_workflows"
+        "anthropic_engineering", "barbell_medicine"
     }
 
 
 def test_frozen_filtered_and_forced_sources_are_exact(configuration):
     sources, _ = configuration
     assert {source["id"] for source in sources if source["minTopicMatches"]} == {
-        "openai_release_notes", "barbell_medicine", "entra_releases"
+        "barbell_medicine", "entra_releases"
     }
     assert {source["id"]: source["forcedTags"] for source in sources if source["forcedTags"]} == {
         "ietf_oauth": ["oauth"],
         "w3c_webauthn": ["passkeys_webauthn"],
         "ietf_scim": ["scim"],
     }
+
+
+def test_amendment_5_deferred_sources_are_absent_from_pipeline_boundaries():
+    from pipeline.adapters.html_listing import APPROVED_HTML_SOURCES
+
+    assert APPROVED_SOURCE_IDS.isdisjoint(DEFERRED_SOURCE_IDS)
+    assert HTML_SOURCE_IDS == {"anthropic_engineering", "barbell_medicine"}
+    assert FILTERED_SOURCE_IDS == {"barbell_medicine", "entra_releases"}
+    assert APPROVED_HTML_SOURCES == HTML_SOURCE_IDS
 
 
 def test_default_validation_rejects_catalog_drift(tmp_path, configuration):
