@@ -445,9 +445,9 @@ if all valid entries were intentionally rejected by an admission filter.
 Example:
 
 ```text
-OpenAI feed retrieved successfully
+Microsoft Entra feed retrieved successfully
 8 raw release entries parsed
-0 match approved technical admission topics
+0 match approved identity-automation admission topics
 
 source status = successful
 accepted = 0
