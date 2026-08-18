@@ -819,20 +819,8 @@ Forced tags never count toward admission.
 Per `03-content-sources.md`, V1 applies topic admission filtering to exactly:
 
 ```text
-openai_release_notes
 barbell_medicine
 entra_releases
-```
-
-### OpenAI Release Notes
-
-Require at least one organic match from:
-
-```text
-ai_ml
-software_architecture
-cybersecurity
-devops_sre
 ```
 
 ### Barbell Medicine
@@ -842,6 +830,8 @@ Require at least one organic Weightlifting topic.
 ### Microsoft Entra Releases
 
 Require at least one organic match from the approved identity-automation admission allowlist defined in `03-content-sources.md`.
+
+Under Amendment 5, `openai_release_notes` is deferred to V2 and has no active V1 admission rule.
 
 ---
 

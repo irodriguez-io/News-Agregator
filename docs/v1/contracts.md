@@ -92,8 +92,8 @@ with this top-level structure:
   "schemaVersion": 1,
   "generatedAt": "2026-08-16T23:00:00Z",
   "pipeline": {
-    "enabledSourceCount": 22,
-    "successfulSourceCount": 21,
+    "enabledSourceCount": 20,
+    "successfulSourceCount": 19,
     "failedSourceCount": 1,
     "articleCount": 214
   },

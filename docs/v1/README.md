@@ -124,6 +124,8 @@ Contract Amendment 1 is incorporated:
 
 Approved Amendment 4, **Initial Release Upstream Source Failure Acceptance**, is also incorporated. It permits the initial V1 release to proceed while the specifically investigated upstream conditions for `n8n_release_notes` and `ietf_scim` persist, provided those conditions still match their documented failure modes, normal catastrophic dataset gates pass, and there is no implementation regression. Both sources remain enabled and continue to be reported as failed; this amendment does not make `--validate-sources` pass or accept unrelated or changed failures.
 
+Approved Amendment 5, **OpenAI and Okta Workflows Deferral to V2**, removes `openai_release_notes` and `okta_workflows` from the V1 source catalog after initial-release investigation found that OpenAI retrieval is intermittently blocked by a managed challenge and Okta publishes no usable entry-specific URLs. V1 contains exactly 20 configured sources. Neither deferred source may be fetched, emitted, counted, or treated as an accepted V1 failure. Reintroducing either source requires a future V2 source-catalog amendment with contract-compatible retrieval and canonical Article identity.
+
 ---
 
 ### `03-content-sources.md`
@@ -137,12 +139,11 @@ Defines:
 - source-quality scores;
 - content types;
 - source-specific admission rules;
-- OpenAI technical-content filtering;
 - Anthropic Engineering inclusion;
 - forced tags;
 - source-catalog policies.
 
-V1 contains exactly 22 configured sources unless this specification is formally revised.
+V1 contains exactly 20 configured sources under Amendment 5.
 
 ---
 

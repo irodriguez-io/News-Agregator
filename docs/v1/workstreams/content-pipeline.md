@@ -184,8 +184,10 @@ contracts.md
 Do not invent new source IDs, topics, aliases, or score values.
 10. Source Catalog Requirement
 config/sources.json must contain exactly:
-22 enabled V1 sources
+20 enabled V1 sources
 unless the authoritative source specification is formally amended.
+
+Amendment 5 is that approved amendment: `openai_release_notes` and `okta_workflows` are deferred to V2 and must be absent from V1 configuration and runtime processing.
 The source definitions must reproduce exactly:
 source ID;
 display name;
@@ -232,7 +234,6 @@ Do not use public-web search or third-party RSS-generation services.
 Implement narrow source-specific parsing for exactly the approved V1 HTML-listing sources:
 anthropic_engineering
 barbell_medicine
-okta_workflows
 Do not build a generalized arbitrary-site scraper.
 The implementation may dispatch on source ID inside the HTML adapter or use source-specific helper functions/modules.
 15. Network Safety
@@ -381,7 +382,6 @@ Forced tags contribute:
 to topicSignal.
 29. Admission Filtering
 Implement source-specific admission exactly for:
-openai_release_notes
 barbell_medicine
 entra_releases
 Admission counts distinct organically detected topic IDs.
@@ -486,8 +486,8 @@ A normal generation run is deployable only if:
 retained articleCount >= 20
 and:
 successfulSourceCount >= ceil(enabledSourceCount * 0.50)
-For 22 enabled sources:
->=11 successful
+For 20 enabled sources:
+>=10 successful
 A failing gate must result in non-zero process exit.
 38. Dataset Contract
 Generate:
@@ -632,7 +632,6 @@ IETF OAuth Atom
 IETF SCIM Atom
 Anthropic Engineering HTML
 Barbell Medicine HTML
-Okta Workflows HTML
 Additional feed fixtures are encouraged when parsing behavior materially differs.
 Do not make unit tests depend on live internet.
 49. Test Commands
@@ -696,7 +695,9 @@ report to supervisor.
 Do not edit docs/v1/** from the feature branch.
 56. Completion Gate
 The Content Pipeline workstream is complete only when:
-config/sources.json exists and matches approved 22-source catalog
+config/sources.json exists and matches the Amendment 5 approved 20-source catalog
+
+openai_release_notes and okta_workflows are absent from V1 configuration, adapters, constants, fixtures, validation, and generation
 
 config/topics.json exists and matches approved taxonomy
 

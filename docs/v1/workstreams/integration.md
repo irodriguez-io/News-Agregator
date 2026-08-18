@@ -1153,7 +1153,7 @@ Before final V1 release:
 python -m pipeline.main --validate-sources
 ```
 
-Review all 22 sources.
+Review all 20 Amendment 5 V1 sources and confirm `openai_release_notes` and `okta_workflows` are absent from configuration and runtime processing.
 
 A broken source at initial release must be investigated rather than ignored simply because degraded deployment thresholds would permit it.
 
@@ -1595,7 +1595,7 @@ Dependency audits:
 <results>
 
 Live source validation:
-<22-source summary>
+<20-source summary>
 
 Generated dataset:
 <source success / Article count>

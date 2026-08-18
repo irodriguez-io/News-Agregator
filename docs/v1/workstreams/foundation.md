@@ -338,7 +338,7 @@ third consecutive category in All:
 Exactly:
 
 ```text
-22 configured V1 sources
+20 configured V1 sources under Amendment 5; OpenAI Release Notes and Okta Workflows are deferred to V2
 ```
 
 unless an approved specification amendment changes the count.

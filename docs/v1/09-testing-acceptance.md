@@ -273,7 +273,6 @@ ietf_oauth.atom
 ietf_scim.atom
 anthropic_engineering.html
 barbell_medicine.html
-okta_workflows.html
 ```
 
 Additional fixtures may be added where source behavior materially differs.
@@ -901,13 +900,13 @@ Required cases:
 → article-count gate passes
 ```
 
-For 22 enabled sources:
+For 20 enabled sources:
 
 ```text
-10 successful
+9 successful
 → fails
 
-11 successful
+10 successful
 → passes source-ratio gate
 ```
 
@@ -1600,7 +1599,9 @@ Live checks are separate from deterministic tests. They verify that enabled endp
 
 For initial-release review, Amendment 4 permits the release decision to remain acceptable when live validation reports failures only for `n8n_release_notes` and/or `ietf_scim`, but only after verifying each still-present failure exactly matches its documented upstream condition in `03-content-sources.md` and `07-pipeline-deployment.md`. The command result remains a failure and must be reported truthfully; the release decision is evaluated separately.
 
-Normal catastrophic dataset gates must pass, and the reviewer must find no implementation regression. Any other failed source or materially different failure mode is outside Amendment 4 and requires investigation. The previously observed diagnostic state was 20 of 22 successful sources and 221 retained Articles; it is evidence, not a permanently required count.
+Normal catastrophic dataset gates must pass, and the reviewer must find no implementation regression. Any other failed source or materially different failure mode is outside Amendment 4 and requires investigation.
+
+Amendment 5 requires deterministic configuration and orchestration tests to prove the exact V1 catalog contains 20 enabled sources and excludes both `openai_release_notes` and `okta_workflows`. Live validation and generation must not request, count, fail, or emit either deferred source. Tests must also prove the approved HTML-listing source set contains only `anthropic_engineering` and `barbell_medicine`, and the approved filtered-source set contains only `barbell_medicine` and `entra_releases`.
 
 ---
 
