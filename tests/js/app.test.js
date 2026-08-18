@@ -3,7 +3,12 @@ import test from "node:test";
 
 import { backupFilename, createApplication, destinationFromHash } from "../../js/app.js";
 import { transitionArticle } from "../../js/state/article-state.js";
-import { createDefaultState, exportState, saveState } from "../../js/state/storage.js";
+import {
+  LOCAL_STORAGE_KEY,
+  createDefaultState,
+  exportState,
+  saveState,
+} from "../../js/state/storage.js";
 import { makeArticle, makeDataset, MemoryStorage, TIMES } from "./helpers.js";
 
 function createUiRecorder() {
@@ -144,6 +149,46 @@ test("persistent actions commit only after storage succeeds and only eligible ac
   assert.equal(saved.ok, true);
   assert.equal(app.getSnapshot().state.articles[article.id].status, "saved");
   assert.equal(app.getSnapshot().undoAvailable, false);
+});
+
+test("corrupt startup state stays locked until explicit valid import or Reset", async (t) => {
+  const article = makeArticle();
+  const corruptCases = [
+    ["malformed state recovers through valid replacement import", "{not json", "import_data"],
+    [
+      "unsupported state recovers through Reset",
+      JSON.stringify({ ...createDefaultState(), schemaVersion: 2 }),
+      "reset_data",
+    ],
+  ];
+
+  for (const [name, corruptRaw, recoveryAction] of corruptCases) {
+    await t.test(name, async () => {
+      const storage = new MemoryStorage({ [LOCAL_STORAGE_KEY]: corruptRaw });
+      const { ui } = createUiRecorder();
+      const app = createApplication({
+        storage,
+        ui,
+        locationObject: { hash: "#discover", search: "" },
+        windowObject: createWindowStub(),
+        loadDataset: async () => makeDataset([article]),
+        now: () => TIMES.first,
+      });
+      await app.start();
+
+      assert.equal(app.handleAction({ action: "save", articleId: article.id }).ok, false);
+      assert.equal(app.handleAction({ action: "appearance_change", appearance: "dark" }).ok, false);
+      assert.equal(storage.values.get(LOCAL_STORAGE_KEY), corruptRaw);
+      assert.deepEqual(app.getSnapshot().state, createDefaultState());
+
+      const recovery = recoveryAction === "import_data"
+        ? app.handleAction({ action: recoveryAction, serialized: exportState(createDefaultState()) })
+        : app.handleAction({ action: recoveryAction });
+      assert.equal(recovery.ok, true);
+      assert.equal(app.handleAction({ action: "save", articleId: article.id }).ok, true);
+      assert.equal(app.getSnapshot().state.articles[article.id].status, "saved");
+    });
+  }
 });
 
 test("Open validates the URL, attempts persistence first, and still navigates after persistence failure", async () => {
