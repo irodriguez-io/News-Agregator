@@ -45,8 +45,8 @@ export function makeDataset(articles = [makeArticle()]) {
     schemaVersion: 1,
     generatedAt: "2026-08-17T12:00:00Z",
     pipeline: {
-      enabledSourceCount: 22,
-      successfulSourceCount: 22,
+      enabledSourceCount: 20,
+      successfulSourceCount: 20,
       failedSourceCount: 0,
       articleCount: articles.length,
     },
