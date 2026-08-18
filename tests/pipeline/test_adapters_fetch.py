@@ -191,17 +191,11 @@ def test_autodiscovery_prefers_primary_and_rejects_comment_and_podcast(monkeypat
             "https://www.barbellmedicine.com/articles/articles-training/",
             "Training Volume for Strength",
         ),
-        (
-            "okta_workflows",
-            "okta_workflows.html",
-            "https://help.okta.com/wf/en-us/Content/Topics/ReleaseNotes/Workflows/production.htm",
-            "Okta Workflows 2026.08.1 production release",
-        ),
     ],
 )
 def test_source_specific_html_fixtures(source_id, fixture, page, expected_title):
     entries = parse_html_listing(source_id, (FIXTURES / fixture).read_bytes(), page)
-    assert len(entries) == (2 if source_id == "okta_workflows" else 1)
+    assert len(entries) == 1
     assert entries[0]["title"] == expected_title
     assert entries[0]["url"].startswith("http")
 
@@ -209,6 +203,16 @@ def test_source_specific_html_fixtures(source_id, fixture, page, expected_title)
 def test_html_adapter_rejects_unapproved_source():
     with pytest.raises(ValueError, match="unapproved_html_source"):
         parse_html_listing("arbitrary", b"<html></html>", "https://example.com/")
+
+
+def test_amendment_5_removes_okta_adapter_and_fixture():
+    with pytest.raises(ValueError, match="unapproved_html_source"):
+        parse_html_listing("okta_workflows", b"<main></main>", "https://example.com/")
+    deferred_ids = {"openai_release_notes", "okta_workflows"}
+    assert all(
+        all(source_id not in fixture.name for source_id in deferred_ids)
+        for fixture in FIXTURES.iterdir()
+    )
 
 
 def test_every_enabled_source_has_deterministic_adapter_fixture_coverage(configuration):
@@ -221,4 +225,4 @@ def test_every_enabled_source_has_deterministic_adapter_fixture_coverage(configu
     assert parse_feed((FIXTURES / "ietf_oauth.atom").read_bytes())
     assert parse_feed((FIXTURES / "ietf_scim.atom").read_bytes())
     assert (FIXTURES / "autodiscovery.html").exists()
-    assert html_ids == {"anthropic_engineering", "barbell_medicine", "okta_workflows"}
+    assert html_ids == {"anthropic_engineering", "barbell_medicine"}

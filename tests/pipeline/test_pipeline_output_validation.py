@@ -46,7 +46,7 @@ def _public_valid_article(source, topics, index=0):
     return public_article(article)
 
 
-def _dataset(sources, topics, article_count=20, successful=11):
+def _dataset(sources, topics, article_count=20, successful=10):
     articles = sorted(
         [_public_valid_article(sources[0], topics, index) for index in range(article_count)],
         key=article_order_key,
@@ -55,9 +55,9 @@ def _dataset(sources, topics, article_count=20, successful=11):
         "schemaVersion": 1,
         "generatedAt": "2026-08-16T23:00:00Z",
         "pipeline": {
-            "enabledSourceCount": 22,
+            "enabledSourceCount": 20,
             "successfulSourceCount": successful,
-            "failedSourceCount": 22 - successful,
+            "failedSourceCount": 20 - successful,
             "articleCount": article_count,
         },
         "articles": articles,
@@ -112,7 +112,7 @@ def test_dataset_rejects_duplicate_ids_and_noncanonical_url(configuration):
 
 @pytest.mark.parametrize(
     ("articles", "successful", "passes"),
-    [(19, 11, False), (20, 11, True), (20, 10, False)],
+    [(19, 10, False), (20, 10, True), (20, 9, False)],
 )
 def test_catastrophic_exact_boundaries(configuration, articles, successful, passes):
     sources, topics = configuration
@@ -171,14 +171,14 @@ def test_parsed_but_filtered_to_zero_source_is_successful(monkeypatch, sources, 
         "pipeline.main.fetch_entries",
         lambda source, client: [
             {
-                "title": "New sidebar colors",
-                "url": "https://openai.com/sidebar",
-                "summary": "A generic product interface announcement.",
+                "title": "Managing seasonal allergies",
+                "url": "https://www.barbellmedicine.com/blog/allergies",
+                "summary": "Clinical guidance for seasonal allergies.",
                 "content": [],
             }
         ],
     )
-    source = sources["openai_release_notes"]
+    source = sources["barbell_medicine"]
     record, articles = process_source(
         source, topics, {topic["id"]: topic for topic in topics}, NOW, UnusedClient()
     )
@@ -192,10 +192,11 @@ def test_parsed_but_filtered_to_zero_source_is_successful(monkeypatch, sources, 
 
 def test_normal_generation_uses_all_stages_and_output_override(monkeypatch, tmp_path, configuration, capsys):
     sources, topics = configuration
+    fetched_source_ids = []
 
     def fixture_entry(source, client):
+        fetched_source_ids.append(source["id"])
         title = {
-            "openai_release_notes": "AI software architecture release",
             "barbell_medicine": "Strength training volume",
             "entra_releases": "SCIM provisioning connector release",
         }.get(source["id"], f"Useful release {source['id']}")
@@ -220,11 +221,13 @@ def test_normal_generation_uses_all_stages_and_output_override(monkeypatch, tmp_
         destination=destination,
     )
     assert destination.exists()
+    assert set(fetched_source_ids) == {source["id"] for source in sources}
+    assert {"openai_release_notes", "okta_workflows"}.isdisjoint(fetched_source_ids)
     assert dataset["pipeline"] == {
-        "enabledSourceCount": 22,
-        "successfulSourceCount": 22,
+        "enabledSourceCount": 20,
+        "successfulSourceCount": 20,
         "failedSourceCount": 0,
-        "articleCount": 22,
+        "articleCount": 20,
     }
     output = capsys.readouterr().out
     assert "Pipeline summary" in output
@@ -243,7 +246,7 @@ def test_validate_sources_exit_code_reports_individual_failure(monkeypatch, conf
     assert validate_live_sources(sources, UnusedClient()) == 1
     output = capsys.readouterr().out
     assert "FAIL quanta reason=timeout" in output
-    assert "passed=21 failed=1" in output
+    assert "passed=19 failed=1" in output
 
 
 def test_validate_config_mode_does_not_construct_network_client():
