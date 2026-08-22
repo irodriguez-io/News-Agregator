@@ -5,9 +5,6 @@
     <string name="read_later">Read Later</string>
     <string name="discover">Discover</string>
     <string name="history">History</string>
-    <string name="read_later_placeholder">Read Later</string>
-    <string name="history_placeholder">History</string>
-
     <string name="discover_eyebrow">A finite reading queue</string>
     <string name="discover_description">Choose what deserves your attention. Save what matters, dismiss what does not, and leave when you are done.</string>
     <string name="discover_context">%1$d available in %2$s</string>
@@ -21,4 +18,36 @@
     <string name="mark_read">Mark read</string>
     <string name="opened">Opened</string>
     <string name="opened_acknowledgment">This article is ready for your next decision.</string>
+
+    <string name="read_later_eyebrow">Your deliberate queue</string>
+    <string name="read_later_description">Articles you already decided are worth your time, kept in the order supplied by your local reading state.</string>
+    <string name="discover_something_new">Discover something new</string>
+    <string name="in_queue">In queue</string>
+    <string name="known_reading_time">Known reading time</string>
+    <string name="next_topic">Next topic</string>
+    <string name="read_external">Read ↗</string>
+    <string name="remove">Remove</string>
+    <string name="read_later_empty_title">Your reading queue is open</string>
+    <string name="read_later_empty_copy">Save worthwhile articles from Discover to build your reading queue.</string>
+    <string name="return_to_discover">Return to Discover</string>
+
+    <string name="history_eyebrow">Completed reading</string>
+    <string name="history_description">A chronological record of articles you explicitly marked read—not merely opened.</string>
+    <string name="return_to_read_later">Return to Read Later</string>
+    <string name="articles_read">Articles read</string>
+    <string name="latest_topic">Latest topic</string>
+    <string name="read_date_unavailable">Read date unavailable</string>
+    <string name="reopen_external">Reopen ↗</string>
+    <string name="mark_unread">Mark unread</string>
+    <string name="history_empty_title">No reading history yet</string>
+    <string name="history_empty_copy">Articles appear here after you explicitly mark them read. There is no target to keep up with.</string>
+    <string name="go_to_discover">Go to Discover</string>
+
+    <string name="settings_eyebrow">Local preferences</string>
+    <string name="close_settings">Close Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_copy">System follows your device or browser color preference.</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="appearance_system">System</string>
 </resources>

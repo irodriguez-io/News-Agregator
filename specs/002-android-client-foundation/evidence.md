@@ -26,6 +26,9 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 | `80a6d9d2eb66809204e127bee06cb381cc2ee016` | `test(android): cover destination and appearance state` |
 | `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | `fix(android): drop the unsupported regex flag from title validation` |
 | this commit | `feat(android): add Compose shell and Discover screen` |
+| `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` | `feat(android): expose localized read time and topic labels` |
+| `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` | `test(android): cover Read Later History and settings state` |
+| this commit | `feat(android): add Read Later History and settings surfaces` |
 
 ## Snapshot profile
 
@@ -116,6 +119,23 @@ the same string repeatedly. Absence remains `null`, which `RelativeTime` renders
 `targetSdk = 36` and `minSdk = 26` remain unchanged. `./gradlew :app:assembleDebug` passed with the
 pinned stack, resolving the slice 1 carry-forward observation without adding a dependency.
 
+### Authorized slice 2 contract extension for 3b
+
+Slice 3b exposed two omissions in the slice 2 brief, both verified against the browser and authorized
+in the 3b follow-up before protected files changed:
+
+- `RelativeTime.localDateTime` now formats an already-validated `Instant?` with injected zone and locale,
+  and `HistoryRowUiState` carries the result. Null renders `""`; malformed text cannot reach this layer
+  because `DatasetValidator` has already rejected or parsed it at the boundary.
+- `AggregateUiState` retains `firstTagId` and now carries `firstTagLabel`, resolved from the same ordered
+  record list by matching the selected ID to the first authored tag label.
+
+The targeted pre-implementation run was compile-time RED with **0 tests executed** and five unresolved
+contract references. Commit `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` made the forced full suite
+**56 tests / 56 pass / 0 fail / 0 skipped**. The extension added three tests: localized date-time plus
+null input, null topic ID/label for untagged records, and label/date-time assertions in mapper cases.
+No other protected-layer file changed.
+
 ## Slice 3 — theme, navigation shell, three screens
 
 **Split taken:** 3a + 3b — slice 3a is complete here; the exact slice 3b remainder is recorded below.
@@ -200,20 +220,77 @@ a title containing non-ASCII letters.
 Slice 4's instrumented smoke must launch `MainActivity` and assert visible Discover content, not merely
 install the APK, so any future class-initialization/startup crash fails that gate.
 
-### Exact slice 3b remainder
+### Slice 3b completion
 
-Slice 3b still owns all three deferred bodies and no 3a file should pre-empt them:
+- [x] Read Later renders its exact editorial header and empty copy, a non-empty-only three-value band,
+      zero-padded queue positions, saved age, source-first kicker, title, up to three tags, and Read ↗ /
+      Mark read / Remove in order
+- [x] History renders its exact editorial header and empty copy, a non-empty-only three-value band,
+      mapper-ordered Today / Yesterday / Earlier groups with counts and empty groups omitted, localized
+      date/time fallback, category-first kicker, title, and Reopen ↗ / Mark unread
+- [x] absent/zero stat values render `Unavailable`; positive known time renders `~{n} min`
+- [x] shared editorial header, stat band, row shell, compact text action, and empty panel live under
+      `ui/components/`; reading-list rows use rules rather than raised card shadows
+- [x] row action descriptions name the article; compact actions are at least 44dp; external actions retain
+      the visible ↗ affordance
+- [x] Remove and Mark unread reach `ArticleStateMachine` only through `AppViewModel.onArticleAction`
+- [x] Settings is a `ModalBottomSheet` with only Light / Dark / System, the approved token backdrop, a
+      visible close control, and both Back and Escape dismissal before destination handling
+- [x] Export, Import, and Reset are deliberately absent because item 002 has no persisted data
+- [x] adaptive launcher foreground/background/monochrome resources use the authored accent and surface;
+      manifest declares icon and round icon while retaining both permission-removal entries
+- [x] no swipe, Undo, toast, new dependency, persistence, product logic in composables, or adjacent-runtime
+      change was introduced
 
-- render the modal Settings sheet from the existing `settingsOpen` and `appearance` state, with Light /
-  Dark / System controls and the approved 42% backdrop
-- replace the Read Later placeholder with its editorial header, stat band, empty state, and article rows,
-  using the already-computed `AppUiState.readLater` projection and its available actions
-- replace the History placeholder with its editorial header, stat band, grouped Today / Yesterday /
-  Earlier sections, article rows, and available actions, using the already-computed history projection
+#### Slice 3b RED → GREEN
 
-Slice 2 exposed every content value 3a needed; no screen-side product computation or contract change was
-required. The 3a brief's functional requirements held. The only incorrect environment assumption was
-outside the brief's new code: host-JVM validator success did not imply Android regex-flag compatibility.
+Commit `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` is a genuine compile-time RED: **0 tests
+executed**, with eleven unresolved references for queue-position, stat-value, and group-count presentation
+contracts. The ViewModel row-action tests in that commit compiled against the existing state-machine
+boundary; no production failure was manufactured. The completed implementation runs **62 tests / 62
+pass / 0 fail / 0 skipped**: 10 `AppViewModelTest`, 4 reading-surface formatting, 15 mapper, 10 relative
+time, 2 theme derivation, and 21 inherited data/domain tests.
+
+#### Slice 3b API 37 emulator walkthrough
+
+Observed on the `Pixel_10` AVD (Android API 37), installed from the built debug APK and started from a
+cleared app state:
+
+- cold launch resumed `MainActivity` without a crash and rendered Discover at `166 available in All`;
+  the crash log stayed empty
+- Read Later and History both rendered their exact empty-state title, copy, and navigation action before
+  any interaction
+- Settings remained a top-bar modal rather than a fourth destination; its hierarchy contained only the
+  appearance section and Light / Dark / System options, with no Export, Import, or Reset controls
+- Light and Dark selection changed both the app and sheet palettes and updated the selected radio state;
+  system Back and `KEYCODE_ESCAPE` each dismissed the sheet while leaving History selected
+- saving `Transaction Tokens` advanced Discover to 165, raised the Read Later badge to 1, and placed it at
+  `Queue 01` with `Saved Now`, source-first metadata, `Unavailable` known time, OAuth topic, and the three
+  row actions in order
+- two later saves proved ordering rather than mere membership: `Building a Quantum Computer, One Fragile
+  Qubit at a Time` was `Queue 01` and the earlier `Genomes of Poaceae relatives…` was `Queue 02`; the
+  badge and overview count both showed 2
+- Mark read emptied Read Later, raised History to 1, and rendered `Transaction Tokens` under Today with
+  `1 article`, a localized `Aug 22, 2026, 10:57 AM` position, category-first metadata, and both actions
+- Reopen handed the URL to Chrome's `IntentDispatcher`; returning left the record in History, and no
+  missing-browser path was available to observe
+- Mark unread emptied History and restored the same article to `Queue 01` with a Read Later count of 1;
+  Remove then reached the exact empty Read Later state and returned both counts to zero
+- `aapt2 dump permissions` emitted only the package line, confirming zero APK permissions after the icon
+  and modal additions; the Pixel launcher app drawer rendered the authored navy-and-paper adaptive book
+  icon instead of the prior system default
+
+The committed snapshot's maximum tag count is two, so the three-tag cap cannot be stress-tested with
+real bundled data; both call sites enforce `take(3)`. Fresh in-memory interactions can produce only Today,
+so Yesterday/Earlier rendering and empty-group omission remain covered by `UiStateMapperTest` rather than
+claimed as manually observed. A null read timestamp and a positive known-time aggregate were likewise not
+reachable through valid fresh state in this walkthrough. Loading/error and a missing browser remain the
+same unobservable device paths recorded for 3a.
+
+The emulator exposed and the implementation fixed one 3b-specific defect before acceptance: the first
+Escape handler was attached to an unfocused sheet modifier, so `KEYCODE_ESCAPE` did not dismiss. The
+modal content now owns initial focus and handles Escape at its preview boundary; the repeated walkthrough
+confirmed dismissal without the destination handler firing.
 
 ## Slice 4 — CI and instrumented smoke test
 
@@ -237,6 +314,8 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | 2 | `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | compile-time RED; 0 executed because the slice 2 production types and the `publishedAt: Instant?` boundary were absent | `feat(android): add article status state machine and screen state` (this commit) | 41 tests / 41 pass / 0 fail (35 slice 2 + 6 inherited) |
 | 3a | `80a6d9d2eb66809204e127bee06cb381cc2ee016` | compile-time RED; 0 executed because the ViewModel, destination/appearance state, and theme APIs were absent | `feat(android): add Compose shell and Discover screen` (this commit) | 53 tests / 53 pass / 0 fail / 0 skipped |
 | 3a validator repair | regression added over `80a6d9d2eb66809204e127bee06cb381cc2ee016` | 7 tests / 6 pass / 1 fail | `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | 7 tests / 7 pass / 0 fail |
+| 3b slice 2 extension | targeted pre-commit RED | compile-time RED; 0 executed, 5 unresolved contract references | `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` | 56 tests / 56 pass / 0 fail / 0 skipped |
+| 3b | `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` | compile-time RED; 0 executed, 11 unresolved presentation references | `feat(android): add Read Later History and settings surfaces` (this commit) | 62 tests / 62 pass / 0 fail / 0 skipped |
 | 4 | | | | |
 
 ## Scenario traceability
@@ -252,7 +331,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | an opened article is acknowledged and held | 06-ui-ux.md §51 | `ArticleStateMachineTest.open from unseen creates an opened record with write-once metadata`; `UiStateMapperTest.an eligible held article remains presented and visibly acknowledged when opened` |
 | marking read reaches History under Today | 05-personalization-state.md §27 | `ArticleStateMachineTest.mark read sets readAt clears queue timestamps and preserves openedAt`; `UiStateMapperTest.marking read removes Discover head and groups it under Today without undo state` |
 | a contract-violating dataset claims nothing | contracts.md §ArticleDataset | `DatasetValidatorTest` rejection table and failure-code cases |
-| three destinations and a modal settings surface | 06-ui-ux.md §18 | `AppViewModelTest.destination switching preserves the fixed declaration order`; `AppViewModelTest.settings entry point toggles open and closed`; modal rendering deferred to 3b |
+| three destinations and a modal settings surface | 06-ui-ux.md §18 | `AppViewModelTest.destination switching preserves the fixed declaration order`; `AppViewModelTest.settings entry point toggles open and closed`; `AppViewModelTest.appearance changes between the three frozen values`; API 37 modal walkthrough |
 
 ## Test infrastructure added
 
