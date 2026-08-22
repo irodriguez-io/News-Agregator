@@ -25,7 +25,7 @@ Scenario names refer to `spec.md` §4.
   - no new persisted state; `state.session` unchanged;
   - `npm test` green, with the four regression tests in `design.md` §Regression boundary untouched
     and passing.
-- **Status:** pending
+- **Status:** done (gate: PASS, slice review)
 
 ## Slice 2: opened acknowledgment and `Mark read` control on the card
 
