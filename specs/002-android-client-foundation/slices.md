@@ -193,7 +193,7 @@ Discover) and **3b** (Read Later, History, Settings) — pre-authorized, no re-a
     a CI gate and the omission is stated in `evidence.md`;
   - the workflow is **not** registered as a required status check, because a path-filtered required check
     never reports on pull requests that do not touch `android/**`.
-- **Status:** not started
+- **Status:** done (gate: PASS, slice review)
 
 ## Gates
 
