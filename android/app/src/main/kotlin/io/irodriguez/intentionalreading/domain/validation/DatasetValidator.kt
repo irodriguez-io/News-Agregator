@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets
 import java.time.DateTimeException
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.regex.Pattern
 import kotlinx.serialization.decodeFromString
 
 class DatasetValidator {
@@ -92,7 +91,7 @@ class DatasetValidator {
     private fun validateArticle(dto: ArticleDto, path: String): Article {
         expectPattern(dto.id, ARTICLE_ID_PATTERN, "$path.id")
         expectLength(dto.title, minimum = 1, maximum = 500, path = "$path.title")
-        if (!READABLE_TEXT_PATTERN.matcher(dto.title).find()) {
+        if (!READABLE_TEXT_PATTERN.containsMatchIn(dto.title)) {
             invalid("$path.title", "must contain readable text")
         }
         if (!isSafeHttpUrl(dto.url)) {
@@ -235,9 +234,6 @@ class DatasetValidator {
         val UTC_TIMESTAMP_PATTERN = Regex(
             "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{1,3}))?Z$",
         )
-        val READABLE_TEXT_PATTERN: Pattern = Pattern.compile(
-            "[^\\s\\p{P}\\p{S}]",
-            Pattern.UNICODE_CHARACTER_CLASS,
-        )
+        val READABLE_TEXT_PATTERN = Regex("[^\\p{Z}\\p{C}\\p{P}\\p{S}]")
     }
 }
