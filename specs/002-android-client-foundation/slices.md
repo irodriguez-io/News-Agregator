@@ -71,13 +71,13 @@ before dispatching slice 1, and record its checksum in `evidence.md`.
     source count, and the null/empty counts per nullable field — because `spec.md` §5 drives the manual
     walkthrough from it rather than from hard-coded numbers;
   - `./gradlew :app:testDebugUnitTest` green.
-- **Note:** this slice settles whether `org.jetbrains.kotlin.plugin.serialization` applies cleanly under
+- **Note:** this slice settled whether `org.jetbrains.kotlin.plugin.serialization` applies cleanly under
   AGP 9's built-in Kotlin. If it does not, the fallbacks in order are (a) `android.builtInKotlin=false`
   plus the `org.jetbrains.kotlin.android` plugin, recorded in `evidence.md` as dated debt because the
   flag is removed in AGP 10, or (b) drop the plugin and read fields explicitly from
   `Json.parseToJsonElement` inside `DatasetValidator`, which changes no behavior. Report which path was
   taken.
-- **Status:** not started
+- **Status:** done (gate: PASS, slice review)
 
 ## Slice 2: article status state machine and screen-state derivation
 
