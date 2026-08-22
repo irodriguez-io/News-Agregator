@@ -167,7 +167,7 @@ Discover) and **3b** (Read Later, History, Settings) — pre-authorized, no re-a
     load success and failure mapping to the right phase;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green, plus a manual install walking the
     scenarios in `spec.md` §5.
-- **Status:** 3a done (gate: PASS, slice review); 3b not started
+- **Status:** done as 3a + 3b (gate: PASS, slice review on each)
 
 ## Slice 4: continuous integration and one instrumented smoke test
 
