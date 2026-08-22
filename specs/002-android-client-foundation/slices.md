@@ -10,7 +10,13 @@ below.
 
 Fixed for every slice — do not re-decide these mid-implementation:
 
-- compileSdk 36, targetSdk 36, minSdk 26, JDK 17 source/target.
+- compileSdk **37**, targetSdk 36, minSdk 26, JDK 17 source/target. compileSdk was 36 until the
+  slice 1 review: the AndroidX stack pinned for this item requires 37, and the original reason for
+  choosing 36 — that `platforms/android-37` was not installed and there are no `cmdline-tools` — was
+  wrong. AGP installs the platform itself against the already-accepted licence. Verified: platform
+  37.0 auto-installs, `checkDebugAarMetadata` passes with Compose 1.12.0 / Core 1.19.0 /
+  Activity 1.13.0 / Lifecycle 2.11.0, and the debug APK builds. targetSdk stays 36 — inheriting
+  Android 17 behaviour changes is its own slice, not a side effect of this one.
 - AGP 9 removed `kotlinOptions {}` (use `kotlin { compilerOptions { } }`), defaults `buildConfig` and
   `resValues` to `false`, and now defaults `targetSdk` to `compileSdk` — so set `targetSdk` explicitly.
 - Nothing under `«pkg»/domain/` may import `android.*` or `androidx.*`.
