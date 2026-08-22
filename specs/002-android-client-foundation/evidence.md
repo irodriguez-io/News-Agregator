@@ -18,7 +18,7 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 |---|---|
 | `409137a9201b23e15cb5521538a5a799592b7306` | `chore(android): scaffold Gradle project` |
 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | `test(android): cover ArticleDataset v1 parsing and validation` |
-| this slice's implementation commit | `feat(android): add ArticleDataset model and validator` |
+| `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | `feat(android): add ArticleDataset model and validator` |
 
 ## Snapshot profile
 
@@ -128,7 +128,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 
 | Slice | Red commit | Red counts | Green commit | Green counts |
 |---|---|---|---|---|
-| 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | this slice's implementation commit | 6 tests / 6 pass / 0 fail |
+| 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | 6 tests / 6 pass / 0 fail |
 | 2 | | | | |
 | 3 | | | | |
 | 4 | | | | |
@@ -162,6 +162,48 @@ validator rejects malformed UTF-8 before JSON decoding.
 - [x] no change under `pipeline/**`, `config/**`, `js/**`, `css/**`, `index.html`
 
 ## Reviewer observations (not findings)
+
+Slice 1 gate: **PASS** (reviewer: Claude, non-author; implementer: Codex). Verified independently of the
+implementer's report — commit range `947cacc..c8bfdf8`, a forced clean `--rerun-tasks` test run read from
+the JUnit XML, and the diff read in full.
+
+Confirmed by the reviewer rather than taken on trust:
+
+- 6 test functions, 6 pass, 0 fail on a forced re-run; the low count is table-driven counting, not thin
+  coverage. `a contract violating dataset claims nothing` holds 21 rejection cases, with unsupported
+  schema version and missing-versus-null author as two further tests — 23 rejections against the 22 the
+  slice plan named.
+- The committed asset is byte-identical to the bytes profiled at design time — SHA-256
+  `235e4df6…`, matching `android/README.md`. Every number in the snapshot profile above was
+  re-measured and matched.
+- `approvedSourceIds` is exactly the 20 IDs in `config/sources.json`, and `approvedTopicIds` is exactly
+  the 72 IDs in `config/topics.json` — no drift, nothing invented.
+- The 200-character limits on `source.name`, `author`, `tag.label`, and `contentType.label` are faithful
+  ports of `js/data/validation.js:134,141,157,165`, not invented bounds.
+- Zero `uses-permission` entries in both the source and merged debug manifests. No file under `domain/`
+  imports `android.*` or `androidx.*`. Nothing outside `android/` and this file was touched.
+- The failing-first commit `334ba32` precedes the implementation commit `c8bfdf8`, and no test was
+  weakened or deleted. `npm test` remains 105/105.
+- UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
+  the right call given 25 non-ASCII titles in the snapshot.
+
+Observations carried forward, none of which block this slice:
+
+1. **`Article.publishedAt` is a validated `String?`, not a temporal type.** Nothing in `spec.md` or
+   `design.md` required parsing, and canonical ordering over a fixed-format UTC string is correct. But
+   slice 2 introduces relative-age rendering and day bucketing, so decide there whether to parse once in
+   the validator or per projection — not per recomposition.
+2. **`DatasetRepository.load()` is synchronous.** Harmless today because `AppContainer` only constructs
+   it and nothing calls it, but slice 3 wires it to a ViewModel: make it `suspend` on an IO dispatcher at
+   that point rather than reading 170 KB on the main thread.
+3. **`DatasetValidator` lives under `domain/validation/` but imports `data.DatasetJson` and `data.dto`.**
+   The stated rule — no `android.*`/`androidx.*` under `domain/` — holds, and the JVM-testability
+   guarantee holds with it. Worth revisiting only if the module is ever split.
+4. **Deferred build settings.** No launcher icon (`android:icon` is absent, so the app shows the system
+   default), `.idea/` missing from `android/.gitignore`, `isMinifyEnabled = false` for release, and the
+   Compose compiler plugin not yet in the catalog. All belong to slice 3 or 4; none contradict slice 1.
+5. **The AGP deprecation warning** on `sourceSets.getByName("test").resources.srcDir("src/main/assets")`
+   is accepted for now — the mechanism is what keeps the suite emulator-free. Revisit if AGP 10 removes it.
 
 ## Outstanding
 
