@@ -8,8 +8,6 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,7 +21,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -34,6 +31,9 @@ import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.ui.components.BottomNavigationBar
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverScreen
+import io.irodriguez.intentionalreading.ui.screens.history.HistoryScreen
+import io.irodriguez.intentionalreading.ui.screens.readlater.ReadLaterScreen
+import io.irodriguez.intentionalreading.ui.screens.settings.SettingsSheet
 import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingTheme
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
@@ -52,9 +52,6 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
         val tokens = LocalIntentionalReadingTokens.current
         BackHandler(enabled = !settingsOpen && destination != Destination.DISCOVER) {
             viewModel.selectDestination(Destination.DISCOVER)
-        }
-        BackHandler(enabled = settingsOpen) {
-            viewModel.closeSettings()
         }
 
         Scaffold(
@@ -97,10 +94,17 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
             },
         ) { innerPadding ->
             when (destination) {
-                Destination.READ_LATER -> DestinationPlaceholder(
-                    label = stringResource(R.string.read_later_placeholder),
+                Destination.READ_LATER -> ReadLaterScreen(
+                    state = uiState.readLater,
+                    onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
+                    onReadArticle = { article ->
+                        viewModel.onArticleAction(article, ArticleAction.OPEN)
+                        openPublisher(context, article.url)
+                    },
+                    onMarkRead = { article -> viewModel.onArticleAction(article, ArticleAction.MARK_READ) },
+                    onRemove = { article -> viewModel.onArticleAction(article, ArticleAction.REMOVE) },
                     modifier = Modifier.padding(innerPadding),
-                ) // slice 3b
+                )
                 Destination.DISCOVER -> DiscoverScreen(
                     state = uiState.discover,
                     degraded = uiState.degraded,
@@ -117,28 +121,29 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     onMarkRead = { article -> viewModel.onArticleAction(article, ArticleAction.MARK_READ) },
                     modifier = Modifier.padding(innerPadding),
                 )
-                Destination.HISTORY -> DestinationPlaceholder(
-                    label = stringResource(R.string.history_placeholder),
+                Destination.HISTORY -> HistoryScreen(
+                    state = uiState.history,
+                    onReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
+                    onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
+                    onReopen = { article ->
+                        viewModel.onArticleAction(article, ArticleAction.OPEN)
+                        openPublisher(context, article.url)
+                    },
+                    onMarkUnread = { article ->
+                        viewModel.onArticleAction(article, ArticleAction.MARK_UNREAD)
+                    },
                     modifier = Modifier.padding(innerPadding),
-                ) // slice 3b
+                )
             }
         }
 
-        // slice 3b renders the modal Settings surface when settingsOpen is true.
-    }
-}
-
-@Composable
-private fun DestinationPlaceholder(label: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = LocalIntentionalReadingTokens.current.muted,
-        )
+        if (settingsOpen) {
+            SettingsSheet(
+                appearance = appearance,
+                onAppearanceSelected = viewModel::setAppearance,
+                onDismiss = viewModel::closeSettings,
+            )
+        }
     }
 }
 
