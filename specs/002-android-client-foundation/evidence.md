@@ -294,6 +294,65 @@ Confirmed by the reviewer rather than taken on trust:
 - UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
   the right call given 25 non-ASCII titles in the snapshot.
 
+### Slice 3a gate: PASS
+
+Reviewer: Claude, non-author. Verified independently — commit range `6232036..5d6596e`, a forced
+`--rerun-tasks` run read from the JUnit XML (**53 tests, 53 pass, 0 skipped**), and the diff read in full.
+
+**The significant event of this slice was an escaped slice 1 defect.** `DatasetValidator` compiled its
+title-readability pattern with `Pattern.UNICODE_CHARACTER_CLASS` in a companion object. Android's regex
+engine rejects that flag, so the app threw `IllegalArgumentException` at first touch of the class — app
+startup. Every JVM unit test passed throughout, because the host JVM supports the flag.
+
+Three things about how it was found are worth recording, because they change how later slices should be
+briefed:
+
+1. **The orchestrator's brief was wrong.** It stated no emulator was available. A `Pixel_10` AVD and an
+   `android-37.0` system image are both installed. The implementer booted one anyway, which is the only
+   reason this surfaced before owner acceptance.
+2. **The slice 1 review missed it.** The reviewer read that exact line and verified the *rule* was a
+   faithful port of `js/data/validation.js:127`, without asking whether the *mechanism* exists on the
+   target platform. Porting a rule and porting a working implementation are different checks.
+3. **The implementer stopped instead of patching.** `domain/**` was forbidden to slice 3a, so it reported
+   the defect and waited for authorization rather than making a silent cross-boundary edit. That is the
+   forbidden-path rule working exactly as intended.
+
+The authorized repair (`df6192f`, deliberately its own commit because it fixes slice 1, not slice 3a)
+replaces the flag with a flag-free Unicode class, `[^\p{Z}\p{C}\p{P}\p{S}]` — separators, control and
+format characters, punctuation, symbols — which preserves the JavaScript rule's intent without depending
+on any flag, and agrees with `pipeline/validation.py:54-59`.
+
+**Guard against the class of defect, not the instance:** a test asserts the pattern carries no regex
+options at all, since no JVM test can reproduce an Android-only limitation. Two further tests prove
+Unicode whitespace and punctuation are still unreadable and that a non-ASCII *letter* title is accepted —
+load-bearing, given 25 non-ASCII titles in the snapshot. Slice 4's definition of done has been tightened
+to require the instrumented smoke test to fail on a startup crash.
+
+Also confirmed by the reviewer:
+
+- The twelve theme values per theme are **derived**, not pasted: `mixOklch` interpolates in OKLCH with
+  correct shortest-arc hue handling, and `ThemeDerivationTest` asserts all 24 against the table in
+  `design.md` §Six authored colour tokens. That table was computed independently by the orchestrator, so
+  two separate implementations agree — including the 42%-alpha backdrop as `#6B…`.
+- **Accent discipline holds** (`DESIGN.md:36-40`): navigation selection uses `tokens.fg` for icon, label,
+  and indicator, and accent appears in exactly two places — the content-type badge and the primary
+  `Read article` action.
+- **Zero permissions survived adding AndroidX.** The manifest strips both the `<permission>` and the
+  `<uses-permission>` that AndroidX injects for `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Verified three
+  ways: source manifest, merged manifest, and `aapt2 dump permissions` on the built APK.
+- Slice 1 observation 2 is **resolved**: `DatasetRepository.load()` is now `suspend` with an injected
+  dispatcher defaulting to `Dispatchers.IO`.
+- No `Instant.now()`, `ZoneId.systemDefault()`, or `LocalDate.now()` appears inside any composable; the
+  zone is an injectable provider on the ViewModel. No dynamic colour anywhere.
+- Only the authorized `DatasetValidator` files changed in the protected layers; `domain/` otherwise
+  untouched, `ui/state/**` and `ui/format/**` untouched. `npm test` still 105/105.
+
+The implementer also found and fixed a second real defect on the emulator: a new Discover card inherited
+the previous card's scroll offset. Not in any scenario, and a genuine bug.
+
+Outstanding for 3b and beyond: the app still declares no `android:icon`, so the launcher shows the system
+default. Cosmetic, but it should not reach owner acceptance that way.
+
 ### Slice 2 gate: PASS
 
 Reviewer: Claude, non-author. Verified independently — commit range `eb243b7..70ecc98`, a forced

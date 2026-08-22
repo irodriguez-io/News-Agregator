@@ -167,7 +167,7 @@ Discover) and **3b** (Read Later, History, Settings) — pre-authorized, no re-a
     load success and failure mapping to the right phase;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green, plus a manual install walking the
     scenarios in `spec.md` §5.
-- **Status:** not started
+- **Status:** 3a done (gate: PASS, slice review); 3b not started
 
 ## Slice 4: continuous integration and one instrumented smoke test
 
@@ -186,8 +186,11 @@ Discover) and **3b** (Read Later, History, Settings) — pre-authorized, no re-a
   - `gradle/actions/setup-gradle` performs wrapper-JAR validation, this being the repository's first
     committed binary;
   - `permissions: contents: read` and no secrets are used;
-  - one instrumented smoke test asserts the three destination labels render and that selecting one
-    changes the presented screen; it is **not** a CI gate and the omission is stated in `evidence.md`;
+  - one instrumented smoke test **launches the app and fails on a startup crash**, then asserts the three
+    destination labels render and that selecting one changes the presented screen. The launch assertion is
+    not optional: slice 3a found an Android-only regex defect that every JVM test passed through, and a
+    smoke test that only inspects labels after a successful launch would have missed it too. It is **not**
+    a CI gate and the omission is stated in `evidence.md`;
   - the workflow is **not** registered as a required status check, because a path-filtered required check
     never reports on pull requests that do not touch `android/**`.
 - **Status:** not started
