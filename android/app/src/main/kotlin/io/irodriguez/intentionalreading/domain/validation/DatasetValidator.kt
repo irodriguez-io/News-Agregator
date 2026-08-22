@@ -17,6 +17,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.time.DateTimeException
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.regex.Pattern
 import kotlinx.serialization.decodeFromString
@@ -102,7 +103,7 @@ class DatasetValidator {
         expectLength(dto.source.name, minimum = 1, maximum = 200, path = "$path.source.name")
         val category = Category.fromId(dto.category)
             ?: invalid("$path.category", "is invalid")
-        dto.publishedAt?.let { expectTimestamp(it, "$path.publishedAt") }
+        val publishedAt = dto.publishedAt?.let { parseTimestamp(it, "$path.publishedAt") }
         dto.author?.let { expectLength(it, minimum = 1, maximum = 200, path = "$path.author") }
         expectLength(dto.excerpt, minimum = 0, maximum = 800, path = "$path.excerpt")
         dto.readingTimeMinutes?.let {
@@ -143,7 +144,7 @@ class DatasetValidator {
             url = dto.url,
             source = ArticleSource(id = dto.source.id, name = dto.source.name),
             category = category,
-            publishedAt = dto.publishedAt,
+            publishedAt = publishedAt,
             author = dto.author,
             excerpt = dto.excerpt,
             readingTimeMinutes = dto.readingTimeMinutes,
@@ -167,6 +168,10 @@ class DatasetValidator {
         .toString()
 
     private fun expectTimestamp(value: String, path: String) {
+        parseTimestamp(value, path)
+    }
+
+    private fun parseTimestamp(value: String, path: String): Instant {
         val match = UTC_TIMESTAMP_PATTERN.matchEntire(value)
             ?: invalid(path, "must be a UTC ISO-8601 timestamp")
         try {
@@ -181,6 +186,7 @@ class DatasetValidator {
         } catch (failure: DateTimeException) {
             invalid(path, "must be a real UTC calendar timestamp")
         }
+        return Instant.parse(value)
     }
 
     private fun expectPattern(value: String, pattern: Regex, path: String) {
