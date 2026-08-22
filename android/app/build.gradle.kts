@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "io.irodriguez.intentionalreading"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.irodriguez.intentionalreading"
