@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class DatasetValidatorTest {
     private val validator = DatasetValidator()
@@ -138,6 +139,29 @@ class DatasetValidatorTest {
             DatasetErrorCode.MALFORMED_DATASET,
             assertIs<DatasetResult.Failure>(result).code,
         )
+    }
+
+    @Test
+    fun `readable title regex has no options because Android rejects the Unicode character class flag`() {
+        val field = DatasetValidator::class.java.getDeclaredField("READABLE_TEXT_PATTERN")
+        field.isAccessible = true
+
+        // Android's java.util.regex.Pattern rejects UNICODE_CHARACTER_CLASS during class initialization.
+        val pattern = assertIs<Regex>(field.get(null))
+        assertTrue(pattern.options.isEmpty())
+    }
+
+    @Test
+    fun `Unicode separators and punctuation stay unreadable while non ASCII letters are accepted`() {
+        val unreadable = validDocument.withArticle { article ->
+            article.with("title", JsonPrimitive("\u00A0\u2003\u202F—。"))
+        }
+        assertIs<DatasetResult.Failure>(validator.validate(unreadable.bytes()))
+
+        val readable = validDocument.withArticle { article ->
+            article.with("title", JsonPrimitive("Identité numérique — São Paulo"))
+        }
+        assertIs<DatasetResult.Success>(validator.validate(readable.bytes()))
     }
 
     private data class InvalidCase(
