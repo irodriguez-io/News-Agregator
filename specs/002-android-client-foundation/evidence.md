@@ -296,17 +296,64 @@ confirmed dismissal without the destination handler firing.
 
 **Definition of done**
 
-- [ ] workflow path-filtered to `android/**` and its own file
-- [ ] runs unit tests and `assembleDebug` on JDK 17 with `working-directory: android`
-- [ ] wrapper-JAR validation enabled
-- [ ] every action pinned by full SHA with a `# vX` comment
-- [ ] `permissions: contents: read`, no secrets
-- [ ] instrumented smoke test present, and its exclusion from CI stated
-- [ ] not registered as a required status check
+- [x] workflow path-filtered to `android/**` and its own file
+- [x] runs unit tests and `assembleDebug` on JDK 17 with `working-directory: android`
+- [x] wrapper-JAR validation enabled
+- [x] every action pinned by full SHA with a `# vX` comment
+- [x] `permissions: contents: read`, no secrets
+- [x] instrumented smoke test present, and its exclusion from CI stated
+- [x] not registered as a required status check
+
+`.github/workflows/android.yml` has only `pull_request` and `push` to `main`, and both triggers carry the
+same two path filters: `android/**` and `.github/workflows/android.yml`. Its one `ubuntu-latest` job uses
+JDK 17 Temurin, `defaults.run.working-directory: android`, the basic GitHub Actions-backed Gradle cache,
+explicit wrapper validation, and exactly
+`./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug`. It has repository-content read
+permission and no secret input.
+
+The action pins were resolved from each official GitHub repository on 2026-08-22 with both
+`git ls-remote` and GitHub's Git refs API:
+
+- `actions/checkout` tag `v7.0.1` is a lightweight tag directly at commit
+  `3d3c42e5aac5ba805825da76410c181273ba90b1`;
+- `actions/setup-java` tag `v5.7.0` is a lightweight tag directly at commit
+  `b6effb05e454b25005698d916606bdc6ffcbf961`;
+- `gradle/actions` tag `v6.3.0` is an annotated tag object
+  `67621b124fd2e251c5e8a0e6e3b91318f2287669`; dereferencing it with `refs/tags/v6.3.0^{}` and then
+  resolving the tag object through the API both produce commit
+  `9c971963bec38e04b3d30dcc455b5382be2fdbfb`, which is the SHA pinned in the workflow.
+
+`MainActivityLaunchSmokeTest` first launches `MainActivity`, waits for the Compose tree to become idle,
+and asserts that the activity remains `RESUMED` with the message "a startup crash is the likely cause."
+It then asserts the three rendered destination controls are ordered Read Later / Discover / History by
+their screen positions, selects Read Later, and proves the Discover header leaves the semantics tree as
+the Read Later header enters it. On the `Pixel_10` API 37 emulator, the final
+`:app:connectedDebugAndroidTest` run passed 1/1.
+
+The guard was also made genuinely red: an uncommitted `error("Intentional startup crash for smoke-test
+RED proof")` was temporarily inserted immediately after `MainActivity.onCreate` called `super`. The run
+executed 1 test, failed 1, exited 1, reported `Unable to start activity`, and ended with
+`Instrumentation run failed due to Process crashed`. A fatal activity-start exception kills the
+in-process instrumentation before JUnit can replace Android's crash report with the assertion's custom
+message; Android's runner nevertheless reports the process death explicitly. The temporary exception was
+removed, `git diff -- android/app/src/main` returned empty, and the next run passed 1/1.
+
+The instrumented test added stable AndroidX Test JUnit `1.3.0` and Espresso `3.7.0`; Compose
+`ui-test-junit4` and the debug-only `ui-test-manifest` inherit `1.12.0` from the existing Compose BOM.
+The brief's dependency list was incomplete for an executable JUnit4 instrumented test:
+`testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"` was also required. This is
+test-only build configuration and changes no shipped behavior.
+
+No emulator job is present by deliberate decision. The instrumented smoke test is a local/on-demand
+device gate; CI protects pull requests with the JVM suite and APK assembly without adding emulator boot
+time. The path-filtered workflow is also deliberately not a required status check, because it produces no
+check at all for pull requests outside the two filtered paths.
 
 ## Gate results
 
-Failing-first is proven per slice by a red test commit preceding its implementation commit.
+Failing-first is proven by a red test commit preceding implementation for slices 1 through 3. Slice 4
+instead uses the brief's uncommitted startup-crash injection so no deliberately broken product commit is
+added to history.
 
 | Slice | Red commit | Red counts | Green commit | Green counts |
 |---|---|---|---|---|
@@ -316,7 +363,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | 3a validator repair | regression added over `80a6d9d2eb66809204e127bee06cb381cc2ee016` | 7 tests / 6 pass / 1 fail | `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | 7 tests / 7 pass / 0 fail |
 | 3b slice 2 extension | targeted pre-commit RED | compile-time RED; 0 executed, 5 unresolved contract references | `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` | 56 tests / 56 pass / 0 fail / 0 skipped |
 | 3b | `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` | compile-time RED; 0 executed, 11 unresolved presentation references | `feat(android): add Read Later History and settings surfaces` (this commit) | 62 tests / 62 pass / 0 fail / 0 skipped |
-| 4 | | | | |
+| 4 | temporary uncommitted startup-crash injection | 1 test / 0 pass / 1 fail; instrumentation process crashed; Gradle exit 1 | `f7c7ede8c2768f5654e6627653f5287a61e509f5` | 1 test / 1 pass / 0 fail on `Pixel_10` API 37; 62 JVM tests / 62 pass / 0 fail; `assembleDebug` green; web 105/105 |
 
 ## Scenario traceability
 
@@ -564,7 +611,8 @@ Observations carried forward, none of which block this slice:
   documents as its default; 9.7.1 is the latest stable and was deliberately not chosen for a foundation
   slice.
 - **Instrumented tests are not gated.** They require an emulator and are excluded from CI by decision,
-  not by oversight.
+  not by oversight. `MainActivityLaunchSmokeTest` is the local/on-demand startup guard; the path-filtered
+  CI job intentionally remains emulator-free and runs the 62-test JVM suite plus `assembleDebug`.
 - **No persistence.** State does not survive process death in this milestone; every launch is a fresh
   queue. Stated in `spec.md` §3 so it is not filed as data loss.
 - **Web-side validator gaps observed, not fixed.** `js/data/validation.js:148-163` enforces no `tags`
