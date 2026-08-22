@@ -81,3 +81,41 @@ export class MemoryStorage {
     this.values.delete(key);
   }
 }
+
+export function createUiRecorder() {
+  const calls = {
+    appearance: [],
+    announcements: [],
+    discover: [],
+    history: [],
+    navigation: [],
+    readLater: [],
+    settings: [],
+    destroyDiscover: 0,
+  };
+  return {
+    calls,
+    ui: {
+      announceStatus: (message) => calls.announcements.push(message),
+      applyAppearance: (appearance) => calls.appearance.push(appearance),
+      destroyDiscover: () => { calls.destroyDiscover += 1; },
+      renderDiscover: (viewModel) => calls.discover.push(viewModel),
+      renderHistory: (viewModel) => calls.history.push(viewModel),
+      renderNavigation: (viewModel) => calls.navigation.push(viewModel),
+      renderReadLater: (viewModel) => calls.readLater.push(viewModel),
+      renderSettings: (viewModel) => calls.settings.push(viewModel),
+    },
+  };
+}
+
+export function createWindowStub() {
+  const listeners = new Map();
+  return {
+    addEventListener(type, listener) {
+      listeners.set(type, listener);
+    },
+    dispatch(type) {
+      listeners.get(type)?.();
+    },
+  };
+}
