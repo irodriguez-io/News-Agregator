@@ -373,6 +373,61 @@ Confirmed by the reviewer rather than taken on trust:
 - UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
   the right call given 25 non-ASCII titles in the snapshot.
 
+### Slice 3b gate: PASS
+
+Reviewer: Claude, non-author. Verified independently — commit range `7bedecc..5078204`, a forced
+`--rerun-tasks` run read from the JUnit XML (**62 tests, 62 pass, 0 skipped**), and the diff read in full.
+
+**Two more gaps in the orchestrator's slice 2 brief, found before any code was written.** The implementer
+stopped twice in this slice rather than working around a boundary, and was right both times:
+
+1. `HistoryUiState` exposed `readAt` and a relative `readAge`, but `js/ui/history.js:24` renders an
+   absolute localized date and time with the fallback "Read date unavailable". The slice 2 brief asked for
+   `relativeDate`, `historyGroup`, and `readingTime` and never mentioned `localDateTime`
+   (`js/ui/format.js:39-49`).
+2. The aggregate exposed `firstTagId`, but both overview bands display a topic **label**.
+   `js/state/selectors.js:42` yields only the id; resolution happens a layer up in `topicLabel`
+   (`js/app.js:75-82`), which `js/app.js:192` and `:204` call before the view sees it. The brief said
+   "the first tag ID", which is what was built, and is not what the band shows.
+
+Both were authorized as a narrow slice 2 contract extension, landed as its own commit `8be14ed` ahead of
+the 3b feature commit. `firstTagId` was kept alongside the new label so the existing derivation tests
+stayed meaningful, and `topicLabel` was ported faithfully rather than shortcut to "the first tag of the
+first tagged record".
+
+**Root cause worth naming:** all three implementer stops in this item trace to the same place. The web
+client assembles its view models in `js/app.js`, one layer above `js/state/selectors.js`, and the
+orchestrator's briefs repeatedly treated the selectors as the whole derivation contract. The state and
+formatting layers ported cleanly; the *assembly* layer is where the instructions kept coming up short.
+
+Also confirmed by the reviewer:
+
+- Only the two authorized files and their tests changed in the protected layers. `domain/**` and
+  `data/**` untouched. `npm test` still 105/105.
+- **Every user-visible string is verbatim from the web client**, checked string by string against
+  `js/ui/read-later.js`, `js/ui/history.js`, and `js/ui/settings.js` — eyebrows, descriptions, both stat
+  band label sets, both empty states and their actions, the row action labels including the `↗`
+  affordance, and the settings appearance section.
+- Copy is externalized to `res/values/strings.xml` rather than Kotlin constants, which is better Android
+  practice than the brief required.
+- Zero permissions in the built APK (`aapt2 dump permissions`), with both `tools:node="remove"` entries
+  intact after adding the launcher icon. An adaptive launcher icon now exists, resolving the observation
+  carried from 3a.
+- Export, import, and reset are absent from the settings sheet, as `spec.md` §3 requires.
+
+The implementer found and fixed a third emulator-only defect: `Escape` did not dismiss the settings sheet
+because it did not own keyboard focus. Like the scroll-offset bug in 3a, no scenario covered it and no
+unit test could have.
+
+**Observation 9 — split copy convention, deliberate but worth knowing.** Discover's four body-state
+strings, the degraded notice, the side note, and the category labels live in Kotlin constants in
+`ui/format/Labels.kt`, while every other screen's copy lives in `strings.xml`. This is forced rather than
+careless: `UiStateMapper` chooses the Discover state *and* carries its copy, and being pure Kotlin with no
+Android imports it cannot read a resource. The consequence is that Discover's body-state copy cannot be
+localized while the rest of the app can. No scenario is violated and nothing is broken — the web client is
+English-only — but if localization ever matters, the fix is for the mapper to emit a state key and let the
+composable resolve the string. Cheaper to do then than to discover then.
+
 ### Slice 3a gate: PASS
 
 Reviewer: Claude, non-author. Verified independently — commit range `6232036..5d6596e`, a forced
