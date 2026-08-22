@@ -161,9 +161,32 @@ A Material 3 `ColorScheme` is still constructed, because `NavigationBar`, `Modal
 and focus indication read from it and would otherwise render in default Material purple. Dynamic colour
 is disabled: the palette is authored, not derived from wallpaper.
 
-Compose has no OKLCH literal, so the six values are converted to sRGB hex with the OKLCH triple retained
-in a comment beside each. The conversion self-validates: the light accent `oklch(0.322424 0.12543
-262.24)` round-trips to `#0B2D72`, the hex `DESIGN.md:36` requires.
+Compose has no OKLCH literal, so the values are converted to sRGB hex with the OKLCH triple retained in a
+comment beside each. The conversion self-validates: the light accent `oklch(0.322424 0.12543 262.24)`
+round-trips to exactly `#0B2D72`, the hex `DESIGN.md:36` requires.
+
+Converted through OKLab → linear sRGB → sRGB, with the six derived values interpolated in OKLCH exactly
+as `color-mix(in oklch, …)` does (`css/app.css:9-15`). These are the authoritative Compose values:
+
+| Token | Light | Dark | Origin |
+|---|---|---|---|
+| `bg` | `#F2F6FB` | `#050A15` | authored |
+| `surface` | `#FCFEFF` | `#0D1522` | authored |
+| `fg` | `#0F1725` | `#E6ECF3` | authored |
+| `muted` | `#58616F` | `#9AA6B4` | authored |
+| `border` | `#CFD6E2` | `#2F3848` | authored |
+| `accent` | `#0B2D72` | `#7FAAFA` | authored |
+| `accentSoft` | `#DBE3EF` | `#182438` | `accent` 12% into `surface` |
+| `surfaceHover` | `#EEF0F3` | `#151E2B` | `fg` 5% into `surface` |
+| `strongBorder` | `#8F97A4` | `#606A77` | `fg` 30% into `border` |
+| `quietInk` | `#1E2634` | `#D5DCE5` | `fg` 78% into `muted` |
+| `toastSurface` | `#1A2230` | `#D7DDE5` | `fg` 94% into `surface` |
+| `toastInk` | `#F1F3F6` | `#141C29` | `surface` 96% into `fg` |
+| `backdrop` | `fg` at 42% alpha | `fg` at 42% alpha | `fg` 42% into transparent |
+
+Derived values are still computed from the authored six in Kotlin rather than pasted as constants, so the
+relationships stay relationships; the table above is what those computations must produce, and is the
+check a test can assert.
 
 ### No image loading dependency, ever
 
