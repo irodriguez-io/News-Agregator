@@ -1,0 +1,377 @@
+package io.irodriguez.intentionalreading.ui.state
+
+import io.irodriguez.intentionalreading.domain.model.Article
+import io.irodriguez.intentionalreading.domain.model.ArticleAction
+import io.irodriguez.intentionalreading.domain.model.ArticleContentType
+import io.irodriguez.intentionalreading.domain.model.ArticleDataset
+import io.irodriguez.intentionalreading.domain.model.ArticleRecord
+import io.irodriguez.intentionalreading.domain.model.ArticleScore
+import io.irodriguez.intentionalreading.domain.model.ArticleSource
+import io.irodriguez.intentionalreading.domain.model.ArticleStatus
+import io.irodriguez.intentionalreading.domain.model.ArticleTag
+import io.irodriguez.intentionalreading.domain.model.Category
+import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
+import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
+import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.ui.DatasetPhase
+import io.irodriguez.intentionalreading.ui.format.Labels
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
+import io.irodriguez.intentionalreading.ui.screens.history.HistoryPeriod
+import java.time.Instant
+import java.time.ZoneId
+import java.util.Locale
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+class UiStateMapperTest {
+    @Test
+    fun `Discover body state maps loading then error then empty then card`() {
+        val loading = UiStateMapper.map(
+            phase = DatasetPhase.Loading,
+            records = emptyMap(),
+            selectedCategory = null,
+            heldArticleId = null,
+            now = now,
+            zone = zone,
+            locale = Locale.US,
+        )
+        val error = UiStateMapper.map(
+            phase = DatasetPhase.Error,
+            records = emptyMap(),
+            selectedCategory = null,
+            heldArticleId = null,
+            now = now,
+            zone = zone,
+            locale = Locale.US,
+        )
+        val empty = map(dataset = dataset(emptyList()))
+        val card = map(dataset = dataset(listOf(article(1))))
+
+        assertEquals(Labels.DISCOVER_LOADING_COPY, assertIs<DiscoverUiState.Loading>(loading.discover).copy)
+        assertEquals(Labels.DISCOVER_ERROR_TITLE, assertIs<DiscoverUiState.Error>(error.discover).title)
+        assertEquals(Labels.DISCOVER_EMPTY_TITLE, assertIs<DiscoverUiState.Empty>(empty.discover).title)
+        assertIs<DiscoverUiState.Card>(card.discover)
+    }
+
+    @Test
+    fun `a category with no articles uses exact permission-to-leave copy`() {
+        val state = map(
+            dataset = dataset(listOf(article(1, Category.IAM))),
+            selectedCategory = Category.WEIGHTLIFTING,
+        )
+
+        val empty = assertIs<DiscoverUiState.Empty>(state.discover)
+        assertEquals("Nothing needs your attention right now", empty.title)
+        assertEquals(
+            "You are caught up for this category. Leave without missing anything, or return to your saved reading.",
+            empty.copy,
+        )
+        assertEquals("View Read Later", empty.actionLabel)
+    }
+
+    @Test
+    fun `Discover offers one dataset-ordered card with available and remaining counts`() {
+        val articles = listOf(article(1), article(2), article(3))
+
+        val card = assertIs<DiscoverUiState.Card>(map(dataset = dataset(articles)).discover)
+
+        assertEquals(articles.first(), card.article)
+        assertEquals(3, card.availableCount)
+        assertEquals(2, card.remainingCount)
+        assertEquals("2 more choices wait quietly behind this one.", Labels.remainingChoices(card.remainingCount))
+    }
+
+    @Test
+    fun `category filtering happens before head selection without sorting dataset order`() {
+        val technology = article(2, Category.TECHNOLOGY)
+        val laterIam = article(3, Category.IAM)
+        val articles = listOf(article(1, Category.IAM), technology, laterIam)
+
+        val card = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(articles), selectedCategory = Category.TECHNOLOGY).discover,
+        )
+
+        assertEquals(technology, card.article)
+        assertEquals(1, card.availableCount)
+        assertEquals(0, card.remainingCount)
+        assertNull(Labels.remainingChoices(card.remainingCount))
+    }
+
+    @Test
+    fun `an eligible held article remains presented and visibly acknowledged when opened`() {
+        val articles = listOf(article(1), article(2), article(3))
+        val held = articles[1]
+        val records = mapOf(held.id to record(held, ArticleStatus.OPENED, openedAt = now.minusSeconds(60)))
+
+        val card = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(articles), records = records, heldArticleId = held.id).discover,
+        )
+
+        assertEquals(held, card.article)
+        assertTrue(card.isOpened)
+        assertEquals(3, card.availableCount)
+        assertEquals(2, card.remainingCount)
+    }
+
+    @Test
+    fun `an ineligible or category-mismatched held article does not replace the first eligible head`() {
+        val first = article(1, Category.IAM)
+        val held = article(2, Category.TECHNOLOGY)
+        val records = mapOf(held.id to record(held, ArticleStatus.SAVED, savedAt = now))
+
+        val card = assertIs<DiscoverUiState.Card>(
+            map(
+                dataset = dataset(listOf(first, held)),
+                records = records,
+                selectedCategory = Category.IAM,
+                heldArticleId = held.id,
+            ).discover,
+        )
+
+        assertEquals(first, card.article)
+        assertFalse(card.isOpened)
+    }
+
+    @Test
+    fun `dismissing advances the deck and immediately decreases both counts`() {
+        val articles = listOf(article(1), article(2))
+        val initial = assertIs<DiscoverUiState.Card>(map(dataset = dataset(articles)).discover)
+        val transition = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(emptyMap(), articles.first(), ArticleAction.DISMISS, now),
+        )
+
+        val next = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(articles), records = transition.records).discover,
+        )
+
+        assertEquals(2, initial.availableCount)
+        assertEquals(1, initial.remainingCount)
+        assertEquals(articles[1], next.article)
+        assertEquals(1, next.availableCount)
+        assertEquals(0, next.remainingCount)
+    }
+
+    @Test
+    fun `saving removes Discover head reaches top of Read Later and increments navigation`() {
+        val first = article(1)
+        val olderSaved = record(article(3), ArticleStatus.SAVED, savedAt = now.minusSeconds(60))
+        val transition = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                mapOf(olderSaved.article.id to olderSaved),
+                first,
+                ArticleAction.SAVE,
+                now,
+            ),
+        )
+
+        val state = map(dataset = dataset(listOf(first, article(2))), records = transition.records)
+
+        assertEquals(article(2), assertIs<DiscoverUiState.Card>(state.discover).article)
+        assertEquals(listOf(first.id, olderSaved.article.id), state.readLater.rows.map { it.article.id })
+        assertEquals(2, state.navigationCounts.readLater)
+        assertEquals(0, state.navigationCounts.history)
+    }
+
+    @Test
+    fun `marking read removes Discover head and groups it under Today without undo state`() {
+        val first = article(1)
+        val opened = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(emptyMap(), first, ArticleAction.OPEN, now.minusSeconds(120)),
+        )
+        val read = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(opened.records, first, ArticleAction.MARK_READ, now),
+        )
+
+        val state = map(dataset = dataset(listOf(first, article(2))), records = read.records)
+
+        assertEquals(article(2), assertIs<DiscoverUiState.Card>(state.discover).article)
+        assertEquals(listOf(HistoryPeriod.TODAY), state.history.groups.map { it.period })
+        assertEquals(first.id, state.history.groups.single().rows.single().article.id)
+        assertEquals(0, state.navigationCounts.readLater)
+        assertEquals(1, state.navigationCounts.history)
+    }
+
+    @Test
+    fun `Read Later orders savedAt descending and computes every aggregate field`() {
+        val oldest = record(
+            article = article(1, readingTimeMinutes = 5, tags = emptyList()),
+            status = ArticleStatus.SAVED,
+            savedAt = now.minusSeconds(300),
+        )
+        val newest = record(
+            article = article(2, readingTimeMinutes = null, tags = listOf(ArticleTag("oauth", "OAuth"))),
+            status = ArticleStatus.SAVED,
+            savedAt = now.minusSeconds(60),
+        )
+        val middle = record(
+            article = article(3, readingTimeMinutes = 7, tags = listOf(ArticleTag("oidc", "OIDC"))),
+            status = ArticleStatus.SAVED,
+            savedAt = now.minusSeconds(120),
+        )
+        val records = listOf(oldest, newest, middle).associateBy { it.article.id }
+
+        val state = map(dataset = dataset(emptyList()), records = records).readLater
+
+        assertEquals(listOf(newest.article.id, middle.article.id, oldest.article.id), state.rows.map { it.article.id })
+        assertEquals(3, state.aggregate.count)
+        assertEquals(12, state.aggregate.knownReadingTimeMinutes)
+        assertEquals(1, state.aggregate.unknownReadingTimeCount)
+        assertEquals("oauth", state.aggregate.firstTagId)
+    }
+
+    @Test
+    fun `History orders readAt descending groups local calendar days and omits empty groups`() {
+        val localZone = ZoneId.of("America/Los_Angeles")
+        val localNow = Instant.parse("2026-08-22T07:30:00Z")
+        val todayEarly = record(article(1), ArticleStatus.READ, readAt = Instant.parse("2026-08-22T07:05:00Z"))
+        val yesterdayLate = record(article(2), ArticleStatus.READ, readAt = Instant.parse("2026-08-22T06:55:00Z"))
+        val earlier = record(article(3), ArticleStatus.READ, readAt = Instant.parse("2026-08-20T18:00:00Z"))
+        val records = listOf(earlier, yesterdayLate, todayEarly).associateBy { it.article.id }
+
+        val history = UiStateMapper.history(records, localNow, localZone, Locale.US)
+
+        assertEquals(
+            listOf(HistoryPeriod.TODAY, HistoryPeriod.YESTERDAY, HistoryPeriod.EARLIER),
+            history.groups.map { it.period },
+        )
+        assertEquals(todayEarly.article.id, history.groups[0].rows.single().article.id)
+        assertEquals(yesterdayLate.article.id, history.groups[1].rows.single().article.id)
+        assertEquals(earlier.article.id, history.groups[2].rows.single().article.id)
+
+        val onlyToday = UiStateMapper.history(mapOf(todayEarly.article.id to todayEarly), localNow, localZone, Locale.US)
+        assertEquals(listOf(HistoryPeriod.TODAY), onlyToday.groups.map { it.period })
+    }
+
+    @Test
+    fun `History aggregate uses newest tagged record and counts unknown reading times`() {
+        val newest = record(
+            article(1, readingTimeMinutes = null, tags = emptyList()),
+            ArticleStatus.READ,
+            readAt = now,
+        )
+        val tagged = record(
+            article(2, readingTimeMinutes = 8, tags = listOf(ArticleTag("scim", "SCIM"))),
+            ArticleStatus.READ,
+            readAt = now.minusSeconds(60),
+        )
+
+        val history = map(
+            dataset = dataset(emptyList()),
+            records = listOf(tagged, newest).associateBy { it.article.id },
+        ).history
+
+        assertEquals(2, history.aggregate.count)
+        assertEquals(8, history.aggregate.knownReadingTimeMinutes)
+        assertEquals(1, history.aggregate.unknownReadingTimeCount)
+        assertEquals("scim", history.aggregate.firstTagId)
+    }
+
+    @Test
+    fun `navigation counts ignore opened and dismissed records and degraded follows pipeline failures`() {
+        val records = listOf(
+            record(article(1), ArticleStatus.OPENED, openedAt = now),
+            record(article(2), ArticleStatus.DISMISSED, dismissedAt = now),
+            record(article(3), ArticleStatus.SAVED, savedAt = now),
+            record(article(4), ArticleStatus.READ, readAt = now),
+        ).associateBy { it.article.id }
+
+        val state = map(dataset = dataset(emptyList(), failedSourceCount = 2), records = records)
+
+        assertEquals(1, state.navigationCounts.readLater)
+        assertEquals(1, state.navigationCounts.history)
+        assertTrue(state.degraded)
+        assertEquals("Some sources were unavailable during the latest refresh.", Labels.DEGRADED_NOTICE)
+        assertFalse(map(dataset = dataset(emptyList(), failedSourceCount = 0)).degraded)
+    }
+
+    @Test
+    fun `the eight category options retain exact order ids and labels`() {
+        assertEquals(
+            listOf(
+                "all" to "All",
+                "science" to "Science",
+                "technology" to "Technology",
+                "literature" to "Literature",
+                "history" to "History",
+                "weightlifting" to "Weightlifting",
+                "iam" to "IAM",
+                "identity_automation" to "Identity Automation",
+            ),
+            Labels.categoryOptions.map { it.id to it.label },
+        )
+    }
+
+    private fun map(
+        dataset: ArticleDataset,
+        records: Map<String, ArticleRecord> = emptyMap(),
+        selectedCategory: Category? = null,
+        heldArticleId: String? = null,
+    ) = UiStateMapper.map(
+        phase = DatasetPhase.Ready(dataset),
+        records = records,
+        selectedCategory = selectedCategory,
+        heldArticleId = heldArticleId,
+        now = now,
+        zone = zone,
+        locale = Locale.US,
+    )
+
+    private fun dataset(articles: List<Article>, failedSourceCount: Int = 0): ArticleDataset = ArticleDataset(
+        schemaVersion = 1,
+        generatedAt = "2026-08-22T12:00:00Z",
+        pipeline = PipelineMetadata(
+            enabledSourceCount = 2,
+            successfulSourceCount = 2 - failedSourceCount,
+            failedSourceCount = failedSourceCount,
+            articleCount = articles.size,
+        ),
+        articles = articles,
+    )
+
+    private fun record(
+        article: Article,
+        status: ArticleStatus,
+        openedAt: Instant? = null,
+        savedAt: Instant? = null,
+        dismissedAt: Instant? = null,
+        readAt: Instant? = null,
+    ) = ArticleRecord(
+        article = article,
+        status = status,
+        firstSeenAt = now.minusSeconds(600),
+        openedAt = openedAt,
+        savedAt = savedAt,
+        dismissedAt = dismissedAt,
+        readAt = readAt,
+    )
+
+    private fun article(
+        index: Int,
+        category: Category = Category.IAM,
+        readingTimeMinutes: Int? = 7,
+        tags: List<ArticleTag> = listOf(ArticleTag("oauth", "OAuth")),
+    ): Article = Article(
+        id = index.toString(16).padStart(20, '0'),
+        title = "Article $index",
+        url = "https://example.com/$index",
+        source = ArticleSource("source_$index", "Source $index"),
+        category = category,
+        publishedAt = now.minusSeconds(index * 3_600L),
+        author = null,
+        excerpt = "Excerpt $index",
+        readingTimeMinutes = readingTimeMinutes,
+        tags = tags,
+        contentType = ArticleContentType(ContentTypeId.STANDARDS_UPDATE, "Standards Update"),
+        score = ArticleScore(91, 50, 20, 15, 5, 1),
+    )
+
+    private companion object {
+        val now: Instant = Instant.parse("2026-08-22T12:00:00Z")
+        val zone: ZoneId = ZoneId.of("America/Managua")
+    }
+}
