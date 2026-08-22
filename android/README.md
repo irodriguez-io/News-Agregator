@@ -21,5 +21,19 @@ printf 'sdk.dir=%s\n' "$HOME/Library/Android/sdk" > local.properties
 ## Bundled dataset
 
 The app ships a snapshot of the public production dataset from
-`https://irodriguez.io/News-Agregator/data/articles.json`. Its exact provenance and refresh instructions
-are recorded here when the snapshot is committed.
+`https://irodriguez.io/News-Agregator/data/articles.json`.
+
+The committed snapshot was fetched on 2026-08-22. It reports `generatedAt` `2026-08-22T12:59:34Z`, and
+the response ETag was `"6a899d51-29708"`. Its SHA-256 is
+`235e4df614b66108d1a471dddfa0b3ce06d838ac058d8570d440a5d7ac93f27f`.
+
+Refresh it from the repository root without editing or trimming the response:
+
+```sh
+curl -fsS -o android/app/src/main/assets/sample_articles.json \
+  https://irodriguez.io/News-Agregator/data/articles.json
+```
+
+After a refresh, update this provenance and the snapshot profile in
+`specs/002-android-client-foundation/evidence.md`, then run both Android gates. The unit suite reads the
+same bytes that ship in the APK and rejects invalid UTF-8 or a contract violation.
