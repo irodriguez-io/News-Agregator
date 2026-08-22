@@ -121,7 +121,7 @@ No Compose in this slice. Every file is pure Kotlin with no Android imports.
     injected clock and zone, omitting empty groups;
   - `RelativeTimeTest` covers the `Now` / `{n}h` / `{n}d` / absolute ladder and the 31-day cutover;
   - `./gradlew :app:testDebugUnitTest` green.
-- **Status:** not started
+- **Status:** done (gate: PASS, slice review)
 
 ## Slice 3: theme, navigation shell, and the three screens
 
