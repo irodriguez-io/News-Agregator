@@ -29,6 +29,22 @@ build under `/android` makes the isolation mechanical: `scripts/build_pages.py:1
 regardless of what is added later. Single `:app` module; the package layering below is the same seam and
 is extractable when a second *consumer* appears (widget, Wear), not when a second *layer* appears.
 
+### compileSdk 37, targetSdk 36, minSdk 26
+
+`minSdk 26` is a timekeeping decision, not a hand-wave about modern devices: API 26 provides `java.time`
+with no core-library desugaring configuration at all, and this dataset is timestamp-dense — `publishedAt`
+parsing, relative-age rendering, and the local-calendar day bucketing of `js/ui/format.js:51-62`. Compose
+itself needs only 21.
+
+`compileSdk 37` is forced by the pinned AndroidX stack, which declares a minimum compileSdk of 37 in its
+AAR metadata. This was set to 36 at design time on the incorrect assumption that a missing
+`platforms/android-37` and absent `cmdline-tools` made 37 unreachable locally; AGP installs the platform
+itself against the already-accepted licence, which slice 1's review verified end to end.
+
+`targetSdk` deliberately stays at **36**. It satisfies the Play requirement that took effect
+2026-08-31, and moving to 37 means inheriting Android 17 behaviour changes — that belongs in its own
+slice with its own testing, not in a foundation.
+
 ### The bundled dataset is a snapshot of production bytes, not a hand-authored fixture
 
 `articles.json` is gitignored (`.gitignore:1`) and CI never commits it, but the six-hourly deploy
