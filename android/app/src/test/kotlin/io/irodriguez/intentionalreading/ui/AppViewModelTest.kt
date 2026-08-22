@@ -147,6 +147,56 @@ class AppViewModelTest {
         assertStatus(viewModel, articles[2], ArticleAction.MARK_UNREAD, ArticleStatus.SAVED)
     }
 
+    @Test
+    fun `Read Later row actions update queue and History projections immediately`() {
+        val savedArticle = article(1)
+        val removedArticle = article(2)
+        val viewModel = viewModel(DatasetResult.Success(dataset(listOf(savedArticle, removedArticle))))
+
+        viewModel.onArticleAction(savedArticle, ArticleAction.SAVE)
+        viewModel.onArticleAction(removedArticle, ArticleAction.SAVE)
+        viewModel.onArticleAction(savedArticle, ArticleAction.OPEN)
+
+        assertEquals(2, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+        val unchanged = assertIs<ArticleTransition.Unchanged>(
+            viewModel.onArticleAction(savedArticle, ArticleAction.SAVE),
+        )
+        assertEquals(ArticleStatus.SAVED, unchanged.records.getValue(savedArticle.id).status)
+
+        viewModel.onArticleAction(savedArticle, ArticleAction.MARK_READ)
+        viewModel.onArticleAction(removedArticle, ArticleAction.REMOVE)
+
+        assertTrue(viewModel.uiState.value.readLater.rows.isEmpty())
+        assertEquals(listOf(savedArticle.id), viewModel.uiState.value.history.groups.single().rows.map { it.article.id })
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
+    }
+
+    @Test
+    fun `History row actions reopen in place then mark unread back to Read Later`() {
+        val readArticle = article(1)
+        val viewModel = viewModel(DatasetResult.Success(dataset(listOf(readArticle))))
+
+        viewModel.onArticleAction(readArticle, ArticleAction.MARK_READ)
+        val reopened = assertIs<ArticleTransition.Applied>(
+            viewModel.onArticleAction(readArticle, ArticleAction.OPEN),
+        )
+
+        assertEquals(ArticleStatus.READ, reopened.record.status)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
+        assertEquals(readArticle.id, viewModel.uiState.value.history.groups.single().rows.single().article.id)
+
+        val unread = assertIs<ArticleTransition.Applied>(
+            viewModel.onArticleAction(readArticle, ArticleAction.MARK_UNREAD),
+        )
+
+        assertEquals(ArticleStatus.SAVED, unread.record.status)
+        assertEquals(readArticle.id, viewModel.uiState.value.readLater.rows.single().article.id)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+    }
+
     private fun assertStatus(
         viewModel: AppViewModel,
         article: Article,
