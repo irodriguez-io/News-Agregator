@@ -1,9 +1,9 @@
 package io.irodriguez.intentionalreading
 
+import android.app.Activity
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }

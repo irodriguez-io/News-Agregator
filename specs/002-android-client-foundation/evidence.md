@@ -16,7 +16,9 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 
 | SHA | Message |
 |---|---|
-| | |
+| `409137a9201b23e15cb5521538a5a799592b7306` | `chore(android): scaffold Gradle project` |
+| `334ba329ab217b61f1855cb640ddaa4fd67e770f` | `test(android): cover ArticleDataset v1 parsing and validation` |
+| this slice's implementation commit | `feat(android): add ArticleDataset model and validator` |
 
 ## Snapshot profile
 
@@ -26,35 +28,52 @@ table rather than from hard-coded numbers.
 
 | Property | Value |
 |---|---|
-| Source URL | |
-| Fetched | |
-| `generatedAt` | |
-| ETag | |
-| Bytes / article count | |
-| `pipeline` counts | |
-| Articles per category | |
-| Empty categories | |
-| Null `publishedAt` / `author` / `readingTimeMinutes` / empty `excerpt` | |
-| Articles with zero tags / maximum tag count | |
-| Titles containing non-ASCII characters | |
+| Source URL | `https://irodriguez.io/News-Agregator/data/articles.json` |
+| Fetched | 2026-08-22 |
+| `generatedAt` | `2026-08-22T12:59:34Z` |
+| ETag | `"6a899d51-29708"` |
+| Bytes / article count | 169,736 / 166 |
+| `pipeline` counts | 20 enabled / 15 successful / 5 failed |
+| Articles per category | technology 96 / science 35 / history 14 / iam 11 / literature 10 / weightlifting 0 / identity_automation 0 |
+| Empty categories | `weightlifting`, `identity_automation` |
+| Null `publishedAt` / `author` / `readingTimeMinutes` / empty `excerpt` | 25 / 70 / 121 / 33 |
+| Articles with zero tags / maximum tag count | 122 / 2 |
+| Titles containing non-ASCII characters | 25 |
 
 ## Slice 1 — Gradle foundation, dataset model, validator, snapshot asset
 
 **Definition of done**
 
-- [ ] `./gradlew :app:assembleDebug` succeeds
-- [ ] `Json` configured strictly; no DTO property carries a default value
-- [ ] `DatasetValidator` returns a result type and never throws across the data boundary
-- [ ] unsupported `schemaVersion` carries a code distinct from malformed
-- [ ] `DatasetValidatorTest` covers every rejection listed in `slices.md`
-- [ ] `SampleDatasetTest` validates the shipped asset bytes off the test classpath
-- [ ] canonical sort order, approved source IDs, and taxonomy tag IDs asserted
-- [ ] `android/README.md` records provenance, refresh command, allowlist exclusion, `JAVA_HOME` note
-- [ ] snapshot profile recorded above
-- [ ] manifest declares zero permissions
-- [ ] `./gradlew :app:testDebugUnitTest` green
+- [x] `./gradlew :app:assembleDebug` succeeds
+- [x] `Json` configured strictly; no DTO property carries a default value
+- [x] `DatasetValidator` returns a result type and never throws across the data boundary
+- [x] unsupported `schemaVersion` carries a code distinct from malformed
+- [x] `DatasetValidatorTest` covers every rejection listed in `slices.md`
+- [x] `SampleDatasetTest` validates the shipped asset bytes off the test classpath
+- [x] canonical sort order, approved source IDs, and taxonomy tag IDs asserted
+- [x] `android/README.md` records provenance, refresh command, allowlist exclusion, `JAVA_HOME` note
+- [x] snapshot profile recorded above
+- [x] manifest declares zero permissions
+- [x] `./gradlew :app:testDebugUnitTest` green
 
-**Serialization plugin under AGP 9 built-in Kotlin:** path taken, and why —
+**Serialization plugin under AGP 9 built-in Kotlin:** the primary path applied cleanly:
+`org.jetbrains.kotlin.plugin.serialization` 2.4.10 is applied directly beside
+`com.android.application`; neither `org.jetbrains.kotlin.android` nor the temporary
+`android.builtInKotlin=false` fallback is present.
+
+**Version verification:** all specified versions resolve and remain unchanged in the catalog: AGP
+9.3.1, Gradle 9.5.0, Kotlin 2.4.10, Compose BOM 2026.08.00, `kotlinx.serialization` 1.11.0, Core 1.19.0,
+Activity 1.13.0, Lifecycle 2.11.0, and Navigation3 1.1.6. A verification build that temporarily placed
+the AndroidX UI stack on the runtime classpath failed `checkDebugAarMetadata`: Compose 1.12.0, Core
+1.19.0, Activity 1.13.0, and Lifecycle 2.11.0 require compileSdk 37, conflicting with the fixed
+compileSdk 36. The failed build reported 13 AAR-metadata incompatibilities; no SDK check was suppressed
+and no approved version was silently changed. This does not block slice 1 because it has no Compose UI
+and those coordinates are cataloged but unused; it must be resolved before slice 3 applies them.
+
+The Compose, Core, Activity, Lifecycle, and Navigation3 coordinates are cataloged but intentionally not
+on the slice-1 runtime classpath: the placeholder uses platform `Activity`. Besides matching the no-UI
+scope, this prevents AndroidX startup/profile tooling from contributing a generated receiver permission;
+the merged debug manifest therefore has zero `uses-permission` entries.
 
 ## Slice 2 — article status state machine and screen-state derivation
 
@@ -109,7 +128,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 
 | Slice | Red commit | Red counts | Green commit | Green counts |
 |---|---|---|---|---|
-| 1 | | | | |
+| 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | this slice's implementation commit | 6 tests / 6 pass / 0 fail |
 | 2 | | | | |
 | 3 | | | | |
 | 4 | | | | |
@@ -118,7 +137,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 
 | Scenario (`spec.md` §4) | Authority | Covering test |
 |---|---|---|
-| the bundled dataset loads and validates | contracts.md §ArticleDataset | |
+| the bundled dataset loads and validates | contracts.md §ArticleDataset | `SampleDatasetTest`; `DatasetValidatorTest` file-order case |
 | Discover offers exactly one article | 01-product.md §27; 06-ui-ux.md §3 | |
 | a category with no articles reaches the empty state | 06-ui-ux.md §3 | |
 | a degraded dataset is disclosed without alarm | contracts.md:133 | |
@@ -126,17 +145,21 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | saving reaches Read Later | 05-personalization-state.md §27 | |
 | an opened article is acknowledged and held | 06-ui-ux.md §51 | |
 | marking read reaches History under Today | 05-personalization-state.md §27 | |
-| a contract-violating dataset claims nothing | contracts.md §ArticleDataset | |
+| a contract-violating dataset claims nothing | contracts.md §ArticleDataset | `DatasetValidatorTest` rejection table and failure-code cases |
 | three destinations and a modal settings surface | 06-ui-ux.md §18 | |
 
 ## Test infrastructure added
 
+`src/main/assets` is added to the JVM test resource classpath, so `SampleDatasetTest` reads the exact
+shipped bytes without Robolectric or an emulator. Kotlin's JUnit bridge is test-only. The production
+validator rejects malformed UTF-8 before JSON decoding.
+
 ## Regression boundary held
 
-- [ ] no existing test modified
-- [ ] `scripts/build_pages.py` `ALLOWED_PATHS` unchanged
-- [ ] `.github/workflows/test.yml` and `deploy.yml` unchanged
-- [ ] no change under `pipeline/**`, `config/**`, `js/**`, `css/**`, `index.html`
+- [x] no existing test modified
+- [x] `scripts/build_pages.py` `ALLOWED_PATHS` unchanged
+- [x] `.github/workflows/test.yml` and `deploy.yml` unchanged
+- [x] no change under `pipeline/**`, `config/**`, `js/**`, `css/**`, `index.html`
 
 ## Reviewer observations (not findings)
 
@@ -152,7 +175,8 @@ Failing-first is proven per slice by a red test commit preceding its implementat
   correctly; a wrapper jar built by 9.5.0 itself (published checksum
   `497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7`) is not separately downloadable, so
   regenerating it requires a second `./gradlew wrapper` pass after the 9.5.0 distribution has been
-  fetched. Do that during slice 1, which downloads the distribution anyway, and update this record.
+  fetched. The optional second pass was not run in slice 1; the already committed, upstream-verified jar
+  was left unchanged.
 - **Distribution pinning.** `distributionSha256Sum` is set to
   `553c78f50dafcd54d65b9a444649057857469edf836431389695608536d6b746`, retrieved from
   `services.gradle.org/distributions/gradle-9.5.0-bin.zip.sha256`. Gradle 9.5.0 is the version AGP 9.3
