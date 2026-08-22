@@ -1,0 +1,4742 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-22T12:59:34Z",
+  "pipeline": {
+    "enabledSourceCount": 20,
+    "successfulSourceCount": 15,
+    "failedSourceCount": 5,
+    "articleCount": 166
+  },
+  "articles": [
+    {
+      "id": "9424b12a2c8cb8464a44",
+      "title": "Transaction Tokens",
+      "url": "https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens",
+      "source": {
+        "id": "ietf_oauth",
+        "name": "IETF OAuth WG"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-21T11:57:16Z",
+      "author": "Rifaat Shekh-Yusef",
+      "excerpt": "IETF WG state changed to WG Consensus: Waiting for Write-Up from In WG Last Call",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "oauth",
+          "label": "OAuth"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 88,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "9ed0ad4444af6cc0fc23",
+      "title": "Genomes of Poaceae relatives reveal key metabolic innovations preceding the evolution of grasses | Science",
+      "url": "https://www.science.org/doi/10.1126/science.adv0443",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "The grass family (Poaceae) has immense economic and ecological importance and exhibits distinctive metabolic traits, including dual starch and lignin biosynthetic pathways. We sequenced the genomes of Pharus, Joinvillea, Ecdeiocolea, and Typha species to ...",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "biology_evolution",
+          "label": "Biology & Evolution"
+        }
+      ],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 88,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 3,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "7811b8f32df9725a4907",
+      "title": "Building a Quantum Computer, One Fragile Qubit at a Time",
+      "url": "https://www.quantamagazine.org/building-a-quantum-computer-one-fragile-qubit-at-a-time-20260819",
+      "source": {
+        "id": "quanta",
+        "name": "Quanta Magazine"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-19T14:16:03Z",
+      "author": "Ben Brubaker",
+      "excerpt": "No one yet knows which technology will power the quantum computers of the future, but the race to create them has already produced some of science’s most intricate machinery. The post Building a Quantum Computer, One Fragile Qubit at a Time first appeared on Quanta Magazine",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "physics_quantum",
+          "label": "Physics & Quantum"
+        }
+      ],
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science"
+      },
+      "score": {
+        "base": 88,
+        "sourceQuality": 48,
+        "contentType": 18,
+        "freshness": 13,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "a52dfa584011001a476b",
+      "title": "‘Huge Breakthrough’ in the Math of Imbalance",
+      "url": "https://www.quantamagazine.org/huge-breakthrough-in-the-math-of-imbalance-20260821",
+      "source": {
+        "id": "quanta",
+        "name": "Quanta Magazine"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-21T14:53:32Z",
+      "author": "Max G. Levy",
+      "excerpt": "For the first time in 30 years, computer scientists have found a better way to allocate objects evenly between two groups. The post ‘Huge Breakthrough’ in the Math of Imbalance first appeared on Quanta Magazine",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science"
+      },
+      "score": {
+        "base": 86,
+        "sourceQuality": 48,
+        "contentType": 18,
+        "freshness": 15,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "7036a2be6729d4ef63c8",
+      "title": "Tracing the origins of de novo coronary collateral formation in cardiac repair | Science",
+      "url": "https://www.science.org/doi/10.1126/science.ady3027",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Coronary collateral arteries have been proposed to form de novo through artery reassembly, a process in which arterial endothelial cells (ECs) migrate away from preexisting arteries and reassemble into new arteries. Using genetic tools that trace ...",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "biology_evolution",
+          "label": "Biology & Evolution"
+        }
+      ],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 86,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 1,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "e1d9d64902fb505b0d64",
+      "title": "Experiences and economic decision-making | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aej2368",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "It is often said that we are nothing but the sum of our experiences. The accumulation of past experiences matters for economic behavior in any given moment: They can shape the objectives and goals we set, the perceived constraints around choices to be made, and they help form our attitudes and views of the world around us. A fast-growing literature in economics studies such experience effects, drawing together work in sociology, social psychology, and neuroscience, to understand how past experiences sink into memory, are recalled when making decisions, and compete with other relevant sources of information we might have, to shape consequential behaviors throughout life.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "neuroscience",
+          "label": "Neuroscience & Cognition"
+        }
+      ],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 86,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 1,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "b64bbf80dbf6b719217b",
+      "title": "Notice of Vote for Proposed Implementer’s Draft of OpenID Connect Key Binding",
+      "url": "https://openid.net/notice-of-vote-for-proposed-implementers-draft-of-openid-connect-key-binding",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-10T16:01:37Z",
+      "author": "Mike Leszcz",
+      "excerpt": "Notice of Vote for Proposed Implementer’s Draft of OpenID Connect Key Binding The voting period will be between Monday, August 24, 2026 and Monday, September 7, 2026, following the 45 day review of the specification. The OpenID Connect Working Group page is https://openid.net/wg/connect/. If you’re not already a member, or if your membership has expired, please consider joining [...] The post Notice of Vote for Proposed Implementer’s Draft of OpenID Connect Key Binding first appeared on OpenID Foundation .",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "oidc",
+          "label": "OpenID Connect"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 86,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 7,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "b4a94615cb64fa6b2c18",
+      "title": "AI chatbots are becoming experts at changing people's minds. What's their secret?",
+      "url": "https://www.science.org/content/article/ai-chatbots-are-becoming-experts-changing-people-s-minds-what-s-their-secret",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T19:00:00Z",
+      "author": null,
+      "excerpt": "ChatGPT and other AIs use a flood of facts, and the occasional lie, to persuade humans",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "d2555846265f6ef86c57",
+      "title": "Scientific spat erupts over claim that bones have key immune vessels",
+      "url": "https://www.science.org/content/article/scientific-spat-erupts-over-claim-bones-have-key-immune-vessels",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T16:00:00Z",
+      "author": null,
+      "excerpt": "Discovery of lymphatic tubes suggested new possibilities for bone healing, but challenge has prompted dueling papers and publication delay in prominent journal",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "d20d4d04831977ce501e",
+      "title": "Are We Thinking Correctly About AI Intelligence?",
+      "url": "https://www.quantamagazine.org/are-we-thinking-correctly-about-ai-intelligence-20260820",
+      "source": {
+        "id": "quanta",
+        "name": "Quanta Magazine"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T14:04:40Z",
+      "author": "Steven Strogatz and Janna Levin",
+      "excerpt": "Computer scientist Melanie Mitchell discusses why artificial intelligence doesn’t “think” or “reason” like humans, and how we can create better methods for measuring machine cognition. The post Are We Thinking Correctly About AI Intelligence? first appeared on Quanta Magazine",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "neuroscience",
+          "label": "Neuroscience & Cognition"
+        }
+      ],
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 48,
+        "contentType": 18,
+        "freshness": 13,
+        "topicSignal": 1,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "013a988e8197857e5d16",
+      "title": "Dryland restoration needs shared evidence | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aek5595",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "On 15 August 2026, China’s Ecological and Environmental Code entered into force, consolidating more than 30 environmental laws into a unified framework of more than 1240 articles (1). At the time of this publication, the 17th session of the Conference of the Parties to the United Nations Convention to Combat Desertification (UNCCD COP17) is ongoing in Ulaanbaatar, Mongolia (2). This rare convergence offers an opportunity to extend China’s ecological governance beyond national borders through evidence-based dryland restoration cooperation.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "1f5ed6059a5f1570a72d",
+      "title": "Who checks what AI can do? | Science",
+      "url": "https://www.science.org/doi/10.1126/science.ael2161",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "The most important findings about frontier artificial intelligence (AI) are also the hardest to verify. Much of the information needed to understand its capabilities and risks—including results from evaluations of prerelease models and containment ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "2df69c0474ab9ca8f0b0",
+      "title": "A serendipitous sunset on Mars | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aec4203",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "HomeScienceVol. 393, No. 6813A serendipitous sunset on MarsBack To Vol. 393, No. 6813 Full accessLetterLife in Science Share on A serendipitous sunset on MarsPaul L. FoxAuthors Info & AffiliationsScience20 Aug 2026Vol 393, Issue 6813p. 768DOI: 10.1126/science.aec4203 PREVIOUS ARTICLEDryland restoration needs shared evidencePreviousNEXT ARTICLEA Brussels Effect for battery sustainabilityNext Noti...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "4acfaf363fd5b963ff8e",
+      "title": "Learning to love the machine | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aek5943",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Big Tech’s crusade to get kids coding is more self-interested than it first appears, argues a journalist",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "59416c7ec04c42c1d757",
+      "title": "Touch and pain shape what brain imaging sees | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aek1809",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Sensory inputs influence different blood vessel networks, affecting the precision of brain scans",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "6469769b3cc4e67e4945",
+      "title": "Biodiversity monitoring misses behavior | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aej9284",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "HomeScienceVol. 393, No. 6813Biodiversity monitoring misses behaviorBack To Vol. 393, No. 6813 Full accessLetter Share on Biodiversity monitoring misses behaviorPeter Mikula, Daniel T. Blumstein, and Piotr TryjanowskiAuthors Info & AffiliationsScience20 Aug 2026Vol 393, Issue 6813p. 767DOI: 10.1126/science.aej9284 PREVIOUS ARTICLELearning to love the machinePreviousNEXT ARTICLEDryland restoration...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "7689a9f3874add2a5b61",
+      "title": "RAD51 stabilizes neutrophil extracellular traps to compartmentalize inflammation | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aed9286",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Neutrophil extracellular traps (NETs) feature a branched chromatin architecture whose origin and function remain unknown. We found that NET branching is mediated by RAD51, a protein generating DNA junctions during DNA recombination repair. ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "9d0c5768c61aaddeb1ca",
+      "title": "Technology is not a replacement for democracy | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aej1046",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "A government run by machines is not inevitable—we have been here and rejected it before",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "a65db504b7d9b0d35d55",
+      "title": "The lab that learns | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aee2448",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Integrating high-throughput experiments, robotics, and artificial intelligence can accelerate scientific discoveries",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "b419bbecdaa216756342",
+      "title": "TGW1a locus simultaneously shortens growth duration and boosts grain yield in rice | Science",
+      "url": "https://www.science.org/doi/10.1126/science.ady1619",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Reconciling the trade-off between short growth duration and high grain yield is essential for enhancing annual rice yields. We found that qTGW1a, encoding a flowering locus T-like protein, controls heading and nitrogen use efficiency (NUE) underpinning ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "c5f2aa068f5b5b0a102f",
+      "title": "Beyond carbon in renewable energy policy | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aek1460",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "China’s policy-driven solar expansion shows why climate policy appraisal should look at biodiversity impacts",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "cf3731dbc118ed67b733",
+      "title": "A Brussels Effect for battery sustainability | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aed8133",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "An EU battery regulation can help drive toward a widely shared evidentiary system for sustainability governance",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "d267d5ddd8f42aefaf4a",
+      "title": "Modality-specific neurovascular coupling via layer-segregated arteriole networks | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aeb5077",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "The brain’s vascular system dynamically regulates energy supply through neurovascular coupling. In this study, we show that in mice, neurovascular coupling is modality-dependent: Distinct sensory inputs recruit specific arteriole types, producing ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 85,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "c1f616cb61f8979508bf",
+      "title": "Say it once: introducing Bot Preference Sync",
+      "url": "https://blog.cloudflare.com/bot-preference-sync",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-21T23:19:57Z",
+      "author": "Jin-Hee Lee",
+      "excerpt": "Cloudflare's new Bot Preference Sync automatically aligns your robots.txt file with your AI bot policies for Search, Agent, and Training. Easily manage which bots access your content without maintaining static files.",
+      "readingTimeMinutes": 7,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 15,
+        "topicSignal": 1,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "31298ffe2b4dd857f3df",
+      "title": "In Science Journals | Science",
+      "url": "https://www.science.org/doi/10.1126/science.ael5804",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Highlights from the Science family of journals",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 3
+      }
+    },
+    {
+      "id": "569d40e3ed76f34dcb5c",
+      "title": "In Other Journals | Science",
+      "url": "https://www.science.org/doi/10.1126/science.ael5805",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "Editors’ selections from the current scientific literature",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 3
+      }
+    },
+    {
+      "id": "eb7802fa8a31d307f4a1",
+      "title": "Bonding carbons iteratively | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aeg5569",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-20T13:01:00Z",
+      "author": null,
+      "excerpt": "A modular synthesis method could broaden the accessibility of chemistry",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 3
+      }
+    },
+    {
+      "id": "59fa9cf7ab044ae3ab6b",
+      "title": "China mission aims for the Moon’s hidden water with ‘hopping’ probe",
+      "url": "https://www.science.org/content/article/china-mission-aims-moon-s-hidden-water-hopping-probe",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-19T13:00:00Z",
+      "author": null,
+      "excerpt": "Chang’e-7 will sample lunar ice in a polar crater to trace its origins",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 3
+      }
+    },
+    {
+      "id": "e5a5c441204348ce65b7",
+      "title": "Notice of Vote to Approve Proposed Implementer’s Drafts of Two OpenID Federation Extensions",
+      "url": "https://openid.net/notice-of-vote-to-approve-proposed-implementers-drafts-of-two-openid-federation-extensions",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-07T15:52:35Z",
+      "author": "Mike Leszcz",
+      "excerpt": "The two-week voting period will be between Friday, August 21, 2026 to Friday, September 4, 2026, once the 45 day review of the specification has been completed. The OpenID Connect working group page https://openid.net/wg/connect/. If you’re not already a member, or if your membership has expired, please consider joining to participate in the approval vote. Information on [...] The post Notice of Vote to Approve Proposed Implementer’s Drafts of Two OpenID Federation Extensions first appeared on OpenID Foundation .",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "federation",
+          "label": "Federation"
+        },
+        {
+          "id": "oidc",
+          "label": "OpenID Connect"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 84,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 4,
+        "topicSignal": 5,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "4dc080c0750861844ab2",
+      "title": "Why Hawaii Put Japanese into Public Schools",
+      "url": "https://daily.jstor.org/why-hawaii-put-japanese-into-public-schools",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-21T13:26:43Z",
+      "author": "H.M.A. Leow",
+      "excerpt": "Political and religious leaders battled for influence through the education of Japanese immigrant children. The post Why Hawaii Put Japanese into Public Schools appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 4,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 83,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 15,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "39c5d897fda06534a282",
+      "title": "If You Build It, Will They Come? On the Sperm Racing World Cup",
+      "url": "https://www.theparisreview.org/blog/2026/08/21/if-you-build-it-will-they-come-on-the-sperm-racing-world-cup",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-21T14:00:32Z",
+      "author": "Paul McAdory",
+      "excerpt": "Onto Sperm Racing’s elegantly vulgar premise, the company has grafted a lame higher purpose intended to justify and temper the joyful stupidity of the enterprise.",
+      "readingTimeMinutes": 13,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 15,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "962d36387805a8c7e203",
+      "title": "Where Did All the Public Bathrooms Go?",
+      "url": "https://daily.jstor.org/where-did-all-the-public-bathrooms-go",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-19T13:23:00Z",
+      "author": "Jonathan Aprea",
+      "excerpt": "Nineteenth-century Paris tackled public urination with ornate pissoirs . American reformers later turned toilets into a temperance cause. The post Where Did All the Public Bathrooms Go? appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 6,
+      "tags": [
+        {
+          "id": "modern_history",
+          "label": "Modern History"
+        }
+      ],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 13,
+        "topicSignal": 1,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "16b8ac96c7b988a1f3eb",
+      "title": "BGP Role model: tracking the adoption of RFC 9234",
+      "url": "https://blog.cloudflare.com/rfc9234-bgp-role-model",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-18T15:21:32Z",
+      "author": "Mingwei Zhang",
+      "excerpt": "RFC 9234 lets routers reject route leaks on their own, using BGP Roles and the Only to Customer attribute. We measured who has deployed it, and found two Tier 1 networks unexpectedly stripping OTC.",
+      "readingTimeMinutes": 17,
+      "tags": [
+        {
+          "id": "networking",
+          "label": "Networking"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 10,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "9e96680cfcb9de28d8b1",
+      "title": "Justice Department calls three NSF diversity programs unconstitutional",
+      "url": "https://www.science.org/content/article/justice-department-calls-three-nsf-diversity-programs-unconstitutional",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-17T18:48:00Z",
+      "author": null,
+      "excerpt": "New ruling bars programs said to discriminate by race and sex, six others can continue if modified",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "4f645f3bf127dcdcb075",
+      "title": "Massive new animal disease lab in Kansas runs into more delays",
+      "url": "https://www.science.org/content/article/massive-new-animal-disease-lab-kansas-runs-more-delays",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-17T18:30:00Z",
+      "author": null,
+      "excerpt": "USDA doesn’t know when facility will be able to handle the most dangerous pathogens",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "3f20229fc3deecf6bbc2",
+      "title": "Ancient Rome: A City of Immigrants",
+      "url": "https://daily.jstor.org/ancient-rome-a-city-of-immigrants",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-17T13:29:58Z",
+      "author": "Matthew Wills",
+      "excerpt": "A neighborhood beyond the Tiber became home to generations of Jewish and Syrian migrants who reshaped the imperial capital. The post Ancient Rome: A City of Immigrants appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 4,
+      "tags": [
+        {
+          "id": "ancient_history",
+          "label": "Ancient History"
+        }
+      ],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 82,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 10,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "5ee85db9a39ca3d926e2",
+      "title": "From all-or-nothing to task-based OAuth consent",
+      "url": "https://blog.cloudflare.com/task-based-oauth-consent",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-20T17:03:03Z",
+      "author": "José Enrique Rodríguez",
+      "excerpt": "Cloudflare OAuth now supports optional scopes, giving users more control over what an app can access and helping developers build secure consent flows around the task at hand.",
+      "readingTimeMinutes": 5,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "117e23eba10464bc13c6",
+      "title": "The Culture Wars of The Phantom of the Opera",
+      "url": "https://daily.jstor.org/the-culture-wars-of-the-phantom-of-the-opera",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-20T13:32:58Z",
+      "author": "Angelica Frey",
+      "excerpt": "The hit musical became a battleground for competing ideas about capitalism, artistic value, and commercial theater. The post The Culture Wars of <em>The Phantom of the Opera</em> appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 5,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "886a8b52c23e7a130777",
+      "title": "A revisit of remote Spectre attacks on Cloudflare Workers",
+      "url": "https://blog.cloudflare.com/revisiting-spectre-attacks-on-workers",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-19T16:00:28Z",
+      "author": "Albert Pedersen",
+      "excerpt": "In 2024 and 2025, we reassessed remote Spectre attacks on our Workers infrastructure. We share details about the new attack primitives like Spectre gadgets, remote timers, achieving co-location and how new defenses further harden Cloudflare Workers.",
+      "readingTimeMinutes": 15,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "4cbbdbb4e98befa095ab",
+      "title": "Theory of Fluids Enters the 21st Century",
+      "url": "https://www.quantamagazine.org/theory-of-fluids-enters-the-21st-century-20260817",
+      "source": {
+        "id": "quanta",
+        "name": "Quanta Magazine"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-17T15:11:17Z",
+      "author": "Charlie Wood",
+      "excerpt": "From the 1800s to the early 2000s, physicists used the same theory to understand the behavior of fluids. Now, using a modern insight, they have redefined fluids from the bottom up. The post Theory of Fluids Enters the 21st Century first appeared on Quanta Magazine",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 48,
+        "contentType": 18,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "b587cb5cb3d41bd5d644",
+      "title": "From AI Copilots to Agent Swarms",
+      "url": "https://spectrum.ieee.org/amd-agent-swarms",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-17T14:00:01Z",
+      "author": "Andrej Zdravkovic",
+      "excerpt": "The impact of AI on software development has been both profound and ever-evolving. Last year, I wrote about AMD’s plans to use AI not just for generating new lines of code, but also for other steps in the software development lifecycle (SDLC), such as triaging problems, debugging code, and testing the software. At the time, we were hoping for a 25 percent productivity boost from AI use over the course of two or three years. But with each new release, the capabilities of large language models (LLMs) improve dramatically—accelerating software development, increasing the quality of AI-generated code, and fundamentally reshaping how software is engineered. Now, just one year later, we have surpassed our productivity target, achieving a 30 percent overall productivity boost through AI.…",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 10,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "2b331964d1c717eb692c",
+      "title": "Proposed Advancement of Web Authentication: An API for accessing Public Key Credentials Level 3 to W3C Recommendation",
+      "url": "https://www.w3.org/news/2026/proposed-advancement-of-webauthn-3-to-w3c-recommendation",
+      "source": {
+        "id": "w3c_webauthn",
+        "name": "W3C Web Authentication WG"
+      },
+      "category": "iam",
+      "publishedAt": "2026-07-20T15:16:00Z",
+      "author": null,
+      "excerpt": "This specification defines an API enabling the creation and use of strong, attested, scoped, public key-based credentials by web applications, for the purpose of strongly authenticating users.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "authentication",
+          "label": "Authentication"
+        },
+        {
+          "id": "passkeys_webauthn",
+          "label": "Passkeys / WebAuthn"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 1,
+        "topicSignal": 6,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "cc0bd54f2f93fca66dd7",
+      "title": "Errata to OpenID Identity Assurance Specifications Approved",
+      "url": "https://openid.net/errata-to-openid-identity-assurance-specifications-approved",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-07-08T19:09:11Z",
+      "author": "Mike Leszcz",
+      "excerpt": "Errata to the following specifications have been approved by a vote of the OpenID Foundation members: First Errata Set for OpenID Connect for Identity Assurance 1.0: This extension to OpenID Connect standardizes how relying parties request and receive identity information with additional assurance metadata. First Errata Set for OpenID Identity Assurance Schema Definition 1.0: This specification [...] The post Errata to OpenID Identity Assurance Specifications Approved first appeared on OpenID Foundation .",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "identity_proofing",
+          "label": "Identity Proofing"
+        },
+        {
+          "id": "oidc",
+          "label": "OpenID Connect"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 81,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 1,
+        "topicSignal": 5,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "cbfbeb9ff14287921139",
+      "title": "As demand for Meta AI glasses explodes, it’s harder to avoid creepy recordings",
+      "url": "https://arstechnica.com/tech-policy/2026/08/meta-ai-glasses-may-get-creepier-and-apps-that-detect-them-arent-perfect",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-21T11:00:53Z",
+      "author": "Ashley Belanger",
+      "excerpt": "Ars looks at Zuckoff, the latest free app detecting Meta AI glasses amid privacy backlash.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 80,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 13,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "f3aa1a3d14342b390448",
+      "title": "Gaining Leadership Backing for Your Innovations",
+      "url": "https://spectrum.ieee.org/leadership-backing-innovation",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-19T18:00:02Z",
+      "author": "Alexander Brem",
+      "excerpt": "This article is part of our exclusive career advice series in partnership with the IEEE Technology and Engineering Management Society. Imagine this: You have a strong idea for a new product for your company. Your coworkers encourage you to move forward because they believe it could be the organization’s next big success. The idea clearly falls outside your department’s responsibilities, however, and you have no role in the product line. What should you do? Sit and wait for “the right group” to pick it up, or push the idea forward without knowing how or what it might mean for your current position? Such situations occur frequently. Many end up as missed opportunities, even though they could have significantly advanced the company’s technological or market position.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 80,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "32f2a250f9d195f85c40",
+      "title": "Weekly release 2026.08.1",
+      "url": "https://developer.okta.com/docs/release-notes/2026-okta-identity-engine",
+      "source": {
+        "id": "okta_identity_engine",
+        "name": "Okta Identity Engine"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-12T12:00:00Z",
+      "author": null,
+      "excerpt": "Cross App Access support for AI agents and apps for all customers New IP service categories for enhanced dynamic zones Authorization and token endpoints now support multiple resources per refresh token is GA in Preview Bugs fixed in 2026.08.1",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "authorization",
+          "label": "Authorization"
+        },
+        {
+          "id": "tokens_jwt",
+          "label": "Tokens & JWT"
+        }
+      ],
+      "contentType": {
+        "id": "official_release_notes",
+        "label": "Official Release Notes"
+      },
+      "score": {
+        "base": 80,
+        "sourceQuality": 48,
+        "contentType": 19,
+        "freshness": 7,
+        "topicSignal": 2,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "922094a4e18b2bd9cd18",
+      "title": "Public Review Period for Proposed OpenID Connect Ephemeral Subject Identifier 1.0 Final Specification",
+      "url": "https://openid.net/public-review-period-for-proposed-openid-connect-ephemeral-subject-identifier-1-0-final-specification",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-07-17T18:43:14Z",
+      "author": "Mike Leszcz",
+      "excerpt": "The OpenID Connect Working Group recommends approval of the following specification as an OpenID Final Specification: OpenID Connect Ephemeral Subject Identifier 1.0 A Final Specification provides intellectual property protections to implementers of the specification and is not subject to further revision. This note starts the 60-day public review period for the specification draft in accordance with [...] The post Public Review Period for Proposed OpenID Connect Ephemeral Subject Identifier 1.0 Final Specification first appeared on OpenID Foundation .",
+      "readingTimeMinutes": 2,
+      "tags": [
+        {
+          "id": "oidc",
+          "label": "OpenID Connect"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 80,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 1,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "ac95aac6a34e53b71ee6",
+      "title": "Public Review Period for Proposed Implementer’s Draft of OpenID Connect Key Binding",
+      "url": "https://openid.net/public-review-period-for-proposed-implementers-draft-of-openid-connect-key-binding",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-07-09T18:51:07Z",
+      "author": "Mike Leszcz",
+      "excerpt": "The OpenID Connect Working Group recommends approval of the following specification as an OpenID Implementer’s Draft: OpenID Connect Key Binding 1.0 This would be the first Implementer’s Draft of this specification. An Implementer’s Draft is a stable version of a specification providing intellectual property protections to implementers of the specification. This note starts the 45-day public review [...] The post Public Review Period for Proposed Implementer’s Draft of OpenID Connect Key Binding first appeared on OpenID Foundation .",
+      "readingTimeMinutes": 2,
+      "tags": [
+        {
+          "id": "oidc",
+          "label": "OpenID Connect"
+        }
+      ],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 80,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 1,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "8a216f1c822a48a1b40f",
+      "title": "Too Many DevEx Metrics, Too Little Guidance",
+      "url": "https://queue.acm.org/detail.cfm?id=3831360&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-17T12:15:17Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "d83c65f65471f0a2b48f",
+      "title": "Hundreds of paper-mill papers peddled in ads were later published",
+      "url": "https://www.science.org/content/article/hundreds-paper-mill-papers-peddled-ads-were-later-published",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-12T19:45:00Z",
+      "author": null,
+      "excerpt": "More than one-fifth of some IEEE conferences’ papers appear linked to authorship for sale",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "c04e07db27dc2c7285ea",
+      "title": "Arson attack jolts Italy’s bid to host the Einstein Telescope",
+      "url": "https://www.science.org/content/article/arson-attack-jolts-italy-s-bid-host-einstein-telescope",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-12T12:45:00Z",
+      "author": null,
+      "excerpt": "Two scientists' cars were burned at the proposed Sardinian site, in what researchers say was an attempt to intimidate supporters of the gravitational-wave observatory",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "d9c6827657105a74bda9",
+      "title": "Cloudflare DDoS Threat Report H1 2026: 1 Tbps attacks soar as DNS floods and geopolitical tensions drive a new wave",
+      "url": "https://blog.cloudflare.com/ddos-threat-report-2026-h1",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-11T13:00:00Z",
+      "author": "Cloudforce One",
+      "excerpt": "In the first half of 2026, Cloudflare detected a 519% surge in hyper-volumetric DDos attacks across its network. These attacks were driven heavily by DNS and CLDAP reflection vectors. This report breaks down how major geopolitical conflicts reshaped the global cyber threat landscape.",
+      "readingTimeMinutes": 7,
+      "tags": [
+        {
+          "id": "networking",
+          "label": "Networking"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "184fdc6cb66a37d9e2eb",
+      "title": "OpenID4VP and OpenID4VCI conformance tests are complete and open for self-certification",
+      "url": "https://openid.net/openid4vp-and-openid4vci-conformance-tests-are-complete-and-open-for-self-certification",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-07T15:19:22Z",
+      "author": "Elizabeth Garber",
+      "excerpt": "The OpenID Foundation calls on implementers to self-certify now and be among the first to go on record. The OpenID Foundation is pleased to announce that the conformance test suites for both the OpenID for Verifiable Presentations (OpenID4VP) and OpenID for Verifiable Credential Issuance (OpenID4VCI) protocols used with the High Assurance Interoperability Profile (HAIP) are [...] The post OpenID4VP and OpenID4VCI conformance tests are complete and open for self-certification first appeared on OpenID Foundation .",
+      "readingTimeMinutes": 10,
+      "tags": [],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e8f05864cb94897643ad",
+      "title": "OpenID Foundation completes conformance programme for widely adopted digital identity standards",
+      "url": "https://openid.net/oidf-completes-conformance-programme-for-widely-adopted-digital-identity-standards",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-08-07T15:17:35Z",
+      "author": "Elizabeth Garber",
+      "excerpt": "Governments, wallet providers, issuers, verifiers, and vendors now have a proven, free path to declare their verifiable credentials implementations ready. Early movers who self-certify now will carry greater weight with ecosystem partners, regulators and customers. San Ramon, CA, 07 August 2026 – The OpenID Foundation has completed the conformance test suites for OpenID for Verifiable [...] The post OpenID Foundation completes conformance programme for widely adopted digital identity standards first appeared on OpenID Foundation .",
+      "readingTimeMinutes": 8,
+      "tags": [],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "3a17c7d3bd87c857eb9f",
+      "title": "Public Review Period for Proposed OpenID CAEP Interoperability Profile Final Specification",
+      "url": "https://openid.net/public-review-period-for-proposed-openid-caep-interoperbility-profile-final-specification",
+      "source": {
+        "id": "openid_specs",
+        "name": "OpenID Foundation"
+      },
+      "category": "iam",
+      "publishedAt": "2026-07-27T18:13:32Z",
+      "author": "Mike Leszcz",
+      "excerpt": "The OpenID Shared Signals Working Group recommends approval of the following specification as an OpenID Final Specification: OpenID OpenID CAEP Interoperability Profile A Final Specification provides intellectual property protections to implementers of the specification and is not subject to further revision. This note starts the 60-day public review period for the specification draft in accordance with the [...] The post Public Review Period for Proposed OpenID CAEP Interoperability Profile Final Specification first appeared on OpenID Foundation .",
+      "readingTimeMinutes": 2,
+      "tags": [],
+      "contentType": {
+        "id": "standards_update",
+        "label": "Standards Update"
+      },
+      "score": {
+        "base": 79,
+        "sourceQuality": 50,
+        "contentType": 20,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "ad40d55c6d027b151c69",
+      "title": "Neurodiversity in the Clinic",
+      "url": "https://daily.jstor.org/neurodiversity-in-the-clinic",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-18T13:44:16Z",
+      "author": "Livia Gershon",
+      "excerpt": "Autism researcher Patrick Dwyer examines how the neurodiversity movement is influencing autism research and clinical decision-making. The post Neurodiversity in the Clinic appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 3,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 78,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "518b2b3d8f0f99ea975c",
+      "title": "Why Aging May Be a Program, Not a Breakdown",
+      "url": "https://www.quantamagazine.org/why-aging-may-be-a-program-not-a-breakdown-20260814",
+      "source": {
+        "id": "quanta",
+        "name": "Quanta Magazine"
+      },
+      "category": "science",
+      "publishedAt": "2026-08-14T13:10:26Z",
+      "author": "Ingrid Wickelgren",
+      "excerpt": "By deciphering the molecular signatures of millions of mouse cells, Junyue Cao has found that aging is not haphazard wear and tear but rather a “remodeling of the cell society.” The post Why Aging May Be a Program, Not a Breakdown first appeared on Quanta Magazine",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_science",
+        "label": "Reported Science"
+      },
+      "score": {
+        "base": 78,
+        "sourceQuality": 48,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "bc91c5694f97fbdadc45",
+      "title": "The Catalogue of Lost Things",
+      "url": "https://www.theparisreview.org/blog/2026/08/18/the-catalogue-of-lost-things",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-18T14:00:10Z",
+      "author": "Tarpley Hitt",
+      "excerpt": "Some favorite passages from the many new releases that wound up on our desks this July and August.",
+      "readingTimeMinutes": 6,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 77,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "99ee0a2f103355d2225f",
+      "title": "IEEE Presidents’ Scholarship Honors Teen Innovators",
+      "url": "https://spectrum.ieee.org/ieee-presidents-scholarship-2026",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-17T18:00:04Z",
+      "author": "Dov Fine",
+      "excerpt": "About 16 percent of the global population—more than 1 billion people—live with some form of disability, according to the World Health Organization . Many of the disabilities affect independence and mobility. Three high school students working on inventions to help people with disabilities restore movement, translate thoughts, and navigate rough terrain had their work showcased at Regeneron’s International Science and Engineering Fair (ISEF) , held in May in Phoenix. Their projects earned them this year’s IEEE Presidents’ Scholarship awards. IEEE President Mary Ellen Randall presented the awards at a ceremony held during the fair. They also received an IEEE President’s coin, which students said was a highlight of their experience.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 77,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "11482502fc8ed23d5614",
+      "title": "James Joyces’s Baby Impressions and Other “Awkward Pleasures” of Literary Biography",
+      "url": "https://www.theparisreview.org/blog/2026/08/17/james-joycess-baby-impressions-and-other-awkward-pleasures-of-literary-biography",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-17T15:09:54Z",
+      "author": "Daisy Hildyard",
+      "excerpt": "“I believed I had a fair understanding of W. G. Sebald until I read his biography and saw the black-and-white snapshot of him as a young man standing thigh-deep in a river, topless in wet jeans with a deep tan, defined muscles, and a dagger in his hand.”",
+      "readingTimeMinutes": 3,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 77,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "d5e7959aa0306d0c6343",
+      "title": "Unifying Workers AI and AI Gateway into a single AI control plane",
+      "url": "https://blog.cloudflare.com/workers-ai-gateway-unification",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T13:00:00Z",
+      "author": "Ming Lu",
+      "excerpt": "Cloudflare is unifying AI Gateway and Workers AI into a single control plane, giving developers observability, billing, and dynamic routing across both managed GPUs and external providers. Learn how unified bindings and model-first routing simplify building resilient AI applications.",
+      "readingTimeMinutes": 6,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        },
+        {
+          "id": "devops_sre",
+          "label": "DevOps & SRE"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 77,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 5,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e0c60a968795149ef063",
+      "title": "The Challenge of Efficiency Versus Isolation",
+      "url": "https://queue.acm.org/detail.cfm?id=3831358&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-13T16:37:21Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 76,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "6989b272a2b2dbf050c3",
+      "title": "Unethical Ways to Manage Technical Debt",
+      "url": "https://queue.acm.org/detail.cfm?id=3830399&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-10T15:13:03Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 76,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "3f09e82414601139235f",
+      "title": "Introducing Radar Researcher: An AI tool for exploring Internet data in plain language",
+      "url": "https://blog.cloudflare.com/introducing-radar-researcher",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T13:00:00Z",
+      "author": "André Jesus",
+      "excerpt": "Cloudflare Radar Researcher is a new AI-powered tool that lets you explore global Internet trends and traffic data using plain language. Built entirely on Cloudflare's Developer Platform, it turns natural language queries into real, interactive charts.",
+      "readingTimeMinutes": 11,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 76,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "df6247db840a99f65ea3",
+      "title": "From ranking to recommended: get your site ready to thrive in the age of AI agents",
+      "url": "https://blog.cloudflare.com/aeo",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-06T13:00:00Z",
+      "author": "Jack Galilee",
+      "excerpt": "More than half of requests now come from machines, not people. Agent Readiness shows how well agents can discover and read your site, while Answer Engine Optimization tracks how often AI assistants recommend you.",
+      "readingTimeMinutes": 7,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 76,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "f954d86e102f2f9321c1",
+      "title": "Cloudflare AI Search: give your agents a search engine for your data",
+      "url": "https://blog.cloudflare.com/ai-search-easier",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-06T13:00:00Z",
+      "author": "Anni Wang",
+      "excerpt": "AI Search makes search easier than ever, with no Cloudflare primitives to stitch together. Point it at your data to create a search for your own files and websites. We're also sharing a preview of our new pricing model.",
+      "readingTimeMinutes": 7,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 76,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "443c1ae9ed418bb377f5",
+      "title": "Google Pixel 11 series review: Is the magic fading?",
+      "url": "https://arstechnica.com/gadgets/2026/08/google-pixel-11-series-review-is-the-magic-fading",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-19T16:11:30Z",
+      "author": "Ryan Whitwam",
+      "excerpt": "Google's new Pixels make some compromises but still manage to be good phones.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 13,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "cc71f5d6909721c3b300",
+      "title": "How to Search JSTOR with Keywords",
+      "url": "https://daily.jstor.org/how-to-search-jstor-with-keywords",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-14T13:32:00Z",
+      "author": "The Editors",
+      "excerpt": "Turn a research question into an effective search strategy that delivers more useful scholarly results. The post How to Search JSTOR with Keywords appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 4,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "25f97e26ea36c89ebde6",
+      "title": "How Cloudflare detects MCP traffic and helps secure it",
+      "url": "https://blog.cloudflare.com/mcp-security-updates",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-14T13:12:12Z",
+      "author": "Kenny Johnson",
+      "excerpt": "Cloudflare Gateway identifies MCP requests using protocol-level heuristics. Security teams can use that signal to find shadow MCP traffic, enforce Portal-only access for approved servers, and block direct connections on managed network paths.",
+      "readingTimeMinutes": 15,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "7d16f6d18397197e4155",
+      "title": "Secure all your internal vibe-coded applications — in one click",
+      "url": "https://blog.cloudflare.com/workers-protected-by-access",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-14T13:00:00Z",
+      "author": "Matt Provost",
+      "excerpt": "Introducing Cloudflare Access for Workers. Attach an Access policy directly to a Worker and it applies everywhere that Worker runs — routes, custom domains, workers.dev, and previews — automatically.",
+      "readingTimeMinutes": 6,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "942e89faf12a7c00bf9f",
+      "title": "Total eclipse of the Internet: traffic impacts in Iceland, Spain, and Portugal",
+      "url": "https://blog.cloudflare.com/total-eclipse-internet-traffic-iceland-spain-portugal",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-13T19:58:01Z",
+      "author": "Lai Yi Ohlsen",
+      "excerpt": "Cloudflare's data shows a clear impact on Internet traffic from Iceland to Spain and Portugal, following the path of totality of the total solar eclipse that occurred on August 12, 2026.",
+      "readingTimeMinutes": 5,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "90defa60e6ade602d91f",
+      "title": "Dear Reader: 10 Epistolary Poems by Contemporary Writers",
+      "url": "https://daily.jstor.org/dear-reader-10-epistolary-poems-by-contemporary-writers",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-13T13:31:00Z",
+      "author": "The Editors",
+      "excerpt": "Letters to lovers, siblings, artists, gods, and enemies by Diane Wakoski, Yusef Komunyakaa, Kazim Ali, June Jordan, and more. The post Dear Reader: 10 Epistolary Poems by Contemporary Writers appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 4,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "ff8e21af745fe4d38a97",
+      "title": "Certificate Transparency Monitoring is now generally available",
+      "url": "https://blog.cloudflare.com/certificate-transparency-monitoring-ga",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-13T13:00:00Z",
+      "author": "Pravallika Nakarikanti",
+      "excerpt": "Cloudflare's Certificate Transparency Monitoring is now generally available. The biggest change: we no longer email you about certificates Cloudflare issued for your domain, so when an alert lands in your inbox, it's worth a look.",
+      "readingTimeMinutes": 7,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "42557e9877b16498ef92",
+      "title": "How the Big Dig Changed Boston’s Landscape",
+      "url": "https://daily.jstor.org/how-the-big-dig-changed-bostons-landscape",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-12T13:33:00Z",
+      "author": "The Editors",
+      "excerpt": "Created after the Big Dig, the Rose Kennedy Greenway shows how cities attempt to heal the scars of highway construction. The post How the Big Dig Changed Boston’s Landscape appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 6,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "721628abd6c169c90cf5",
+      "title": "How America Reinvented Yogurt",
+      "url": "https://daily.jstor.org/how-america-reinvented-yogurt",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-11T13:33:24Z",
+      "author": "Livia Gershon",
+      "excerpt": "The journey from immigrant staple to diet snack reveals how yogurt took on a distinctly American identity. The post How America Reinvented Yogurt appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 3,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "56def65bda0a22c6cb78",
+      "title": "Everything we launched during Agents Week",
+      "url": "https://blog.cloudflare.com/agents-week-review-august-2026",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-10T18:34:10Z",
+      "author": "Kathy Liao",
+      "excerpt": "Our latest Agents Week has come to a close. Here’s a recap of all the announcements we made from Wallets to Radar.",
+      "readingTimeMinutes": 2,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "bb978571a523223821ee",
+      "title": "The Long History of Sexpionage",
+      "url": "https://daily.jstor.org/the-long-history-of-sexpionage",
+      "source": {
+        "id": "jstor_daily",
+        "name": "JSTOR Daily"
+      },
+      "category": "history",
+      "publishedAt": "2026-08-10T13:23:16Z",
+      "author": "Matthew Wills",
+      "excerpt": "How honey traps evolved from human seduction to digital deception in the changing world of espionage. The post The Long History of Sexpionage appeared first on JSTOR Daily .",
+      "readingTimeMinutes": 4,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 47,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "4b6d49951797b4ddb63d",
+      "title": "Serving the most critical missions: Cloudflare for Government achieves FedRAMP Class D (High) Certified status",
+      "url": "https://blog.cloudflare.com/fedramp-class-d-certification",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-10T13:00:00Z",
+      "author": "Jake Schaeufele",
+      "excerpt": "Cloudflare for Government achieves FedRAMP Class D (High) Certified status. We also announce our commitment to pursue DoD IL4 authorization. Cloudflare brings world-class security, performance, and developer products to the public sector.",
+      "readingTimeMinutes": 4,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "a1ba55cf7cb792e045b8",
+      "title": "Siobahn Day Grady Wants Everyone to Be AI Literate",
+      "url": "https://spectrum.ieee.org/siobahn-day-grady-ai-hbcu",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-29T14:00:02Z",
+      "author": "Aaron Mok",
+      "excerpt": "Artificial intelligence is reshaping the skills employers expect from new graduates. In response, universities are scrambling to launch new courses, research centers, and industry partnerships that prepare students for today’s workforce. But building a cutting-edge AI curriculum demands funding and access to industry networks, resources that remain unevenly distributed across higher education. At North Carolina Central University, Siobahn Day Grady is trying to change that equation. In January 2025, Grady, an associate professor in the NCCU School of Library and Information Sciences , launched the first AI research institute at a historically Black college or university, or HBCU.…",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "62ef58c30416a271297b",
+      "title": "AI Is Hyper-Scaling Digital Inequality",
+      "url": "https://spectrum.ieee.org/ai-digital-divide",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-29T11:00:04Z",
+      "author": "Danica Radovanović",
+      "excerpt": "Artificial intelligence is rapidly becoming part of everyday infrastructure–in some places. It helps write emails and software code, filters job applications, powers recommendation systems, and is increasingly being integrated into education, health care, finance, and public administration. Industry leaders talk about “AI for everyone,” while governments rush to publish national AI strategies and build sovereign compute. Yet over the past decade, working on digital inclusion and digital literacy projects in regions from Europe to sub-Saharan Africa and Southeast Asia, I’ve seen the same pattern repeat : Each new wave of “transformative” technology lands on a landscape already stratified by connectivity, skills, and institutional capacity. The current AI wave is no exception.…",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 75,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "ffffd487eba78ef46fcd",
+      "title": "Digital Signal Processing Pioneer Bede Liu Dies At 91",
+      "url": "https://spectrum.ieee.org/digital-signal-processing-pioneer-bede-liu",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-14T18:00:02Z",
+      "author": "The Liu Family",
+      "excerpt": "Bede Liu, a digital signal processing pioneer, died on 7 May. He was 91. Liu was widely regarded as one of the founders of modern digital signal processing, a field that applies mathematical algorithms to analyze, modify, and transmit signals including sound, images, and video. The IEEE Life Fellow taught electrical engineering at Princeton for more than 50 years. From 1994 to 1997, he chaired the university’s electrical and computer engineering department . Liu’s research aided the transition from analog to digital processing of sound, images, and video. His work helped establish many of the mathematical and engineering techniques that underpin modern communications, multimedia systems, and consumer electronics.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "37d0a55d2086ca55f755",
+      "title": "Bring a Product Manager Mindset to Your Next Engineering Job",
+      "url": "https://spectrum.ieee.org/product-engineer",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-13T14:44:50Z",
+      "author": "Brian Jenney",
+      "excerpt": "If you haven’t already seen a job listing for a “product engineer,” you probably will soon. The job everyone’s suddenly hiring for, this role is like a cross between a product manager and an engineer (as the name suggests). And it’s a hiring trend worth paying attention to. Companies are opening more of these roles every single month, but they’re struggling to fill them. The reason has almost nothing to do with engineers’ coding skills or years of experience. The best career move you can make to prepare for these types of roles has almost nothing to do with getting more technical. Instead, it comes down to one of the fluffiest, most overused, and potentially cringiest words in all of tech: mindset . Stick with me, I promise this goes somewhere useful.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e0f3cee3b824c175efea",
+      "title": "Terabytes of credentials leaked in massive supply-chain attack",
+      "url": "https://arstechnica.com/security/2026/08/terabytes-of-credentials-leaked-in-massive-supply-chain-attack",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-12T21:43:21Z",
+      "author": "Dan Goodin",
+      "excerpt": "The data was scraped and exfiltrated from 2,500 users of a compromised AI package.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "cybersecurity",
+          "label": "Cybersecurity"
+        },
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 7,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "22a7ed9510286984c1e6",
+      "title": "The Bookstore-Slash-Skate-Shop Next to Ballerina Farm",
+      "url": "https://www.theparisreview.org/blog/2026/08/12/the-bookstore-slash-skate-shop-next-to-ballerina-farm",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-12T14:00:33Z",
+      "author": "Claire Carusillo",
+      "excerpt": "“The first book I sell on our first day in business is a used copy of 'Fart Proudly: Writings of Benjamin Franklin You Never Read in School.'”",
+      "readingTimeMinutes": 10,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "eb1ab67c942e7c0dd17a",
+      "title": "IEEE Engineering Summit Supports Bhutan’s Digital Transformation",
+      "url": "https://spectrum.ieee.org/ieee-summit-bhutan-digital-transformation",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-11T19:50:54Z",
+      "author": "IEEE",
+      "excerpt": "In collaboration with the Kingdom of Bhutan government, IEEE recently introduced its Engineering Education, Research, and Innovation Summit. Held on 9 and 10 June in Paro, in the eastern Himalayas, the event was designed to help Bhutan navigate its digital transformation by focusing on the critical intersection of digital transformation, engineering education, and sustainable development. The summit brought together global academic leaders, technology experts, and Bhutanese government officials to discuss how modern engineering curricula can evolve from theory-centric models into application- and skills-based frameworks.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "d8aa826fc36592222050",
+      "title": "Zap Rocks. Add Water. Get Clean Hydrogen",
+      "url": "https://spectrum.ieee.org/stimulated-geologic-hydrogen",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-11T13:00:01Z",
+      "author": "Ariel Bleicher",
+      "excerpt": "In a tranquil Boston suburb , on the far edge of a horse farm, where pasture gives way to woods, a crane lowers an enormous electrode into a borehole. The electrode, a half-meter-long cylinder with copper-tipped arms to ensure good contact with the borehole walls, descends—deeper, deeper—through layers of spongy sandstone to the hard, marbled roots of an ancient mountain range hundreds of meters below ground. Here the rock is tight; there are few cracks for water or gases to flow. But that’s about to change. A stone’s throw away, a second electrode—a twin of the first—has been fixed in another borehole at the same depth. From above ground, a pair of high-voltage generators cabled to the two electrodes fires a series of pulses. Tsss!...Tsss!...Tsss!...Tsss!...Tsss!....…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "1e076a5ca6b4bdc0e280",
+      "title": "Peer review is overwhelmed—can it survive in the AI era?",
+      "url": "https://arstechnica.com/science/2026/08/peer-review-is-overwhelmed-can-it-survive-in-the-ai-era",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-10T11:00:47Z",
+      "author": "Saima Sidik",
+      "excerpt": "As research and AI-assisted papers surge, volunteer reviewers struggle to keep up.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 7,
+        "topicSignal": 4,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "7ee15b010b037053e75f",
+      "title": "IEEE Course Teaches How to Use AI to Modernize Power Grids",
+      "url": "https://spectrum.ieee.org/ieee-course-ai-power-grids",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-05T18:00:03Z",
+      "author": "Pauleth Jaramillo",
+      "excerpt": "Today’s U.S. electrical grid, among the largest, most complex systems ever built, is operating at its limit. The combination of rapid industrial growth, more frequent extreme weather, and a record surge in electricity use has pushed the grid to its breaking point , according to the U.S. Department of Energy . Built decades ago for a more predictable world in which power came mostly from centralized coal or gas plants and electricity use grew at a steady pace, the grid faces unanticipated strain due in part to growing demand from data centers. The jobs of professionals managing the infrastructure have evolved from traditional engineering tasks to complex, fast-moving challenges.…",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 3,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "ef31b4976cb31439f185",
+      "title": "Virome-wide ubiquitin ligase discovery reveals diverse mechanisms of immune evasion | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aec6299",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-07-09T13:01:00Z",
+      "author": null,
+      "excerpt": "Viruses are intracellular parasites that reprogram the host proteome to promote replication and evade immune recognition. We applied a virome-wide library of ~10,000 open reading frames to discover viral ubiquitin ligases, mapping their mechanisms of ...",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "scientific_method",
+          "label": "Scientific Method"
+        }
+      ],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 74,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 1,
+        "topicSignal": 1,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "fc2e11b0d476383c2b8f",
+      "title": "In the Studio with Chad Fore, the Writer Behind “Lil Spooky”",
+      "url": "https://www.theparisreview.org/blog/2026/08/14/chad-fore-on-lil-spooky",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-14T14:00:26Z",
+      "author": "Owen Park",
+      "excerpt": "“‘What are they rapping about?’ ‘Well, devil worship.’”",
+      "readingTimeMinutes": 13,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "a7a9c478940f938dd7c5",
+      "title": "Booksellers suspect AI firms are buying and then destroying rare books",
+      "url": "https://arstechnica.com/tech-policy/2026/08/heres-a-balm-if-the-idea-of-destroying-books-to-train-ai-breaks-your-heart",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-12T15:19:17Z",
+      "author": "Ashley Belanger",
+      "excerpt": "AI firms quietly bulk buying rare books face resistance from booksellers.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 7,
+        "topicSignal": 4,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "40f5467ebbabf387c83f",
+      "title": "Introducing Kitesurf: The agent-first browser that runs in V8 isolates on Cloudflare Workers",
+      "url": "https://blog.cloudflare.com/kitesurf",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-06T13:00:00Z",
+      "author": "Luís Duarte",
+      "excerpt": "We should be giving all agents tools that excel at what’s important for an AI model. Kitesurf is Cloudflare’s new stateless, highly scalable, and cost-effective web browser that runs entirely on top of Workers and was designed specifically for the Agentic Cloud.",
+      "readingTimeMinutes": 14,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 1,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "380062cd1e134147ec1c",
+      "title": "Where to Draw the Line",
+      "url": "https://queue.acm.org/detail.cfm?id=3834784&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-05T13:55:23Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "d95f7f86facb4502556c",
+      "title": "Indirected Reality",
+      "url": "https://queue.acm.org/detail.cfm?id=3819081&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-02T14:47:23Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "ed48b9f05af20497ce11",
+      "title": "Where Does the Foundation Come From?",
+      "url": "https://queue.acm.org/detail.cfm?id=3831359&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-27T12:14:37Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "d440fef9d579d347ff5f",
+      "title": "Titan Transients and LLM Scalability",
+      "url": "https://queue.acm.org/detail.cfm?id=3819082&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-22T13:40:39Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 1,
+        "topicSignal": 3,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "0323764df49dadea9da1",
+      "title": "Beyond Zero: Enterprise Security for the AI Era",
+      "url": "https://queue.acm.org/detail.cfm?id=3819083&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-20T13:01:06Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 1,
+        "topicSignal": 3,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "60268c4e917396d4f2c6",
+      "title": "A cinnamyl alcohol dehydrogenase–like scaffold organizes monoterpenoid indole alkaloid biosynthesis | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aeb0357",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-07-16T13:01:00Z",
+      "author": null,
+      "excerpt": "Biosynthesis of ~3000 monoterpenoid indole alkaloids (MIAs), including the anticancer drug vinblastine, involves the highly unstable intermediate strictosidine aglycone. Its formation by strictosidine β-glucosidase (SGD) and subsequent conversion by ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "e7988f580df60290dba0",
+      "title": "Preferred synthesis of armchair transition metal dichalcogenide nanotubes | Science",
+      "url": "https://www.science.org/doi/10.1126/science.aeh1429",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-07-16T13:01:00Z",
+      "author": null,
+      "excerpt": "Nanotubes represent an important class of crystalline materials, but controlling their structures, particularly chiralities, remains a fundamental challenge. In this work, we report a strategy for synthesizing transition metal dichalcogenide nanotubes ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "7d7222a015f958f154d4",
+      "title": "Autonomous biomedical research with an artificial intelligence agent | Science",
+      "url": "https://www.science.org/doi/10.1126/science.adz4351",
+      "source": {
+        "id": "science_aaas",
+        "name": "Science / AAAS"
+      },
+      "category": "science",
+      "publishedAt": "2026-07-09T13:01:00Z",
+      "author": null,
+      "excerpt": "Biomedical research is increasingly constrained by repetitive, fragmented workflows that slow discovery. We introduce Biomni, a general-purpose biomedical artificial intelligence agent that autonomously executes diverse research tasks. To map the ...",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "research_reporting",
+        "label": "Research & Science"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 49,
+        "contentType": 19,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "126e07cf0d684e0333f9",
+      "title": "Effective context engineering for AI agents",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 3,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "1eba12a4a8fa384c9268",
+      "title": "Building a C compiler with a team of parallel Claudes",
+      "url": "https://www.anthropic.com/engineering/building-c-compiler",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "programming_languages",
+          "label": "Languages & Runtimes"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 3,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "2ab0d2c099317874ed36",
+      "title": "Designing AI-resistant technical evaluations",
+      "url": "https://www.anthropic.com/engineering/AI-resistant-technical-evaluations",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 3,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "64af1d1a2fd48283363f",
+      "title": "How we contain Claude across products",
+      "url": "https://www.anthropic.com/engineering/how-we-contain-claude",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "As agents grow more capable, so does their potential blast radius. The engineering question is how to cap it. Here’s what we’ve learned building containment for claude.ai, Claude Code, and Cowork.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 1,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "6c790a16de0afd2b5fe6",
+      "title": "Demystifying evals for AI agents",
+      "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 73,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 3,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "422218cec3e1142580fd",
+      "title": "Satellite operators are in panic mode due to a worsening launch crisis",
+      "url": "https://arstechnica.com/space/2026/08/theres-a-huge-launch-crunch-right-now-and-it-will-probably-get-worse",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-17T11:00:26Z",
+      "author": "Eric Berger",
+      "excerpt": "What happens if the Falcon rockets stop flying?",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 10,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "c5e9cce14dec4950e61b",
+      "title": "Unveiling good and bad behaviors on the Agentic Internet",
+      "url": "https://blog.cloudflare.com/good-and-bad-agentic-behaviors",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T13:01:00Z",
+      "author": "Marina Elmore",
+      "excerpt": "Cloudflare is shifting bot mitigation from point-in-time Risk assessment to continuous Trust evaluation. Learn how new good and bad behaviors from bots and agents are assessed by our systems, including BotBase and Precursor — and try out our Precursor Trace simulation to see how your own cursor movements would be assessed as human or bot.",
+      "readingTimeMinutes": 9,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "f178390f22b737644199",
+      "title": "Cars Communicating Badly Is an Already-Solved Problem",
+      "url": "https://spectrum.ieee.org/v2x-technology-5g-open-ran",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T13:00:01Z",
+      "author": "Francesco Linsalata",
+      "excerpt": "The history of networking is full of tools that repurposed solutions to very different kinds of problems first. Wi-Fi’s origins trace back , in part, to a team of Australian radio astronomers trying to detect signals from evaporating black holes. But the data-processing tools they’d developed also proved capable at extracting clean messages from any chaotic, echoing signal environment . Echoes are echoes, after all, whether from distant star systems or from the far corner of the house. I research vehicle communications networks , connecting cars to cars and to transportation infrastructure like traffic lights—for tomorrow’s vehicle-to-everthing (V2X) networks .…",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "networking",
+          "label": "Networking"
+        }
+      ],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 1,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "d88819ef7cbd577e61cc",
+      "title": "Announcing Cloudflare Ambassadors, Community Engineers, and another $1M in open-source funding",
+      "url": "https://blog.cloudflare.com/community-program-refresh",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T13:00:00Z",
+      "author": "Marissa Phul",
+      "excerpt": "We are launching updated community programs, including Cloudflare Ambassadors and Community Engineers, backed by $1M in open-source funding. Learn how we are supporting maintainers and scaling our developer community.",
+      "readingTimeMinutes": 6,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e59e91879b325c7b9828",
+      "title": "Building an open Agentic Internet: readable, discoverable, callable, and payable",
+      "url": "https://blog.cloudflare.com/the-agentic-internet",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-06T13:00:00Z",
+      "author": "Andrew Galloni",
+      "excerpt": "Agents are a new kind of visitor. They don't render CSS or click ads, but they have a paying human on the other end. Block them and you block your customer. We're building the open tools and protocols so publishers and agents can cooperate and not collide.",
+      "readingTimeMinutes": 8,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "f3d7b89cf654e34d7b3c",
+      "title": "The next generation of MCP",
+      "url": "https://blog.cloudflare.com/mcp-v2",
+      "source": {
+        "id": "cloudflare_blog",
+        "name": "Cloudflare Blog"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-06T13:00:00Z",
+      "author": "Matt Carey",
+      "excerpt": "The next version of MCP has a rewritten, stateless core that just works on Workers. We cover upgrades to the protocol, the new feature lifecycle and SDK migration path, and hear from early adopters already running it in production.",
+      "readingTimeMinutes": 10,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 45,
+        "contentType": 18,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "7ce191c9b5cfdd57025d",
+      "title": "Artificial Intelligence: Ars Notoria and the Promise of Instant Knowledge",
+      "url": "https://publicdomainreview.org/essay/ars-notoria",
+      "source": {
+        "id": "public_domain_review",
+        "name": "The Public Domain Review"
+      },
+      "category": "history",
+      "publishedAt": "2026-07-29T14:08:00Z",
+      "author": null,
+      "excerpt": "Centuries before Neo instantly mastered Kung Fu in *The Matrix*, medieval scholars found a shortcut to years of difficult study: a magical manuscript that promised to fast-track advanced learning. Anne Lawrence-Mathers investigates the *Ars notoria*, its supposed powers, and the demonic influence it had upon some users.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "primary_sources",
+          "label": "Archives & Primary Sources"
+        },
+        {
+          "id": "medieval_history",
+          "label": "Medieval History"
+        }
+      ],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 72,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 2,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "f5a63672f84affb0e314",
+      "title": "Navigating the Pivot From Tech Expert to Organizational Leader",
+      "url": "https://spectrum.ieee.org/navigating-pivot-tech-expert-leader",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T18:00:01Z",
+      "author": "Prachi Jain",
+      "excerpt": "The transition from a purely technical expert or individual contributor position to a broader leadership role is one of the most challenging phases in a STEM career. It requires moving away from relying solely on technical excellence toward mastering systems thinking, adaptive leadership, and team alignment. To help mid-career professionals navigate the shift, the inaugural IEEE International Leadership Conference is designed to provide attendees with practical tools to step into broader responsibility and champion an entrepreneurial mindset. The ILC event is scheduled for 3 and 4 October in Budapest. Registration is open .…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "9e2e5fa1641803604231",
+      "title": "No More Missionaries: Shiva Naipaul’s Jonestown",
+      "url": "https://www.theparisreview.org/blog/2026/08/06/no-more-missionaries-shiva-naipauls-jonestown",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-06T14:00:38Z",
+      "author": "Andrew Holter",
+      "excerpt": "There is no better book for understanding Shiva Naipaul, a tragic figure whose name has long been associated with phrases like “unjustly overlooked,” “basically forgotten,” and “younger brother.”",
+      "readingTimeMinutes": 11,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "a9c44ac3147e8075d327",
+      "title": "Last Days at the Aqueduct: New York’s Rundown Racetrack",
+      "url": "https://www.theparisreview.org/blog/2026/08/04/last-days-at-the-aqueduct-new-yorks-rundown-racetrack",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-04T15:07:07Z",
+      "author": "Max Callimanopulos",
+      "excerpt": "“We used to wear hats—everyone in a hat. We called them fedoras back then. You probably never heard of a fedora.”",
+      "readingTimeMinutes": 9,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "033e1c0032813295a921",
+      "title": "The System That Turned Paper Charts Into Digital Medical Records",
+      "url": "https://spectrum.ieee.org/ieee-milestone-digital-medical-records",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-03T18:00:02Z",
+      "author": "Joanna Goodrich",
+      "excerpt": "Most hospitals and health care providers use electronic health records instead of paper charts to note patient vaccinations, diagnoses, and procedures. AthenaOne , Epic , and Oracle Health are some of the systems employed around the world. Many patients can access their electronic medical records from home. The platforms exist thanks to pioneering efforts such as the Medical Information System (MIS-I). The first hospital-wide computer system, it was developed in the 1960s by Lockheed Martin (then known as Lockheed Missiles and Space Co.) in partnership with El Camino Hospital , in Mountain View, Calif.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "5128b57e81cc4156167f",
+      "title": "Identifying the Root Cause of Electronics Failures With Simulation Apps",
+      "url": "https://spectrum.ieee.org/electronics-corrosion-multiphysics-simulation",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-03T11:38:22Z",
+      "author": "Joseph Carew",
+      "excerpt": "This article is brought to you by COMSOL . In pursuit of improved range, greater reliability, and faster charging, electric vehicles are driving the demand for high-voltage electronics. Other applications driving this demand include wind farms, data centers, and server farms, to name a few. As the interest for high-voltage electronics increases, the risks associated with their sudden failure must be considered. Much of what causes high-voltage equipment to malfunction can be linked to the conditions of the climate in which it operates. Specifically, condensation on electronic surfaces caused by humidity can lead to corrosion, which can result in stray leak current and dendrite shorting during Electrochemical Migration (ECM).…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e68908c4342d23646f19",
+      "title": "This Hi-Fi Tape Recorder Changed Radio Forever",
+      "url": "https://spectrum.ieee.org/magnetophon-laugh-track",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-02T13:00:01Z",
+      "author": "Allison Marsh",
+      "excerpt": "A German engineer wanted a cheaper cigarette. The popular crooner Bing Crosby wanted a vacation. Satisfying both desires inadvertently led to the invention of the laugh track. Along the way there were Nazis, spoils of war, and more than one accidental encounter. Tying together this quirky history is the Magnetophon. What Was the Magnetophon? The Magnetophon was a high-fidelity reel-to-reel magnetic tape recorder. The hit of the Berlin Radio Show when it debuted in 1935, it was developed by the German electronics manufacturer AEG. The magnetic tape was produced by I.G. Farben (now known as BASF). German inventor Fritz Pfleumer came up with the idea of recording sound on magnetized paper tape coated with metal.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "3351f1ea5b6a70f11df5",
+      "title": "Fridays With Bob",
+      "url": "https://spectrum.ieee.org/risk",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-01T12:00:01Z",
+      "author": "Harry Goldstein",
+      "excerpt": "When I started at Spectrum 25 years ago, a senior editor suggested that I find a “rabbi,” by which he meant someone who could mentor me in how EEs approach problems and evaluate potential solutions. I didn’t find one right away. Then in 2005 we decided to do a special report, focusing on the challenges of enterprise software development. I suggested we invite IEEE Life Senior Member Robert N. Charette , a self-described risk ecologist, prolific book author, and leading authority on risk management and software engineering, to explore in our pages the myriad reasons software projects fail. His seminal article “ Why Software Fails ” is still read in university engineering classes today. IEEE Life Senior Member Robert N. Charette is one of IEEE Spectrum’s most prolific authors. Robert N.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "4feed46575317f686eac",
+      "title": "IEEE Publishing Ethics Team Upholds Research Integrity",
+      "url": "https://spectrum.ieee.org/ieee-publishing-ethics-research-integrity",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-30T18:00:03Z",
+      "author": "IEEE Publishing Ethics",
+      "excerpt": "Given a rising number of publishing misconduct allegations , IEEE in 2022 created the Publishing Ethics Team as a centralized department to assist in handling claims. The group also works to increase the organization’s visibility in the broader publishing ethics area and helps IEEE volunteers write new policies. Here are some highlights of the team’s activities last year. New detection tools IEEE conducted a pilot program in 2024 to integrate tools from the International Association of Scientific, Technical, and Medical Publishers (STM) Integrity Hub into the peer-review workflow of IEEE Access . The multidisciplinary, fully gold-open-access journal publishes research results across all IEEE fields of interest.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "87aeef238ac1c1c728f9",
+      "title": "The Soothing Unsubtlety of UNBROKEN: The Untold Story of Shen Yun",
+      "url": "https://www.theparisreview.org/blog/2026/07/30/the-soothing-unsubtlety-of-unbroken-the-untold-story-of-shen-yun",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-07-30T16:15:05Z",
+      "author": "Paul Thompson",
+      "excerpt": "“What a relief, a breath of fresh air, to be reminded what the barest, sloppiest propaganda can look like.”",
+      "readingTimeMinutes": 10,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "b53b0936eba109150e8d",
+      "title": "Detect Dark Matter’s Mark From Your Backyard",
+      "url": "https://spectrum.ieee.org/dark-matter",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-30T14:00:03Z",
+      "author": "David Schneider",
+      "excerpt": "If you’re wondering what dark matter is, you’re not alone. Astronomers don’t know. But they’ve determined that this invisible material must be far more abundant than the stars and nebulas that they can see. They’ve surmised as much from observing the gravitational effects of all this perplexing dark stuff, launching a decades-long campaign to understand its nature. I recently learned that it is possible to sense the presence of dark matter using a small radio telescope such as the Discovery Dish covered in these pages last year. The trick is to know what observations to collect and how to analyze them. I’ll sketch that out below, but first let me describe the homemade radio telescope I put together for this project.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "4ffd9e17bf5d17fa34a5",
+      "title": "A Remote Indigenous Community Built One of Canada’s Fastest Fiber Networks",
+      "url": "https://spectrum.ieee.org/indigenous-fiber-network",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-30T13:00:01Z",
+      "author": "Rachel Berkowitz",
+      "excerpt": "In February 2024, a young man lay somewhere on the frozen shore of James Bay, Canada, surrounded by snow and darkness, succumbing to hypothermia. When he failed to get home on time, his frantic mother sent a Facebook message to Elizabeth Kataquapit, then chief of the indigenous community Fort Albany First Nation in northeastern Ontario. Kataquapit used Facebook to alert the community’s search-and-rescue squad , who jumped onto their snowmobiles and drove into the night. Before dawn, they returned with the dazed man, who told rescuers he’d given up until wolves nudged his hypothermic body. “The wolves told him to wake up,” Kataquapit says. “I really believe they saved his life.” A fiber-optic network also played a key role.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "fa4a3e817080a5c6e407",
+      "title": "Negotiating Your Salary Is About More Than Money",
+      "url": "https://spectrum.ieee.org/how-to-negotiate-your-salary",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-29T14:55:45Z",
+      "author": "Brian Jenney",
+      "excerpt": "This article is crossposted from IEEE Spectrum ’s careers newsletter. Sign up now to get insider tips, expert advice, and practical strategies, written i n partnership with tech career development company Parsity and delivered to your inbox for free! Scroll through LinkedIn right now and you may find the same advice repeated by well-meaning people: “In a market this rough, just be grateful anyone will hire you. Take the offer.” I could not disagree more. Negotiating your offer is not ungrateful, and it isn’t greedy. Done well, it’s good for you and good for the company hiring you. I misunderstood this early in my career, and it cost me. I didn’t know it was an option When I got my first job in tech, I didn’t know negotiation was even on the table.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "38701864c492ca49a831",
+      "title": "Laboratoria’s Mariana Costa Empowers Women in Tech",
+      "url": "https://spectrum.ieee.org/mariana-costa-women-in-tech",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-28T18:00:01Z",
+      "author": "Willie D. Jones",
+      "excerpt": "In shaping her career, Peru native Mariana Costa has asked herself a question: What can I do to make life better for women in Latin America? The answer she landed on was training them for tech jobs. Mariana Costa Employer Laboratoria Title Co-founder and president Alma Maters London School of Economics; Columbia Such positions pay well and are in demand. And for too long, women across the region have been locked out of them, she says. Costa is president of Laboratoria , a U.S.-registered nonprofit based in Miami that she helped found. Laboratoria has trained thousands of women in 11 Latin American countries for technology careers. She has built training centers in the countries and has placed graduates at major companies.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e60aaa890ed4a0b9ea17",
+      "title": "Why NIST Researchers Spent 10 Years Measuring Gravity",
+      "url": "https://spectrum.ieee.org/universal-gravitational-constant-nist-schlamminger",
+      "source": {
+        "id": "ieee_spectrum",
+        "name": "IEEE Spectrum"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-28T13:00:01Z",
+      "author": "Michael Koziol",
+      "excerpt": "Physicists have been trying to measure the fundamental gravitation al constant for well over two centuries. The current accepted value of big G , as it’s known, is 6.67430 × 10 -11 cubic meters per kilogram per square second. It also has an uncertainty of ±0.00015 × 10 -11 m 3 /(kg s 2 ). As far as constants of the universe go, that’s very uncertain. Stephan Schlamminger Schlamminger is a physicist at the U.S. National Institute of Standards and Technology. Stephan Schlamminger recently completed a 10-year effort at the U.S. National Institute of Standards and Technology to replicate an earlier measurement of big G from the International Bureau of Weights and Measures , or BIPM (located near Paris) that’s notably higher than most measurements.…",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_journalism",
+        "label": "Engineering Journalism"
+      },
+      "score": {
+        "base": 71,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "8c2c2d6b9212f69383b7",
+      "title": "Samsung Galaxy Z Fold 8 Ultra review: The ultra foldable with an ultra price",
+      "url": "https://arstechnica.com/gadgets/2026/08/samsung-galaxy-z-fold-8-ultra-review-the-ultra-foldable-with-an-ultra-price",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-14T11:00:05Z",
+      "author": "Ryan Whitwam",
+      "excerpt": "Samsung didn't have to change much this year because its hardware is just that good.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "e05727454edeb4bc4a78",
+      "title": "My Year of Tests and Arbitration",
+      "url": "https://www.theparisreview.org/blog/2026/08/03/my-year-of-tests-and-arbitration",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-08-03T15:59:26Z",
+      "author": "The Paris Review",
+      "excerpt": "“Let me be clear: I don’t ever want to see this story again.”",
+      "readingTimeMinutes": 3,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "d4068da6de128475d29c",
+      "title": "The Theater of Sport: Bill Buford Revisits Among the Thugs",
+      "url": "https://www.theparisreview.org/blog/2026/07/29/the-theater-of-sport-bill-buford-revisits-among-the-thugs",
+      "source": {
+        "id": "paris_review",
+        "name": "The Paris Review"
+      },
+      "category": "literature",
+      "publishedAt": "2026-07-29T14:00:58Z",
+      "author": "Leo Robson",
+      "excerpt": "“I kept getting hit by beer cans.”",
+      "readingTimeMinutes": 14,
+      "tags": [],
+      "contentType": {
+        "id": "literary_essay",
+        "label": "Literary Essay"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 15,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "962cb18ec4cbe8f87b71",
+      "title": "Photographs of Atlantic City Sand Sculpture (ca. 1880–1920)",
+      "url": "https://publicdomainreview.org/collection/atlantic-city-sand-sculpture",
+      "source": {
+        "id": "public_domain_review",
+        "name": "The Public Domain Review"
+      },
+      "category": "history",
+      "publishedAt": "2026-07-29T13:07:00Z",
+      "author": null,
+      "excerpt": "Photographs from when Atlantic City beaches featured artists ornately sculpting sand.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "cab95acf4e7a039fe644",
+      "title": "“The Persian Mâr-Nâmeh or, The Book for Taking Omens from Snakes” (1892)",
+      "url": "https://publicdomainreview.org/collection/marnameh",
+      "source": {
+        "id": "public_domain_review",
+        "name": "The Public Domain Review"
+      },
+      "category": "history",
+      "publishedAt": "2026-07-28T19:02:00Z",
+      "author": null,
+      "excerpt": "A Zoroastrian text about serpents translated by the President of the Bombay Anthropological Society.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "52e8457010381fde7567",
+      "title": "Goodbye, and Thanks for All the Bikesheds!",
+      "url": "https://queue.acm.org/detail.cfm?id=3818307&ref=rss",
+      "source": {
+        "id": "acm_queue",
+        "name": "ACM Queue"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-13T13:18:02Z",
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 49,
+        "contentType": 18,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 2
+      }
+    },
+    {
+      "id": "1399aec680791f782180",
+      "title": "Writing effective tools for agents — with agents",
+      "url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "2e50ab69ebea3b2c9412",
+      "title": "Equipping agents for the real world with Agent Skills",
+      "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "33d81116743596d4b1f6",
+      "title": "Introducing Contextual Retrieval",
+      "url": "https://www.anthropic.com/engineering/contextual-retrieval",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "42468eb1c49ef4da0e4e",
+      "title": "Eval awareness in Claude Opus 4.6’s BrowseComp performance",
+      "url": "https://www.anthropic.com/engineering/eval-awareness-browsecomp",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "43d7916975114d603c09",
+      "title": "Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet",
+      "url": "https://www.anthropic.com/engineering/swe-bench-sonnet",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "4d418dad93eb839e23a6",
+      "title": "The \"think\" tool: Enabling Claude to stop and think in complex tool use situations",
+      "url": "https://www.anthropic.com/engineering/claude-think-tool",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "7f7a70a6764975801eea",
+      "title": "Effective harnesses for long-running agents",
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "8537165d23c701b725b2",
+      "title": "Scaling Managed Agents: Decoupling the brain from the hands",
+      "url": "https://www.anthropic.com/engineering/managed-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "85b0ca3c45b5c9931e3c",
+      "title": "An update on recent Claude Code quality reports",
+      "url": "https://www.anthropic.com/engineering/april-23-postmortem",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "955bc6c93f35e54adf83",
+      "title": "A postmortem of three recent issues",
+      "url": "https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "9b88bfec4a46afeb42f3",
+      "title": "Code execution with MCP: Building more efficient agents",
+      "url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "9fa759b72385cdecdf59",
+      "title": "Harness design for long-running application development",
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "a3afc1e8c7c23916e7f5",
+      "title": "How we built our multi-agent research system",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "b77235353457c81e3b8d",
+      "title": "Claude Code: Best practices for agentic coding",
+      "url": "https://www.anthropic.com/engineering/claude-code-best-practices",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "bb4c60b19b246a2ffae5",
+      "title": "Desktop Extensions: One-click MCP server installation for Claude Desktop",
+      "url": "https://www.anthropic.com/engineering/desktop-extensions",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "c765441e9673d9570c40",
+      "title": "Beyond permission prompts: making Claude Code more secure and autonomous",
+      "url": "https://www.anthropic.com/engineering/claude-code-sandboxing",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "c78d84ac1a7e3d92b1c1",
+      "title": "Quantifying infrastructure noise in agentic coding evals",
+      "url": "https://www.anthropic.com/engineering/infrastructure-noise",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "d5f9dbd62b3ecc1122d1",
+      "title": "How we built Claude Code auto mode: a safer way to skip permissions",
+      "url": "https://www.anthropic.com/engineering/claude-code-auto-mode",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "eafa6e2f9f229d6667bf",
+      "title": "Introducing advanced tool use on the Claude Developer Platform",
+      "url": "https://www.anthropic.com/engineering/advanced-tool-use",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "ffc229d83891918f8206",
+      "title": "Building effective agents",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "source": {
+        "id": "anthropic_engineering",
+        "name": "Anthropic Engineering"
+      },
+      "category": "technology",
+      "publishedAt": null,
+      "author": null,
+      "excerpt": "",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "engineering_deep_dive",
+        "label": "Engineering Deep Dive"
+      },
+      "score": {
+        "base": 70,
+        "sourceQuality": 47,
+        "contentType": 18,
+        "freshness": 5,
+        "topicSignal": 0,
+        "metadata": 0
+      }
+    },
+    {
+      "id": "ea36c485e33b3d9fb9b5",
+      "title": "New Pass-ta-key attack reveals all the things we didn't know about passkeys",
+      "url": "https://arstechnica.com/security/2026/08/heres-why-the-new-pass-ta-key-attack-is-mostly-a-nothingburger",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-11T11:30:08Z",
+      "author": "Dan Goodin",
+      "excerpt": "Why passkey apps treat Windows differently than other operating systems.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 69,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 7,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "e9b6887cc1e2b86d261d",
+      "title": "How a Yale AI-cheating dispute became a 13-count federal lawsuit",
+      "url": "https://arstechnica.com/tech-policy/2026/07/how-a-yale-ai-cheating-dispute-became-a-13-count-federal-lawsuit",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-31T11:00:52Z",
+      "author": "Nate Anderson",
+      "excerpt": "A disputed exam, an unreliable detector, and one very late Apple Pages file.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 69,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 3,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "0bbffe72813944cd2741",
+      "title": "Google's SynthID watermark is hard to break, but it doesn't solve AI disinformation",
+      "url": "https://arstechnica.com/ai/2026/07/tested-google-synthid-works-great-but-labeling-ai-content-may-be-a-losing-game",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-29T11:00:39Z",
+      "author": "Ryan Whitwam",
+      "excerpt": "Deciding what's real on the Internet won't be easy in the future.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 69,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 3,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "26ab16ecc45f8774308d",
+      "title": "Archie G. Norcross’ Maine Forest Fire Maps (1918–22)",
+      "url": "https://publicdomainreview.org/collection/maine-forest-fire-maps",
+      "source": {
+        "id": "public_domain_review",
+        "name": "The Public Domain Review"
+      },
+      "category": "history",
+      "publishedAt": "2026-07-14T15:21:00Z",
+      "author": null,
+      "excerpt": "Circular maps custom-made for the fire towers that once dotted the American wilderness.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "historical_essay",
+        "label": "Historical Essay"
+      },
+      "score": {
+        "base": 67,
+        "sourceQuality": 46,
+        "contentType": 16,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "6bd3d7d079f72ccfc868",
+      "title": "Remembering the pre-Google web, when search was an experiment",
+      "url": "https://arstechnica.com/gadgets/2026/08/remembering-the-pre-google-web-when-search-was-an-experiment",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-07T11:00:06Z",
+      "author": "Alan Bradley",
+      "excerpt": "\"Most people have completely forgotten how chaotic it really was.\"",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "bbe8d8a154edd6add494",
+      "title": "Pushing the limits: Infinite Machine's Olto is barely a bicycle",
+      "url": "https://arstechnica.com/cars/2026/08/pushing-the-limits-infinite-machines-olto-is-barely-a-bicycle",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-05T11:00:26Z",
+      "author": "John Timmer",
+      "excerpt": "Scooter layout makes pedaling a bad experience. But it does have pedals.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "784e035e776c68558200",
+      "title": "How headlights got brighter, whiter, and more blinding after dark",
+      "url": "https://arstechnica.com/cars/2026/08/how-headlights-got-brighter-whiter-and-more-blinding-after-dark",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-08-03T11:00:11Z",
+      "author": "Matthew MacConnell",
+      "excerpt": "Automotive lights are better than they've ever been, but there's a trade-off.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "1762180ec9c9d24be0af",
+      "title": "Framework Laptop 13 Pro review: Much better battery, much worse price",
+      "url": "https://arstechnica.com/gadgets/2026/07/framework-laptop-13-pro-review-much-better-battery-much-worse-price",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-27T15:02:45Z",
+      "author": "Andrew Cunningham",
+      "excerpt": "Framework's latest modular laptop trades one set of problems for another.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "97f7d2416a40c0659f91",
+      "title": "With help from data, art museums are reframing the visitor experience",
+      "url": "https://arstechnica.com/culture/2026/07/with-help-from-data-art-museums-are-reframing-the-visitor-experience",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-25T11:00:32Z",
+      "author": "Mureji Fatunde-Iloeje",
+      "excerpt": "Museums are embracing data-driven curation and a shifting technology landscape.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 4,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "ce962bd6a79d2a547b06",
+      "title": "F1 in Belgium: Machine learning algorithms are ruining the sport",
+      "url": "https://arstechnica.com/cars/2026/07/f1-in-belgium-the-2026-cars-look-pathetic-on-all-the-best-racetracks",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-20T15:59:18Z",
+      "author": "Jonathan M. Gitlin",
+      "excerpt": "Many will say Spa is the best racetrack on earth, but not for these F1 cars.",
+      "readingTimeMinutes": null,
+      "tags": [
+        {
+          "id": "ai_ml",
+          "label": "AI & Machine Learning"
+        }
+      ],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 66,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 1,
+        "topicSignal": 3,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "72541417f593e5111504",
+      "title": "I wanted a clock that never needed setting. Things escalated.",
+      "url": "https://arstechnica.com/gadgets/2026/07/i-wanted-a-clock-that-never-needed-setting-things-escalated",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-23T11:00:50Z",
+      "author": "Lee Hutchinson",
+      "excerpt": "Sure, maybe your clock has a backup battery, but mine has a deployment pipeline!",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 64,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "3a3777b555eaa111ecde",
+      "title": "How hard is it to build orbital data centers, actually?",
+      "url": "https://arstechnica.com/space/2026/07/how-hard-is-it-to-build-orbital-data-centers-actually",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-15T11:00:09Z",
+      "author": "Eric Berger",
+      "excerpt": "\"The ISS radiators are expensive and heavy. We're focused on making them cheap and light.\"",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 64,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 5
+      }
+    },
+    {
+      "id": "d1884282a2ad0d0fee7c",
+      "title": "When your vehicle outlives its cloud: What happens next?",
+      "url": "https://arstechnica.com/cars/2026/07/when-your-vehicle-outlives-its-cloud-what-happens-next",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-21T13:36:17Z",
+      "author": "Michael Harley",
+      "excerpt": "Automakers love connected vehicles, but support isn't open-ended.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 63,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    },
+    {
+      "id": "1a89e94d1c57a5902d81",
+      "title": "2026 Lucid Gravity Touring review: A strong act 2",
+      "url": "https://arstechnica.com/cars/2026/07/2026-lucid-gravity-touring-review-a-strong-act-2",
+      "source": {
+        "id": "ars_features",
+        "name": "Ars Technica"
+      },
+      "category": "technology",
+      "publishedAt": "2026-07-17T11:00:30Z",
+      "author": "Jim Resnick",
+      "excerpt": "Quick, comfortable, roomy, and agile for a large electric SUV.",
+      "readingTimeMinutes": null,
+      "tags": [],
+      "contentType": {
+        "id": "reported_journalism",
+        "label": "Reported Journalism"
+      },
+      "score": {
+        "base": 63,
+        "sourceQuality": 44,
+        "contentType": 14,
+        "freshness": 1,
+        "topicSignal": 0,
+        "metadata": 4
+      }
+    }
+  ]
+}
