@@ -222,6 +222,24 @@ class UiStateMapperTest {
         assertEquals(12, state.aggregate.knownReadingTimeMinutes)
         assertEquals(1, state.aggregate.unknownReadingTimeCount)
         assertEquals("oauth", state.aggregate.firstTagId)
+        assertEquals("OAuth", state.aggregate.firstTagLabel)
+    }
+
+    @Test
+    fun `aggregate topic id and label are null when no record has tags`() {
+        val saved = record(
+            article = article(1, tags = emptyList()),
+            status = ArticleStatus.SAVED,
+            savedAt = now,
+        )
+
+        val aggregate = map(
+            dataset = dataset(emptyList()),
+            records = mapOf(saved.article.id to saved),
+        ).readLater.aggregate
+
+        assertNull(aggregate.firstTagId)
+        assertNull(aggregate.firstTagLabel)
     }
 
     @Test
@@ -240,6 +258,7 @@ class UiStateMapperTest {
             history.groups.map { it.period },
         )
         assertEquals(todayEarly.article.id, history.groups[0].rows.single().article.id)
+        assertEquals("Aug 22, 2026, 12:05 AM", history.groups[0].rows.single().readDateTime)
         assertEquals(yesterdayLate.article.id, history.groups[1].rows.single().article.id)
         assertEquals(earlier.article.id, history.groups[2].rows.single().article.id)
 

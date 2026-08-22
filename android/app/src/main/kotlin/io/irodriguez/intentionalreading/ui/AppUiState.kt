@@ -29,4 +29,5 @@ data class AggregateUiState(
     val knownReadingTimeMinutes: Int,
     val unknownReadingTimeCount: Int,
     val firstTagId: String?,
+    val firstTagLabel: String?,
 )

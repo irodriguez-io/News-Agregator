@@ -24,4 +24,5 @@ data class HistoryRowUiState(
     val article: Article,
     val readAt: Instant?,
     val readAge: String,
+    val readDateTime: String,
 )
