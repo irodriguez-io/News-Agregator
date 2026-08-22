@@ -420,6 +420,45 @@ Confirmed by the reviewer rather than taken on trust:
 - UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
   the right call given 25 non-ASCII titles in the snapshot.
 
+### Slice 4 gate: PASS
+
+Reviewer: Claude, non-author. Verified independently — commit range `9d5a76b..df57cad`, a forced
+`--rerun-tasks` run (**62 tests, 62 pass**), and the diff read in full.
+
+- **Every action pin re-verified from upstream, not taken on trust.** `git ls-remote` against each
+  repository confirms `actions/checkout` v7.0.1 → `3d3c42e5…`, `actions/setup-java` v5.7.0 →
+  `b6effb05…`, and `gradle/actions` v6.3.0 → `9c971963…`. The last is an annotated tag and the pin is its
+  dereferenced commit, which is the correct target.
+- The workflow is path-filtered to `android/**` and its own file, carries `permissions: contents: read`
+  with no secrets, runs `working-directory: android` on JDK 17 temurin, and enables
+  `validate-wrappers: true`.
+- **The wrapper provenance item is closed.** The regenerated jar's SHA-256 is
+  `497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7`, matching Gradle's published
+  `gradle-9.5.0-wrapper.jar.sha256` exactly, and `distributionSha256Sum` is intact.
+- **Nothing under `android/app/src/main/**` changed**, and `test.yml`, `deploy.yml`, and
+  `dependabot.yml` are untouched — this slice adds no behaviour.
+- **The smoke test was demonstrated to fail, not merely to pass.** With a startup exception temporarily
+  reintroduced it went red (Gradle exit 1, "Unable to start activity", "Process crashed"); reverted, it
+  passes 1/1 on the Pixel_10 API 37 emulator. A guard that has never failed is not yet a guard.
+- It exceeds what was asked: destination order is verified from actual horizontal positions rather than
+  mere presence, and the screen switch is asserted by one screen's eyebrow appearing as the other's
+  disappears.
+
+Two honest notes recorded by the implementer and confirmed here:
+
+1. A **fatal** startup crash kills in-process instrumentation before the custom assertion message can be
+   emitted; Android's runner reports the process crash instead. The custom message covers non-fatal launch
+   failures. The guard still catches the defect class either way — only the wording differs.
+2. Executable JUnit4 instrumentation also needed the `AndroidJUnitRunner` configuration, which the brief
+   omitted.
+
+**The instrumented test is deliberately not a CI gate.** It needs an emulator, and an emulator job would
+add several minutes and a flake surface to every Android pull request. The decision, not an oversight.
+
+**Caveat on the `paths:` filter.** A path-filtered workflow never reports on pull requests that do not
+touch `android/**`, so it must **not** be registered as a required status check — it would leave those
+pull requests permanently pending. If it is ever to be required, the filter has to go first.
+
 ### Slice 3b gate: PASS
 
 Reviewer: Claude, non-author. Verified independently — commit range `7bedecc..5078204`, a forced
@@ -619,3 +658,40 @@ Observations carried forward, none of which block this slice:
   length limit, and `:145` accepts `readingTimeMinutes >= 1` where `contracts.md` and
   `pipeline/validation.py:81-83` require 2. Reported for the web owner; out of scope here per
   `design.md` §Divergences.
+
+## Item status
+
+All four slices are done and each passed an independent non-author gate. Verified on the final branch
+head: **62 JVM unit tests passing**, `:app:assembleDebug` green, the instrumented launch smoke test
+passing on a Pixel_10 API 37 emulator, and the repository's existing gates untouched — `npm test` still
+105/105, and no file under `pipeline/**`, `config/**`, `js/**`, `css/**`, `scripts/**`, `tests/**`, or
+`index.html` changed at any point in this item.
+
+| Slice | Scope | Gate |
+|---|---|---|
+| 1 | Gradle foundation, dataset model, validator, snapshot asset | PASS |
+| 2 | Article status state machine, screen-state derivation | PASS |
+| 3a | Theme, navigation shell, Discover | PASS |
+| 3b | Read Later, History, Settings sheet | PASS |
+| 4 | CI workflow, launch smoke test, wrapper provenance | PASS |
+
+Three defects were found that no JVM unit test could have caught, all on the emulator: the
+`UNICODE_CHARACTER_CLASS` startup crash, Discover cards inheriting the previous card's scroll offset, and
+the settings sheet not accepting `Escape` because it did not own keyboard focus. That is the strongest
+single lesson from this item — **a green JVM suite is not evidence that an Android app runs.**
+
+## Outstanding — owner verification
+
+The implementer walked the scenarios on a Pixel_10 API 37 emulator and the results are recorded per slice
+above. The **owner walkthrough in `spec.md` §5 has not been performed**, and these specific checks were
+not device-observable with the committed snapshot and so rest on unit coverage alone:
+
+- Discover's Loading and Error states, and the missing-browser-handler path.
+- History's Yesterday and Earlier groups — fresh interactions only ever produce Today.
+- The three-tag row truncation boundary — the snapshot's articles carry at most two tags.
+- A positive known-reading-time aggregate and a null read timestamp.
+
+Also outstanding, and deliberate rather than forgotten: no persistence, so every launch is a fresh queue
+(`spec.md` §3). The reviewer authored the specification and governance documents in this item and the
+per-slice reviews; the reviewer did not author any product code.
+
