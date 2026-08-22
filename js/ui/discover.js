@@ -116,9 +116,16 @@ function debugDetails(debug) {
   return details;
 }
 
-async function actionResult(handlers, detail, source) {
+function actionResult(handlers, detail, source) {
   try {
-    return await emitSemanticAction(handlers, detail, source);
+    const result = emitSemanticAction(handlers, detail, source);
+    if (result && typeof result.then === "function") {
+      return Promise.resolve(result).catch((error) => ({
+        ok: false,
+        message: error instanceof Error ? error.message : "The action could not be completed.",
+      }));
+    }
+    return result;
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : "The action could not be completed." };
   }
@@ -129,6 +136,7 @@ function articleCard(viewModel, handlers) {
   const card = element("article", {
     className: "article-card",
     attributes: { "aria-labelledby": "discover-article-title" },
+    dataset: { opened: viewModel.opened ? "true" : null },
   });
   const content = element("div", { className: "article-card-content" });
   const meta = element("div", { className: "card-meta" });
@@ -152,6 +160,16 @@ function articleCard(viewModel, handlers) {
   if (article?.excerpt) content.append(element("p", { className: "card-excerpt", text: article.excerpt }));
   const tags = topicList(article);
   if (tags) content.append(tags);
+
+  if (viewModel.opened) {
+    content.append(element("p", { className: "opened-acknowledgment" }, [
+      element("span", { className: "opened-acknowledgment-label", text: "Opened" }),
+      element("span", {
+        className: "opened-acknowledgment-copy",
+        text: "This article is ready for your next decision.",
+      }),
+    ]));
+  }
 
   const actions = element("div", { className: "card-actions", attributes: { "aria-label": "Article actions" } });
   const dismissButton = button("Not interested", {
@@ -182,9 +200,16 @@ function articleCard(viewModel, handlers) {
     element("span", { className: "triage-label", text: "Save for later" }),
   );
   actions.append(dismissButton, openButton, saveButton);
+  const markReadButton = viewModel.opened
+    ? button("Mark read", {
+      className: "button button-quiet mark-read-button",
+      ariaLabel: "Mark read",
+    })
+    : null;
+  if (markReadButton) actions.append(markReadButton);
 
   const perform = async (action, { undoEligible = false, source = card } = {}) => {
-    const controls = [dismissButton, openButton, saveButton];
+    const controls = [dismissButton, openButton, saveButton, markReadButton].filter(Boolean);
     controls.forEach((control) => { control.disabled = true; });
     const result = await actionResult(handlers, {
       action,
@@ -210,6 +235,7 @@ function articleCard(viewModel, handlers) {
         dismiss: "Marked not interested.",
         save: "Saved to Read Later.",
         open: "Opening the publisher in a new tab.",
+        mark_read: "Marked read. Moved to History.",
       }[action];
       if (message) announceStatus(message);
     }
@@ -220,6 +246,9 @@ function articleCard(viewModel, handlers) {
   dismissButton.addEventListener("click", () => perform("dismiss", { source: dismissButton }));
   openButton.addEventListener("click", () => perform("open", { source: openButton }));
   saveButton.addEventListener("click", () => perform("save", { source: saveButton }));
+  if (markReadButton) {
+    markReadButton.addEventListener("click", () => perform("mark_read", { source: markReadButton }));
+  }
 
   content.append(actions);
   const debug = debugDetails(viewModel.debug);

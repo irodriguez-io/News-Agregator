@@ -425,6 +425,11 @@ a {
   pointer-events: none;
 }
 
+.article-card[data-opened="true"] {
+  border-color: color-mix(in oklch, var(--accent) 28%, var(--border));
+  background: color-mix(in oklch, var(--accent) 3%, var(--surface));
+}
+
 .article-card[data-swipe-state="left"] .swipe-cue-left,
 .article-card[data-swipe-state="right"] .swipe-cue-right {
   opacity: 1;
@@ -516,6 +521,29 @@ a {
   display: none;
 }
 
+.opened-acknowledgment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin: var(--space-lg) 0 0;
+  padding-block: var(--space-sm);
+  border-block: 1px solid color-mix(in oklch, var(--accent) 18%, var(--border));
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.opened-acknowledgment-label {
+  color: var(--accent);
+  font: 700 11px/1.2 var(--font-meta);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.opened-acknowledgment-copy {
+  text-wrap: pretty;
+}
+
 .card-actions {
   display: grid;
   grid-template-columns: minmax(48px, auto) minmax(0, 1fr) minmax(48px, auto);
@@ -523,6 +551,14 @@ a {
   gap: var(--space-sm);
   margin-top: auto;
   padding-top: var(--space-xl);
+}
+
+.mark-read-button {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-width: min(100%, 240px);
+  border-color: color-mix(in oklch, var(--accent) 32%, var(--border));
+  color: var(--accent);
 }
 
 .triage-button {
