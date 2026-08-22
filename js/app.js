@@ -6,6 +6,7 @@ import {
   getHistoryAggregate,
   getNavigationCounts,
   getReadLaterAggregate,
+  isDiscoverEligible,
   selectHistory,
   selectReadLater,
 } from "./state/selectors.js";
@@ -114,6 +115,12 @@ function resultFailure(action) {
   return { ok: false, message: FAILURE_MESSAGES[action] ?? "The action could not be completed." };
 }
 
+function isOpenedRecord(record) {
+  return isDiscoverEligible(record)
+    && record?.status === "opened"
+    && record.openedAt !== null;
+}
+
 export function createApplication(options = {}) {
   const ui = { ...DEFAULT_UI, ...(options.ui ?? {}) };
   const loadDataset = options.loadDataset ?? loadArticleDataset;
@@ -142,6 +149,7 @@ export function createApplication(options = {}) {
   let datasetLoading = false;
   let started = false;
   let activeDestination = destinationFromHash(locationObject?.hash ?? "");
+  let heldOpenedArticleId = null;
 
   const actionHandlers = {
     onAction: (detail) => handleAction(detail),
@@ -202,10 +210,19 @@ export function createApplication(options = {}) {
     const deck = dataset
       ? buildDeck({ articles: dataset.articles, state, category: state.session.lastCategory })
       : [];
-    const first = deck[0] ?? null;
+    const heldRecord = heldOpenedArticleId === null
+      ? null
+      : state.articles[heldOpenedArticleId];
+    const heldCandidate = heldOpenedArticleId !== null && isOpenedRecord(heldRecord)
+      ? deck.find(({ article }) => article.id === heldOpenedArticleId) ?? null
+      : null;
+    if (heldOpenedArticleId !== null && heldCandidate === null) heldOpenedArticleId = null;
+    const first = heldCandidate ?? deck[0] ?? null;
+    const firstRecord = first === null ? null : state.articles[first.article.id];
     const debugMode = new URLSearchParams(locationObject?.search ?? "").get("debug") === "1";
     ui.renderDiscover({
       article: first?.article ?? null,
+      opened: isOpenedRecord(firstRecord),
       category: state.session.lastCategory,
       remainingCount: dataset ? deck.length : null,
       now: currentDate(),
@@ -219,12 +236,13 @@ export function createApplication(options = {}) {
     }, actionHandlers);
   }
 
-  function persistStateChange(action, mutator) {
+  function persistStateChange(action, mutator, afterCommit = () => {}) {
     const candidate = cloneState(state);
     mutator(candidate);
     const result = saveState(candidate, { storage });
     if (!result.ok) return resultFailure(action);
     state = result.state;
+    afterCommit();
     render();
     return { ok: true, state };
   }
@@ -265,6 +283,9 @@ export function createApplication(options = {}) {
       }
       if (result.ok) {
         state = result.state;
+        if (activeDestination === "discover" && isOpenedRecord(state.articles[article.id])) {
+          heldOpenedArticleId = article.id;
+        }
         render();
       }
       if (!opened) return { ok: false, message: "The publisher could not be opened in a new tab." };
@@ -302,6 +323,8 @@ export function createApplication(options = {}) {
         if (!CATEGORY_FILTER_IDS.includes(detail.category)) return resultFailure(detail.action);
         return persistStateChange(detail.action, (candidate) => {
           candidate.session.lastCategory = detail.category;
+        }, () => {
+          heldOpenedArticleId = null;
         });
       case "appearance_change":
         if (!APPEARANCE_IDS.includes(detail.appearance)) return resultFailure(detail.action);
