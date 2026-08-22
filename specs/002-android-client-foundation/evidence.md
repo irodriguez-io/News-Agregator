@@ -208,6 +208,51 @@ Confirmed by the reviewer rather than taken on trust:
 - UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
   the right call given 25 non-ASCII titles in the snapshot.
 
+### Slice 2 gate: PASS
+
+Reviewer: Claude, non-author. Verified independently — commit range `eb243b7..70ecc98`, a forced
+`--rerun-tasks` run read from the JUnit XML (**41 tests, 41 pass, 0 skipped**: 13 state machine, 14
+mapper, 8 relative time, 5 validator, 1 sample dataset), and the diff read in full.
+
+Confirmed rather than taken on trust:
+
+- The allowed-from table matches `js/state/article-state.js:70-77` cell for cell, and the four idempotent
+  no-ops match `:79-86`. The `open` idempotency translation to `openedAt != null` is sound and commented.
+- Seeding a brand-new record with `status = OPENED` looked wrong until checked: `makeRecord` does exactly
+  the same (`js/state/article-state.js:28`). It is a faithful port, and it is unobservable anyway because
+  every action that can create a record sets the status explicitly.
+- Every Discover string is **verbatim** from `js/ui/discover.js:282-315` — loading, error title and copy,
+  the retry label, empty title and copy, the Read Later action, and the degraded notice.
+- The side-note visibility condition matches: the browser shows it when `eligible > 1`, and
+  `remainingChoices` returns null at `remainingCount <= 0`, which is the same boundary.
+- Aggregates match `js/state/selectors.js:35-57` including `unknownReadingTimeCount` and the
+  first-tag-of-the-first-tagged-record rule; navigation counts match `:25-33`.
+- `historyGroup` correctly translates the browser's *local calendar day* delta (not elapsed hours) using
+  `LocalDate` in an injected zone. `relativeDate` reproduces the ladder and the negative-delta clamp.
+- All eight category options match `js/ui/format.js:1-10` in order and label.
+- The `publishedAt` change to `Instant?` kept full strict validation ahead of parsing, and the only edit
+  to a slice 1 test was a type change in a comparator — no assertion weakened. `npm test` still 105/105.
+- No file under `domain/`, `ui/state/`, or `ui/format/` imports `android.*` or `androidx.*`.
+
+Observations carried forward from slice 2:
+
+6. **`remainingChoices` reproduces a grammatical error in the browser's copy.** `js/ui/discover.js:328`
+   renders "1 more choice wait quietly behind this one." — it switches the noun for the singular case but
+   leaves the verb plural. Porting it verbatim is the right call for parity, and diverging unilaterally
+   would be inventing a requirement. Report it to the web owner alongside the two validator gaps in
+   §Outstanding; fix both clients together or neither.
+7. **`DiscoverUiState.Card.isOpened` tests status only.** The browser also requires `openedAt !== null`
+   (`js/app.js:118-122`). Equivalent today, because no code path yields `OPENED` with a null `openedAt`.
+   Tighten it when persistence lands and records can arrive from storage rather than from a transition.
+8. **`DatasetPhase.Error` carries no error code**, so the `UNSUPPORTED_SCHEMA` versus malformed
+   distinction the validator produces cannot reach the UI. This matches the browser, which renders one
+   error panel for all four codes and is forbidden from leaking payload text
+   (`tests/js/articles.test.js:39-60`), so it is correct for now — but the code is what a networking
+   milestone needs to say "this app is out of date" rather than "something went wrong".
+
+Slice 1 observation 1 is **resolved**: `publishedAt` is parsed once into `Instant?` at the boundary.
+Slice 1 observation 2 (synchronous `DatasetRepository.load()`) remains open and is slice 3's to fix.
+
 Observations carried forward, none of which block this slice:
 
 1. **`Article.publishedAt` is a validated `String?`, not a temporal type.** Nothing in `spec.md` or
