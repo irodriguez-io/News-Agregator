@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Intentional Reading</string>
+    <string name="settings">Settings</string>
+    <string name="read_later">Read Later</string>
+    <string name="discover">Discover</string>
+    <string name="history">History</string>
+    <string name="read_later_placeholder">Read Later</string>
+    <string name="history_placeholder">History</string>
+
+    <string name="discover_eyebrow">A finite reading queue</string>
+    <string name="discover_description">Choose what deserves your attention. Save what matters, dismiss what does not, and leave when you are done.</string>
+    <string name="discover_context">%1$d available in %2$s</string>
+    <string name="discover_category_group">Discover category</string>
+    <string name="article_topics">Article topics</string>
+    <string name="article_actions">Article actions</string>
+    <string name="not_interested">Not interested</string>
+    <string name="read_article">Read article</string>
+    <string name="read_article_external">Read article in the system browser</string>
+    <string name="save_for_later">Save for later</string>
+    <string name="mark_read">Mark read</string>
+    <string name="opened">Opened</string>
+    <string name="opened_acknowledgment">This article is ready for your next decision.</string>
 </resources>

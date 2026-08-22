@@ -46,6 +46,10 @@ kotlin {
     }
 }
 
+configurations.configureEach {
+    exclude(group = "androidx.profileinstaller", module = "profileinstaller")
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
