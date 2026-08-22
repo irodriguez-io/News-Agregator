@@ -70,6 +70,23 @@ class RelativeTimeTest {
         assertEquals("", RelativeTime.readingTime(-1))
     }
 
+    @Test
+    fun `local date time uses the injected zone and locale`() {
+        assertEquals(
+            "Aug 22, 2026, 1:05 AM",
+            RelativeTime.localDateTime(
+                value = Instant.parse("2026-08-22T07:05:00Z"),
+                zone = ZoneId.of("America/Managua"),
+                locale = Locale.US,
+            ),
+        )
+    }
+
+    @Test
+    fun `local date time omits an absent instant`() {
+        assertEquals("", RelativeTime.localDateTime(null, zone, Locale.US))
+    }
+
     private fun relative(value: Instant?): String = RelativeTime.relativeDate(
         value = value,
         now = now,

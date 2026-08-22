@@ -38,6 +38,13 @@ object RelativeTime {
         }
     }
 
+    fun localDateTime(value: Instant?, zone: ZoneId, locale: Locale): String {
+        if (value == null) return ""
+        return DateTimeFormatter.ofPattern("MMM d, yyyy, h:mm a", locale)
+            .withZone(zone)
+            .format(value)
+    }
+
     fun readingTime(value: Int?): String = if (value != null && value > 0) "~$value min" else ""
 
     private const val MILLIS_PER_HOUR = 3_600_000L

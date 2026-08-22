@@ -74,6 +74,7 @@ object UiStateMapper {
                     article = record.article,
                     readAt = record.readAt,
                     readAge = RelativeTime.relativeDate(record.readAt, now, zone, locale),
+                    readDateTime = RelativeTime.localDateTime(record.readAt, zone, locale),
                 )
             }
             .groupBy(keySelector = { it.first }, valueTransform = { it.second })
@@ -142,12 +143,21 @@ object UiStateMapper {
                 knownReadingTimeMinutes += readingTime
             }
         }
+        val firstTagId = records.firstNotNullOfOrNull { it.article.tags.firstOrNull()?.id }
         return AggregateUiState(
             count = records.size,
             knownReadingTimeMinutes = knownReadingTimeMinutes,
             unknownReadingTimeCount = unknownReadingTimeCount,
-            firstTagId = records.firstNotNullOfOrNull { it.article.tags.firstOrNull()?.id },
+            firstTagId = firstTagId,
+            firstTagLabel = topicLabel(records, firstTagId),
         )
+    }
+
+    private fun topicLabel(records: List<ArticleRecord>, topicId: String?): String? {
+        if (topicId == null) return null
+        return records.firstNotNullOfOrNull { record ->
+            record.article.tags.firstOrNull { tag -> tag.id == topicId }?.label
+        }
     }
 
     private fun timestampDescending(
