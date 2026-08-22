@@ -7,6 +7,8 @@
 - Respect frozen cross-agent contracts and escalate conflicts instead of silently changing specifications or contracts.
 - Runtime frontend must remain HTML, CSS, and vanilla JavaScript unless an authoritative specification explicitly changes that rule.
 - Do not introduce frontend runtime dependencies without explicit approval.
+- The two rules above bind every path outside `/android`. `/android` is a native Kotlin and Jetpack Compose client authorized by Amendment 6 in `docs/v1/README.md`; read `android/README.md` and the governing specification item before working there.
+- The Android client consumes the frozen `ArticleDataset v1` contract read-only. Android work must not modify `pipeline/**`, `config/**`, or the web runtime, and the dependency-approval rules apply to Android dependencies as written.
 - Do not introduce external AI APIs, API keys, backend servers, databases, authentication systems, or telemetry unless explicitly approved.
 - Avoid unrelated scope and refactoring.
 - Tests relevant to modified code must pass before committing.

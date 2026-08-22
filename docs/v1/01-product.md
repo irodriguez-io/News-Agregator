@@ -786,6 +786,8 @@ The following are outside V1 scope:
 - infinite scroll;
 - automatic cross-device backups.
 
+`native mobile application` above scopes the V1 web deliverable. Approved Amendment 6, **Native Android Client Authorization** (see `README.md`), permits a separate native Android client that consumes the frozen `ArticleDataset v1` contract read-only and is delivered incrementally under numbered specification items. It changes no other non-goal in this section, no browser runtime rule, and no V1 web requirement.
+
 ---
 
 ## 29. Product Success Criteria
