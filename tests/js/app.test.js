@@ -53,6 +53,18 @@ function stateWith(article, action) {
   return transitionArticle(createDefaultState(), article, action, { now: TIMES.first }).state;
 }
 
+function makeOpenedStabilityArticles() {
+  const opened = makeArticle({ tags: [] });
+  const competitor = makeArticle({
+    id: "00000000000000000002",
+    title: "Another useful article",
+    url: "https://example.com/another-article",
+    source: { id: "source_two", name: "Source Two" },
+    tags: [],
+  });
+  return { opened, competitor };
+}
+
 test("routing and backup naming use stable V1 values", () => {
   assert.equal(destinationFromHash("#read-later"), "read_later");
   assert.equal(destinationFromHash("#history"), "history");
@@ -238,6 +250,143 @@ test("Open validates the URL, attempts persistence first, and still navigates af
   await unsafeApp.start();
   assert.equal(unsafeApp.handleAction({ action: "open", articleId: unsafeArticle.id }).ok, false);
   assert.equal(navigated.length, 1);
+});
+
+test("Scenario: opened article is acknowledged on return (stability half of it)", async (t) => {
+  await t.test("successful Open holds the displayed card and exposes its derived opened state", async () => {
+    const { opened, competitor } = makeOpenedStabilityArticles();
+    const storage = new MemoryStorage();
+    const { calls, ui } = createUiRecorder();
+    const openCalls = [];
+    const openedWindow = { opener: "original" };
+    const windowObject = createWindowStub();
+    windowObject.open = (...args) => {
+      openCalls.push(args);
+      return openedWindow;
+    };
+    const app = createApplication({
+      storage,
+      ui,
+      locationObject: { hash: "#discover", search: "" },
+      windowObject,
+      loadDataset: async () => makeDataset([opened, competitor]),
+      now: () => TIMES.first,
+    });
+    await app.start();
+
+    assert.equal(calls.discover.at(-1).article.id, opened.id);
+    assert.equal(app.handleAction({ action: "open", articleId: opened.id }).ok, true);
+
+    const viewModel = calls.discover.at(-1);
+    assert.equal(viewModel.article.id, opened.id);
+    assert.equal(viewModel.opened, true);
+    assert.equal(app.getSnapshot().state.articles[opened.id].status, "opened");
+    assert.equal(app.getSnapshot().state.articles[opened.id].openedAt, TIMES.first);
+    assert.deepEqual(openCalls, [[opened.url, "_blank", "noopener,noreferrer"]]);
+    assert.equal(openedWindow.opener, null);
+  });
+
+  await t.test("the held card releases when its record leaves opened", async () => {
+    const { opened, competitor } = makeOpenedStabilityArticles();
+    const { calls, ui } = createUiRecorder();
+    const app = createApplication({
+      storage: new MemoryStorage(),
+      ui,
+      locationObject: { hash: "#discover", search: "" },
+      windowObject: createWindowStub(),
+      loadDataset: async () => makeDataset([opened, competitor]),
+      navigateExternal: () => true,
+      now: () => TIMES.first,
+    });
+    await app.start();
+
+    assert.equal(app.handleAction({ action: "open", articleId: opened.id }).ok, true);
+    assert.equal(calls.discover.at(-1).article.id, opened.id);
+    assert.equal(app.handleAction({ action: "mark_read", articleId: opened.id }).ok, true);
+    assert.equal(calls.discover.at(-1).article.id, competitor.id);
+    assert.equal(calls.discover.at(-1).opened, false);
+  });
+
+  await t.test("the held card releases when the category changes", async () => {
+    const { opened, competitor } = makeOpenedStabilityArticles();
+    const { calls, ui } = createUiRecorder();
+    const app = createApplication({
+      storage: new MemoryStorage(),
+      ui,
+      locationObject: { hash: "#discover", search: "" },
+      windowObject: createWindowStub(),
+      loadDataset: async () => makeDataset([opened, competitor]),
+      navigateExternal: () => true,
+      now: () => TIMES.first,
+    });
+    await app.start();
+
+    assert.equal(app.handleAction({ action: "open", articleId: opened.id }).ok, true);
+    assert.equal(calls.discover.at(-1).article.id, opened.id);
+    assert.equal(app.handleAction({ action: "category_change", category: "technology" }).ok, true);
+    assert.equal(calls.discover.at(-1).article.id, competitor.id);
+    assert.equal(calls.discover.at(-1).opened, false);
+  });
+});
+
+test("Scenario: opened stays Discover-eligible until resolved", async () => {
+  const opened = makeArticle();
+  const state = stateWith(opened, "open");
+  const storage = new MemoryStorage();
+  assert.equal(saveState(state, { storage }).ok, true);
+  const { calls, ui } = createUiRecorder();
+  const app = createApplication({
+    storage,
+    ui,
+    locationObject: { hash: "#discover", search: "" },
+    windowObject: createWindowStub(),
+    loadDataset: async () => makeDataset([opened]),
+    now: () => TIMES.second,
+  });
+  await app.start();
+
+  assert.equal(calls.discover.at(-1).article.id, opened.id);
+  assert.equal(calls.discover.at(-1).opened, true);
+  assert.deepEqual(calls.navigation.at(-1), {
+    activeDestination: "discover",
+    readLaterCount: 0,
+    historyCount: 0,
+  });
+  assert.equal(app.handleAction({ action: "navigate", destination: "read_later" }).ok, true);
+  assert.deepEqual(calls.readLater.at(-1).items, []);
+  assert.equal(app.handleAction({ action: "navigate", destination: "history" }).ok, true);
+  assert.deepEqual(calls.history.at(-1).items, []);
+});
+
+test("Scenario: open persistence failure claims nothing", async () => {
+  const article = makeArticle();
+  const storage = new MemoryStorage();
+  const navigated = [];
+  const scheduled = [];
+  const { calls, ui } = createUiRecorder();
+  const app = createApplication({
+    storage,
+    ui,
+    locationObject: { hash: "#discover", search: "" },
+    windowObject: createWindowStub(),
+    loadDataset: async () => makeDataset([article]),
+    navigateExternal: (url) => { navigated.push(url); return true; },
+    schedule: (callback) => scheduled.push(callback),
+    now: () => TIMES.first,
+  });
+  await app.start();
+  assert.equal(calls.discover.at(-1).opened, false);
+  storage.failSet = true;
+
+  assert.deepEqual(
+    app.handleAction({ action: "open", articleId: article.id }),
+    { ok: true, persisted: false, navigationOpened: true },
+  );
+  assert.equal(calls.discover.at(-1).opened, false);
+  assert.deepEqual(app.getSnapshot().state.articles, {});
+  assert.deepEqual(navigated, [article.url]);
+  scheduled[0]();
+  assert.match(calls.announcements.at(-1), /not saved locally/);
 });
 
 test("default external navigation uses a new isolated browsing context", async () => {
