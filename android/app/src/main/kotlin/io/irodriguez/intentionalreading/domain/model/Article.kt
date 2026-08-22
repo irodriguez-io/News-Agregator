@@ -1,12 +1,14 @@
 package io.irodriguez.intentionalreading.domain.model
 
+import java.time.Instant
+
 data class Article(
     val id: String,
     val title: String,
     val url: String,
     val source: ArticleSource,
     val category: Category,
-    val publishedAt: String?,
+    val publishedAt: Instant?,
     val author: String?,
     val excerpt: String,
     val readingTimeMinutes: Int?,

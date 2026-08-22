@@ -47,11 +47,11 @@ class SampleDatasetTest {
                 ?: left.id.compareTo(right.id)
         }
 
-        private fun comparePublishedDescending(left: String?, right: String?): Int = when {
+        private fun comparePublishedDescending(left: Instant?, right: Instant?): Int = when {
             left == null && right == null -> 0
             left == null -> 1
             right == null -> -1
-            else -> Instant.parse(right).compareTo(Instant.parse(left))
+            else -> right.compareTo(left)
         }
 
         private val approvedSourceIds = setOf(

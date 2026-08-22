@@ -19,6 +19,8 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 | `409137a9201b23e15cb5521538a5a799592b7306` | `chore(android): scaffold Gradle project` |
 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | `test(android): cover ArticleDataset v1 parsing and validation` |
 | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | `feat(android): add ArticleDataset model and validator` |
+| `566218ca4e6b299b37308be11ce8a2eb49af8423` | `chore(android): raise compileSdk to 37` |
+| `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | `test(android): cover article status transitions and screen state` |
 
 ## Snapshot profile
 
@@ -79,17 +81,35 @@ the merged debug manifest therefore has zero `uses-permission` entries.
 
 **Definition of done**
 
-- [ ] `ArticleRecord` holds the full `Article` snapshot
-- [ ] transition function is pure, clock-injected, and returns applied / unchanged / invalid
-- [ ] allowed-from sets match `js/state/article-state.js:70-77` exactly
-- [ ] `open` sets opened only when no record existed; `openedAt` is write-once
-- [ ] the four idempotent no-ops preserve timestamps
-- [ ] `ArticleStateMachineTest` covers every table cell, no-op, and rejection
-- [ ] Discover state is a sealed type encoding the four-state precedence
-- [ ] Read Later orders by `savedAt` descending; History groups Today / Yesterday / Earlier
-- [ ] `RelativeTimeTest` covers the ladder and the 31-day cutover
-- [ ] no file under `domain/` imports `android.*` or `androidx.*`
-- [ ] `./gradlew :app:testDebugUnitTest` green
+- [x] `ArticleRecord` holds the full `Article` snapshot
+- [x] transition function is pure, clock-injected, and returns applied / unchanged / invalid
+- [x] allowed-from sets match `js/state/article-state.js:70-77` exactly
+- [x] `open` sets opened only when no record existed; `openedAt` is write-once
+- [x] the four idempotent no-ops preserve timestamps
+- [x] `ArticleStateMachineTest` covers every table cell, no-op, and rejection
+- [x] Discover state is a sealed type encoding the four-state precedence
+- [x] Discover eligibility is unseen/opened, held eligible articles remain presented, and remaining is
+      `available - 1`
+- [x] Read Later orders by `savedAt` descending; History orders by `readAt` descending and groups Today /
+      Yesterday / Earlier in an injected zone with empty groups omitted
+- [x] aggregates include count, known reading-time sum, unknown-time count, and the first available tag ID
+- [x] navigation counts derive from saved/read records; degraded derives from `failedSourceCount > 0`
+- [x] `RelativeTimeTest` covers Now / hours / days / absolute, the 31-day cutover, negative-delta clamp,
+      local-calendar history grouping, and reading-time rules
+- [x] all eight category options match `js/ui/format.js:1-10` in order and label
+- [x] no file under `domain/`, `ui/state/`, or `ui/format/` imports `android.*` or `androidx.*`
+- [x] `publishedAt` is parsed once into `Instant?` by `DatasetValidator`, never per projection/render
+- [x] `./gradlew :app:testDebugUnitTest` green: 41 tests / 41 pass / 0 fail
+
+**`publishedAt` decision:** `Article.publishedAt` is now `Instant?`. `DatasetValidator` performs the
+existing strict UTC/calendar validation and converts a non-null value once while constructing the domain
+Article. This keeps invalid or unparseable timestamps at the dataset boundary, makes canonical ordering
+a direct temporal comparison, and prevents Discover projection or later Compose rendering from parsing
+the same string repeatedly. Absence remains `null`, which `RelativeTime` renders as an empty label.
+
+**compileSdk resolution:** the preliminary `566218c` chore raised only `compileSdk` from 36 to 37;
+`targetSdk = 36` and `minSdk = 26` remain unchanged. `./gradlew :app:assembleDebug` passed with the
+pinned stack, resolving the slice 1 carry-forward observation without adding a dependency.
 
 ## Slice 3 — theme, navigation shell, three screens
 
@@ -129,7 +149,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | Slice | Red commit | Red counts | Green commit | Green counts |
 |---|---|---|---|---|
 | 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | 6 tests / 6 pass / 0 fail |
-| 2 | | | | |
+| 2 | `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | compile-time RED; 0 executed because the slice 2 production types and the `publishedAt: Instant?` boundary were absent | `feat(android): add article status state machine and screen state` (this commit) | 41 tests / 41 pass / 0 fail (35 slice 2 + 6 inherited) |
 | 3 | | | | |
 | 4 | | | | |
 
@@ -138,13 +158,13 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | Scenario (`spec.md` §4) | Authority | Covering test |
 |---|---|---|
 | the bundled dataset loads and validates | contracts.md §ArticleDataset | `SampleDatasetTest`; `DatasetValidatorTest` file-order case |
-| Discover offers exactly one article | 01-product.md §27; 06-ui-ux.md §3 | |
-| a category with no articles reaches the empty state | 06-ui-ux.md §3 | |
-| a degraded dataset is disclosed without alarm | contracts.md:133 | |
-| dismissing advances the deck | 05-personalization-state.md §§27/32 | |
-| saving reaches Read Later | 05-personalization-state.md §27 | |
-| an opened article is acknowledged and held | 06-ui-ux.md §51 | |
-| marking read reaches History under Today | 05-personalization-state.md §27 | |
+| Discover offers exactly one article | 01-product.md §27; 06-ui-ux.md §3 | `UiStateMapperTest.Discover offers one dataset-ordered card with available and remaining counts` |
+| a category with no articles reaches the empty state | 06-ui-ux.md §3 | `UiStateMapperTest.a category with no articles uses exact permission-to-leave copy` |
+| a degraded dataset is disclosed without alarm | contracts.md:133 | `UiStateMapperTest.navigation counts ignore opened and dismissed records and degraded follows pipeline failures` |
+| dismissing advances the deck | 05-personalization-state.md §§27/32 | `ArticleStateMachineTest.dismiss sets dismissedAt and clears savedAt and readAt while preserving openedAt`; `UiStateMapperTest.dismissing advances the deck and immediately decreases both counts` |
+| saving reaches Read Later | 05-personalization-state.md §27 | `ArticleStateMachineTest.save sets savedAt and clears dismissedAt and readAt while preserving openedAt`; `UiStateMapperTest.saving removes Discover head reaches top of Read Later and increments navigation` |
+| an opened article is acknowledged and held | 06-ui-ux.md §51 | `ArticleStateMachineTest.open from unseen creates an opened record with write-once metadata`; `UiStateMapperTest.an eligible held article remains presented and visibly acknowledged when opened` |
+| marking read reaches History under Today | 05-personalization-state.md §27 | `ArticleStateMachineTest.mark read sets readAt clears queue timestamps and preserves openedAt`; `UiStateMapperTest.marking read removes Discover head and groups it under Today without undo state` |
 | a contract-violating dataset claims nothing | contracts.md §ArticleDataset | `DatasetValidatorTest` rejection table and failure-code cases |
 | three destinations and a modal settings surface | 06-ui-ux.md §18 | |
 
@@ -156,7 +176,8 @@ validator rejects malformed UTF-8 before JSON decoding.
 
 ## Regression boundary held
 
-- [x] no existing test modified
+- [x] no existing test weakened, skipped, or deleted; `SampleDatasetTest` changed only to compare the new
+      parsed `Instant?` directly instead of parsing strings inside its comparator
 - [x] `scripts/build_pages.py` `ALLOWED_PATHS` unchanged
 - [x] `.github/workflows/test.yml` and `deploy.yml` unchanged
 - [x] no change under `pipeline/**`, `config/**`, `js/**`, `css/**`, `index.html`
