@@ -47,7 +47,7 @@ Scenario names refer to `spec.md` §4.
   - a card with no opened record renders exactly as it does today;
   - styling uses only the authored tokens with `color-mix(in oklch, ...)`; no new keyboard shortcut;
   - `npm test` green.
-- **Status:** pending
+- **Status:** done (gate: PASS, slice review)
 
 ## Gates
 
