@@ -21,6 +21,11 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | `feat(android): add ArticleDataset model and validator` |
 | `566218ca4e6b299b37308be11ce8a2eb49af8423` | `chore(android): raise compileSdk to 37` |
 | `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | `test(android): cover article status transitions and screen state` |
+| `70ecc98a46cf8c6b5d7174bead3f662221339ba6` | `feat(android): add article status state machine and screen state` |
+| `2fca25db04470bf2969d47ca6cc54bf2f80a3732` | `chore(android): add Compose dependencies` |
+| `80a6d9d2eb66809204e127bee06cb381cc2ee016` | `test(android): cover destination and appearance state` |
+| `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | `fix(android): drop the unsupported regex flag from title validation` |
+| this commit | `feat(android): add Compose shell and Discover screen` |
 
 ## Snapshot profile
 
@@ -113,22 +118,102 @@ pinned stack, resolving the slice 1 carry-forward observation without adding a d
 
 ## Slice 3 — theme, navigation shell, three screens
 
-**Split taken:** 3 as one slice / 3a + 3b —
+**Split taken:** 3a + 3b — slice 3a is complete here; the exact slice 3b remainder is recorded below.
 
-**Definition of done**
+**Slice 3a definition of done**
 
-- [ ] three destinations, ordered Read Later / Discover / History, Discover centered
-- [ ] badges on Read Later and History only
-- [ ] Settings is a modal surface offering Light / Dark / System
-- [ ] Discover presents exactly one card, never a list or feed
-- [ ] all four Discover body states render, degraded notice included
-- [ ] card anatomy and action set complete, including `Mark read` and the opened acknowledgment
-- [ ] `Read article` validates the scheme, dispatches `ACTION_VIEW`, and the card is held then released
-- [ ] only the six authored tokens and their derivations are used; dynamic colour off
-- [ ] back navigation and edge-to-edge insets behave
-- [ ] `AppViewModelTest` green
-- [ ] `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green
-- [ ] manual walkthrough of `spec.md` §5 performed
+- [x] three destinations, ordered Read Later / Discover / History, Discover centered
+- [x] badges on Read Later and History only
+- [x] the Settings entry point toggles `settingsOpen`; Settings is not a destination
+- [x] Read Later and History are single-line placeholders marked `// slice 3b`, with no 3b body work
+- [x] Discover presents exactly one card, never a list or feed
+- [x] all four Discover body states render exclusively, degraded notice included
+- [x] card anatomy and action set complete, including `Mark read` and the opened acknowledgment
+- [x] `Read article` validates the scheme, dispatches `ACTION_VIEW`, and the card is held then released
+- [x] dismiss and save advance the deck and update counts immediately
+- [x] the six authored tokens and six derived values per theme match the approved table; dynamic colour off
+- [x] navigation selection uses ink, not accent, and surfaces have no Material tonal tint
+- [x] `DatasetRepository.load()` is suspend and performs asset IO on its injected IO dispatcher
+- [x] back navigation and edge-to-edge insets behave
+- [x] `AppViewModelTest` and the theme-derivation tests are green
+- [x] `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` are green
+- [x] the available `spec.md` §5 paths were walked on a Pixel 10 API 37 emulator
+
+### Slice 3a RED → GREEN
+
+The feature RED commit `80a6d9d2eb66809204e127bee06cb381cc2ee016` failed at compile time before
+any test could execute because `AppViewModel`, destination and appearance state, and the theme APIs did
+not exist. The completed implementation runs **53 tests / 53 pass / 0 fail / 0 skipped**: 8
+`AppViewModelTest`, 2 theme derivation, 7 validator, and 36 inherited tests.
+
+The six authored light tokens and six authored dark tokens are kept as the only colour literals. The
+other six values per theme are derived in Kotlin and asserted exactly, including the 42% backdrop alpha.
+Every Material colour-scheme role is supplied explicitly, and dynamic colour is disabled.
+
+### API 37 emulator walkthrough
+
+Observed on the `Pixel_10` AVD (Android API 37), from a cleared app state:
+
+- cold launch completed with `MainActivity` resumed and no `AndroidRuntime` error; Discover showed one
+  card, `166 available in All`, and the calm degraded notice for the snapshot's five failed sources
+- the bottom bar contained exactly Read Later / Discover / History in that order, with Discover centered;
+  the left and right destinations showed their mandated single-line 3a placeholders and back returned to
+  Discover
+- Settings remained a top-bar entry rather than a fourth destination; after toggling its state, back was
+  consumed and `MainActivity` remained resumed on Discover, ready for slice 3b to render the modal body
+- selecting Weightlifting showed the exact empty-state title, permission-to-leave copy, and `View Read
+  Later`; that action reached the Read Later placeholder while History remained reachable
+- dismiss advanced the deck and changed 166 to 165; save advanced it to 164 and showed a Read Later badge
+  of 1
+- `Read article` moved the resumed activity to Chrome's first-run activity; returning resumed this app on
+  the same card with `OPENED`, the acknowledgment copy, and `Mark read`
+- `Mark read` advanced the deck from 164 to 163 and showed a History badge of 1; the opened card was no
+  longer presented
+- advancing from a scrolled long card resets the next article to the complete Discover header; returning
+  from the browser to the same opened article retains its useful card position
+- edge-to-edge system bars and minimum action targets were visible without content being trapped beneath
+  the top or bottom app chrome
+
+Loading is normally shorter than an emulator hierarchy capture, and the valid bundled dataset cannot
+produce the Error state; both are covered by the sealed-state rendering branch and mapper/ViewModel unit
+tests rather than claimed as manually observed. A missing-browser handler was not observable because
+Chrome is installed. Light / Dark / System controls, Read Later content, and History content were not
+walked because they belong to slice 3b.
+
+`aapt2 dump permissions app-debug.apk` emitted only the package line: the built APK still declares zero
+permissions.
+
+### Authorized DatasetValidator repair
+
+The first API 37 launch exposed an inherited runtime defect before any 3a content could render:
+Android's regex implementation throws `IllegalArgumentException: UNICODE_CHARACTER_CLASS flag not
+supported` while initializing `DatasetValidator`. The host JVM accepts that flag, which is why all prior
+unit gates were green and could not expose the Android-only failure.
+
+The authorized repair replaces the flag-dependent Java pattern with the flag-free Kotlin regex
+`[^\p{Z}\p{C}\p{P}\p{S}]`; no other validation rule or domain file changed. Its targeted RED run was
+**7 tests / 6 pass / 1 fail**, proving the old field was not a flag-free Kotlin regex. The GREEN run was
+**7 / 7 pass**. Regression coverage asserts the regex has no options (with the Android reason recorded),
+keeps the existing punctuation-only rejection, rejects Unicode separators plus punctuation, and accepts
+a title containing non-ASCII letters.
+
+Slice 4's instrumented smoke must launch `MainActivity` and assert visible Discover content, not merely
+install the APK, so any future class-initialization/startup crash fails that gate.
+
+### Exact slice 3b remainder
+
+Slice 3b still owns all three deferred bodies and no 3a file should pre-empt them:
+
+- render the modal Settings sheet from the existing `settingsOpen` and `appearance` state, with Light /
+  Dark / System controls and the approved 42% backdrop
+- replace the Read Later placeholder with its editorial header, stat band, empty state, and article rows,
+  using the already-computed `AppUiState.readLater` projection and its available actions
+- replace the History placeholder with its editorial header, stat band, grouped Today / Yesterday /
+  Earlier sections, article rows, and available actions, using the already-computed history projection
+
+Slice 2 exposed every content value 3a needed; no screen-side product computation or contract change was
+required. The 3a brief's functional requirements held. The only incorrect environment assumption was
+outside the brief's new code: host-JVM validator success did not imply Android regex-flag compatibility.
 
 ## Slice 4 — CI and instrumented smoke test
 
@@ -150,7 +235,8 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 |---|---|---|---|---|
 | 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | 6 tests / 6 pass / 0 fail |
 | 2 | `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | compile-time RED; 0 executed because the slice 2 production types and the `publishedAt: Instant?` boundary were absent | `feat(android): add article status state machine and screen state` (this commit) | 41 tests / 41 pass / 0 fail (35 slice 2 + 6 inherited) |
-| 3 | | | | |
+| 3a | `80a6d9d2eb66809204e127bee06cb381cc2ee016` | compile-time RED; 0 executed because the ViewModel, destination/appearance state, and theme APIs were absent | `feat(android): add Compose shell and Discover screen` (this commit) | 53 tests / 53 pass / 0 fail / 0 skipped |
+| 3a validator repair | regression added over `80a6d9d2eb66809204e127bee06cb381cc2ee016` | 7 tests / 6 pass / 1 fail | `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | 7 tests / 7 pass / 0 fail |
 | 4 | | | | |
 
 ## Scenario traceability
@@ -166,7 +252,7 @@ Failing-first is proven per slice by a red test commit preceding its implementat
 | an opened article is acknowledged and held | 06-ui-ux.md §51 | `ArticleStateMachineTest.open from unseen creates an opened record with write-once metadata`; `UiStateMapperTest.an eligible held article remains presented and visibly acknowledged when opened` |
 | marking read reaches History under Today | 05-personalization-state.md §27 | `ArticleStateMachineTest.mark read sets readAt clears queue timestamps and preserves openedAt`; `UiStateMapperTest.marking read removes Discover head and groups it under Today without undo state` |
 | a contract-violating dataset claims nothing | contracts.md §ArticleDataset | `DatasetValidatorTest` rejection table and failure-code cases |
-| three destinations and a modal settings surface | 06-ui-ux.md §18 | |
+| three destinations and a modal settings surface | 06-ui-ux.md §18 | `AppViewModelTest.destination switching preserves the fixed declaration order`; `AppViewModelTest.settings entry point toggles open and closed`; modal rendering deferred to 3b |
 
 ## Test infrastructure added
 
