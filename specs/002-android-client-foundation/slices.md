@@ -201,7 +201,7 @@ Discover) and **3b** (Read Later, History, Settings) — pre-authorized, no re-a
 
 The web and pipeline gates are untouched by this item but run in CI on the PR and must stay green:
 `pytest`, `python -m pipeline.main --validate-config`, `python -m pip_audit -r requirements.txt`,
-`npm test` (baseline `105/105` on base SHA `9e524eb`).
+`npm test` (baseline `105/105` on base SHA `ee84290`).
 
 Every slice is reviewed by a non-author reviewer at its gate before the next slice is dispatched, and no
 slice self-merges.

@@ -1,7 +1,7 @@
 # 002 — evidence
 
 **Branch:** `feat/002-android-client-foundation`\
-**Base SHA:** `9e524eb3ea02f79ab626faa7aab65ef3ecf3ceaa` (`main`, identical to `origin/main` at branch
+**Base SHA:** `ee8429081be5b3afd6137e071dce47ce2ef74f91` (`main`, identical to `origin/main` at branch
 creation)\
 **Base gate state:** `npm test` → 105 tests, 105 pass, 0 fail, verified locally before dispatch. Python
 gates were not run locally — this working copy has no `.venv` — so hosted CI on the PR is the
@@ -16,18 +16,18 @@ authoritative run for `pytest`, `--validate-config`, and `pip_audit`.
 
 | SHA | Message |
 |---|---|
-| `409137a9201b23e15cb5521538a5a799592b7306` | `chore(android): scaffold Gradle project` |
-| `334ba329ab217b61f1855cb640ddaa4fd67e770f` | `test(android): cover ArticleDataset v1 parsing and validation` |
-| `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | `feat(android): add ArticleDataset model and validator` |
-| `566218ca4e6b299b37308be11ce8a2eb49af8423` | `chore(android): raise compileSdk to 37` |
-| `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | `test(android): cover article status transitions and screen state` |
+| `99909e94bd5bb26ea6ca487dc611bc2d8c391caf` | `chore(android): scaffold Gradle project` |
+| `1231712d8bf2d28023a4ef59cacbbab328f613dd` | `test(android): cover ArticleDataset v1 parsing and validation` |
+| `2428e7a0e3e4ce11fd33484e2f707067ec6698d2` | `feat(android): add ArticleDataset model and validator` |
+| `83afcadca8000523aed319fa0a0efe31bc2e497b` | `chore(android): raise compileSdk to 37` |
+| `c600ecab43c4d0466854d87c3efecd399713f8a7` | `test(android): cover article status transitions and screen state` |
 | `70ecc98a46cf8c6b5d7174bead3f662221339ba6` | `feat(android): add article status state machine and screen state` |
-| `2fca25db04470bf2969d47ca6cc54bf2f80a3732` | `chore(android): add Compose dependencies` |
-| `80a6d9d2eb66809204e127bee06cb381cc2ee016` | `test(android): cover destination and appearance state` |
-| `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | `fix(android): drop the unsupported regex flag from title validation` |
+| `3406bd6f2e10cfc252714458a365b0331afa70d5` | `chore(android): add Compose dependencies` |
+| `308395295022490f5d636904dac03c0995e2cb16` | `test(android): cover destination and appearance state` |
+| `b4687fad9b2a9fd75533361f65d986f39fd08b75` | `fix(android): drop the unsupported regex flag from title validation` |
 | this commit | `feat(android): add Compose shell and Discover screen` |
-| `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` | `feat(android): expose localized read time and topic labels` |
-| `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` | `test(android): cover Read Later History and settings state` |
+| `117c5720415ec114f1c94450a19ca54daa2e0241` | `feat(android): expose localized read time and topic labels` |
+| `f061b08e6cdda2bbecca75530dfef1119b212c30` | `test(android): cover Read Later History and settings state` |
 | this commit | `feat(android): add Read Later History and settings surfaces` |
 
 ## Snapshot profile
@@ -115,7 +115,7 @@ Article. This keeps invalid or unparseable timestamps at the dataset boundary, m
 a direct temporal comparison, and prevents Discover projection or later Compose rendering from parsing
 the same string repeatedly. Absence remains `null`, which `RelativeTime` renders as an empty label.
 
-**compileSdk resolution:** the preliminary `566218c` chore raised only `compileSdk` from 36 to 37;
+**compileSdk resolution:** the preliminary `83afcad` chore raised only `compileSdk` from 36 to 37;
 `targetSdk = 36` and `minSdk = 26` remain unchanged. `./gradlew :app:assembleDebug` passed with the
 pinned stack, resolving the slice 1 carry-forward observation without adding a dependency.
 
@@ -131,7 +131,7 @@ in the 3b follow-up before protected files changed:
   record list by matching the selected ID to the first authored tag label.
 
 The targeted pre-implementation run was compile-time RED with **0 tests executed** and five unresolved
-contract references. Commit `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` made the forced full suite
+contract references. Commit `117c5720415ec114f1c94450a19ca54daa2e0241` made the forced full suite
 **56 tests / 56 pass / 0 fail / 0 skipped**. The extension added three tests: localized date-time plus
 null input, null topic ID/label for untagged records, and label/date-time assertions in mapper cases.
 No other protected-layer file changed.
@@ -161,7 +161,7 @@ No other protected-layer file changed.
 
 ### Slice 3a RED → GREEN
 
-The feature RED commit `80a6d9d2eb66809204e127bee06cb381cc2ee016` failed at compile time before
+The feature RED commit `308395295022490f5d636904dac03c0995e2cb16` failed at compile time before
 any test could execute because `AppViewModel`, destination and appearance state, and the theme APIs did
 not exist. The completed implementation runs **53 tests / 53 pass / 0 fail / 0 skipped**: 8
 `AppViewModelTest`, 2 theme derivation, 7 validator, and 36 inherited tests.
@@ -244,7 +244,7 @@ install the APK, so any future class-initialization/startup crash fails that gat
 
 #### Slice 3b RED → GREEN
 
-Commit `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` is a genuine compile-time RED: **0 tests
+Commit `f061b08e6cdda2bbecca75530dfef1119b212c30` is a genuine compile-time RED: **0 tests
 executed**, with eleven unresolved references for queue-position, stat-value, and group-count presentation
 contracts. The ViewModel row-action tests in that commit compiled against the existing state-machine
 boundary; no production failure was manufactured. The completed implementation runs **62 tests / 62
@@ -357,13 +357,13 @@ added to history.
 
 | Slice | Red commit | Red counts | Green commit | Green counts |
 |---|---|---|---|---|
-| 1 | `334ba329ab217b61f1855cb640ddaa4fd67e770f` | compile-time RED; 0 executed because the validator/result/domain types were absent | `c8bfdf80b911ce941d5b870293fab6f6e332ebc5` | 6 tests / 6 pass / 0 fail |
-| 2 | `f1283332a0bf1fbdbe12ab6fec2629f8cafefbdb` | compile-time RED; 0 executed because the slice 2 production types and the `publishedAt: Instant?` boundary were absent | `feat(android): add article status state machine and screen state` (this commit) | 41 tests / 41 pass / 0 fail (35 slice 2 + 6 inherited) |
-| 3a | `80a6d9d2eb66809204e127bee06cb381cc2ee016` | compile-time RED; 0 executed because the ViewModel, destination/appearance state, and theme APIs were absent | `feat(android): add Compose shell and Discover screen` (this commit) | 53 tests / 53 pass / 0 fail / 0 skipped |
-| 3a validator repair | regression added over `80a6d9d2eb66809204e127bee06cb381cc2ee016` | 7 tests / 6 pass / 1 fail | `df6192f9f35c4caba812ca6ce1b804b8eef5aa9e` | 7 tests / 7 pass / 0 fail |
-| 3b slice 2 extension | targeted pre-commit RED | compile-time RED; 0 executed, 5 unresolved contract references | `8be14ed10730ccba8ac758d09c09d6e7b796b1ba` | 56 tests / 56 pass / 0 fail / 0 skipped |
-| 3b | `9a3ed82c1f686fa7c56fc79c431c51468ca51b0e` | compile-time RED; 0 executed, 11 unresolved presentation references | `feat(android): add Read Later History and settings surfaces` (this commit) | 62 tests / 62 pass / 0 fail / 0 skipped |
-| 4 | temporary uncommitted startup-crash injection | 1 test / 0 pass / 1 fail; instrumentation process crashed; Gradle exit 1 | `f7c7ede8c2768f5654e6627653f5287a61e509f5` | 1 test / 1 pass / 0 fail on `Pixel_10` API 37; 62 JVM tests / 62 pass / 0 fail; `assembleDebug` green; web 105/105 |
+| 1 | `1231712d8bf2d28023a4ef59cacbbab328f613dd` | compile-time RED; 0 executed because the validator/result/domain types were absent | `2428e7a0e3e4ce11fd33484e2f707067ec6698d2` | 6 tests / 6 pass / 0 fail |
+| 2 | `c600ecab43c4d0466854d87c3efecd399713f8a7` | compile-time RED; 0 executed because the slice 2 production types and the `publishedAt: Instant?` boundary were absent | `feat(android): add article status state machine and screen state` (this commit) | 41 tests / 41 pass / 0 fail (35 slice 2 + 6 inherited) |
+| 3a | `308395295022490f5d636904dac03c0995e2cb16` | compile-time RED; 0 executed because the ViewModel, destination/appearance state, and theme APIs were absent | `feat(android): add Compose shell and Discover screen` (this commit) | 53 tests / 53 pass / 0 fail / 0 skipped |
+| 3a validator repair | regression added over `308395295022490f5d636904dac03c0995e2cb16` | 7 tests / 6 pass / 1 fail | `b4687fad9b2a9fd75533361f65d986f39fd08b75` | 7 tests / 7 pass / 0 fail |
+| 3b slice 2 extension | targeted pre-commit RED | compile-time RED; 0 executed, 5 unresolved contract references | `117c5720415ec114f1c94450a19ca54daa2e0241` | 56 tests / 56 pass / 0 fail / 0 skipped |
+| 3b | `f061b08e6cdda2bbecca75530dfef1119b212c30` | compile-time RED; 0 executed, 11 unresolved presentation references | `feat(android): add Read Later History and settings surfaces` (this commit) | 62 tests / 62 pass / 0 fail / 0 skipped |
+| 4 | temporary uncommitted startup-crash injection | 1 test / 0 pass / 1 fail; instrumentation process crashed; Gradle exit 1 | `041ec87754acc8497515448b0a4346f478ba681b` | 1 test / 1 pass / 0 fail on `Pixel_10` API 37; 62 JVM tests / 62 pass / 0 fail; `assembleDebug` green; web 105/105 |
 
 ## Scenario traceability
 
@@ -397,7 +397,7 @@ validator rejects malformed UTF-8 before JSON decoding.
 ## Reviewer observations (not findings)
 
 Slice 1 gate: **PASS** (reviewer: Claude, non-author; implementer: Codex). Verified independently of the
-implementer's report — commit range `947cacc..c8bfdf8`, a forced clean `--rerun-tasks` test run read from
+implementer's report — commit range `794cf2a..2428e7a`, a forced clean `--rerun-tasks` test run read from
 the JUnit XML, and the diff read in full.
 
 Confirmed by the reviewer rather than taken on trust:
@@ -415,14 +415,14 @@ Confirmed by the reviewer rather than taken on trust:
   ports of `js/data/validation.js:134,141,157,165`, not invented bounds.
 - Zero `uses-permission` entries in both the source and merged debug manifests. No file under `domain/`
   imports `android.*` or `androidx.*`. Nothing outside `android/` and this file was touched.
-- The failing-first commit `334ba32` precedes the implementation commit `c8bfdf8`, and no test was
+- The failing-first commit `1231712` precedes the implementation commit `2428e7a`, and no test was
   weakened or deleted. `npm test` remains 105/105.
 - UTF-8 decoding is strict (`CodingErrorAction.REPORT`), which exceeds what the slice asked for and is
   the right call given 25 non-ASCII titles in the snapshot.
 
 ### Slice 4 gate: PASS
 
-Reviewer: Claude, non-author. Verified independently — commit range `9d5a76b..df57cad`, a forced
+Reviewer: Claude, non-author. Verified independently — commit range `186b93c..312483f`, a forced
 `--rerun-tasks` run (**62 tests, 62 pass**), and the diff read in full.
 
 - **Every action pin re-verified from upstream, not taken on trust.** `git ls-remote` against each
@@ -461,7 +461,7 @@ pull requests permanently pending. If it is ever to be required, the filter has 
 
 ### Slice 3b gate: PASS
 
-Reviewer: Claude, non-author. Verified independently — commit range `7bedecc..5078204`, a forced
+Reviewer: Claude, non-author. Verified independently — commit range `4c127fd..884794c`, a forced
 `--rerun-tasks` run read from the JUnit XML (**62 tests, 62 pass, 0 skipped**), and the diff read in full.
 
 **Two more gaps in the orchestrator's slice 2 brief, found before any code was written.** The implementer
@@ -476,7 +476,7 @@ stopped twice in this slice rather than working around a boundary, and was right
    (`js/app.js:75-82`), which `js/app.js:192` and `:204` call before the view sees it. The brief said
    "the first tag ID", which is what was built, and is not what the band shows.
 
-Both were authorized as a narrow slice 2 contract extension, landed as its own commit `8be14ed` ahead of
+Both were authorized as a narrow slice 2 contract extension, landed as its own commit `117c572` ahead of
 the 3b feature commit. `firstTagId` was kept alongside the new label so the existing derivation tests
 stayed meaningful, and `topicLabel` was ported faithfully rather than shortcut to "the first tag of the
 first tagged record".
@@ -516,7 +516,7 @@ composable resolve the string. Cheaper to do then than to discover then.
 
 ### Slice 3a gate: PASS
 
-Reviewer: Claude, non-author. Verified independently — commit range `6232036..5d6596e`, a forced
+Reviewer: Claude, non-author. Verified independently — commit range `f815faf..d391156`, a forced
 `--rerun-tasks` run read from the JUnit XML (**53 tests, 53 pass, 0 skipped**), and the diff read in full.
 
 **The significant event of this slice was an escaped slice 1 defect.** `DatasetValidator` compiled its
@@ -537,7 +537,7 @@ briefed:
    the defect and waited for authorization rather than making a silent cross-boundary edit. That is the
    forbidden-path rule working exactly as intended.
 
-The authorized repair (`df6192f`, deliberately its own commit because it fixes slice 1, not slice 3a)
+The authorized repair (`b4687fa`, deliberately its own commit because it fixes slice 1, not slice 3a)
 replaces the flag with a flag-free Unicode class, `[^\p{Z}\p{C}\p{P}\p{S}]` — separators, control and
 format characters, punctuation, symbols — which preserves the JavaScript rule's intent without depending
 on any flag, and agrees with `pipeline/validation.py:54-59`.
@@ -575,7 +575,7 @@ default. Cosmetic, but it should not reach owner acceptance that way.
 
 ### Slice 2 gate: PASS
 
-Reviewer: Claude, non-author. Verified independently — commit range `eb243b7..70ecc98`, a forced
+Reviewer: Claude, non-author. Verified independently — commit range `cdd225f..f2a42bb`, a forced
 `--rerun-tasks` run read from the JUnit XML (**41 tests, 41 pass, 0 skipped**: 13 state machine, 14
 mapper, 8 relative time, 5 validator, 1 sample dataset), and the diff read in full.
 

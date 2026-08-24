@@ -33,7 +33,7 @@ The foundation work begins from:
 ```text
 branch: v1-foundation
 bootstrap commit:
-24b9d8d0074222925c42181abbf570bee4d2dab9
+07fd3b6be585ca94435dc8a6b1c7391c81a11e41
 ```
 
 The bootstrap commit contains the documentation skeleton only.
@@ -618,7 +618,7 @@ All three parallel feature branches/worktrees must start from exactly this SHA.
 The previously completed bootstrap commit:
 
 ```text
-24b9d8d0074222925c42181abbf570bee4d2dab9
+07fd3b6be585ca94435dc8a6b1c7391c81a11e41
 ```
 
 is **not** the final implementation foundation SHA.

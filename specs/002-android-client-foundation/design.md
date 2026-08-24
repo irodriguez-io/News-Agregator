@@ -225,7 +225,7 @@ permanently, not merely deferred — worth stating so that nobody adds one "for 
 No existing test may be modified, and no existing gate may change behavior. This item adds no Python, no
 JavaScript, no CSS, and no HTML. The following must remain green and untouched:
 
-- `npm test` — `node --test tests/js/*.test.js`. Baseline verified on the item base SHA `9e524eb`:
+- `npm test` — `node --test tests/js/*.test.js`. Baseline verified on the item base SHA `ee84290`:
   **105 tests, 105 pass, 0 fail**.
 - `python -m pytest` — 86 test functions across `tests/pipeline/`. Counted statically; no local
   virtual environment exists in this working copy, so the authoritative run is hosted CI.

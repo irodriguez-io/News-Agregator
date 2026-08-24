@@ -2,7 +2,7 @@
 
 **Item:** Opened Article Return State\
 **Branch:** `feat/001-opened-article-return-state`\
-**Base:** `main` @ `e3ea02b` (hosted CI green on that SHA, verified before dispatch)
+**Base:** `main` @ `f42335c` (hosted CI green on that SHA, verified before dispatch)
 
 ---
 
@@ -10,12 +10,12 @@
 
 | SHA | Commit |
 | --- | --- |
-| `738481c` | `docs(spec): design opened article return state` |
-| `522c875` | `test: cover opened article return state` (slice 1 RED) |
-| `a873bb7` | `feat: hold opened article in Discover` (slice 1 GREEN) |
-| `44dbd8b` | `docs(spec): mark slice 1 done` |
-| `72e965c` | `test: cover opened Discover card actions` (slice 2 RED) |
-| `fc8ffcd` | `feat: acknowledge opened Discover articles` (slice 2 GREEN) |
+| `bd060ff` | `docs(spec): design opened article return state` |
+| `6971d1c` | `test: cover opened article return state` (slice 1 RED) |
+| `4226473` | `feat: hold opened article in Discover` (slice 1 GREEN) |
+| `a5f6964` | `docs(spec): mark slice 1 done` |
+| `1e23447` | `test: cover opened Discover card actions` (slice 2 RED) |
+| `abd033e` | `feat: acknowledge opened Discover articles` (slice 2 GREEN) |
 
 Implementer: Codex, one fresh session per slice. Reviewer: Claude (non-author) at each slice gate.
 
@@ -54,10 +54,10 @@ Local gate `npm test` (Node 24.x), run by the reviewer independently at each SHA
 
 | SHA | tests | pass | fail |
 | --- | --- | --- | --- |
-| `522c875` (slice 1 RED) | 101 | 95 | 6 |
-| `a873bb7` (slice 1 GREEN) | 101 | 101 | 0 |
-| `72e965c` (slice 2 RED) | 105 | 101 | 4 |
-| `fc8ffcd` (slice 2 GREEN) | 105 | 105 | 0 |
+| `6971d1c` (slice 1 RED) | 101 | 95 | 6 |
+| `4226473` (slice 1 GREEN) | 101 | 101 | 0 |
+| `1e23447` (slice 2 RED) | 105 | 101 | 4 |
+| `abd033e` (slice 2 GREEN) | 105 | 105 | 0 |
 
 Failing-first was confirmed genuine at both RED commits — the new scenario-named tests failed for
 missing behavior while every pre-existing test still passed. No test was edited, skipped, or deleted;
