@@ -373,6 +373,137 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `load failure remains a dismissible recovery notice without a transient announcement`() {
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.MALFORMED_JSON,
+                message = "stored bytes are malformed",
+                state = LocalState.default(),
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.recoveryNoticeVisible.value)
+        assertNull(viewModel.announcement.value)
+        viewModel.dismissRecoveryNotice()
+
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(LocalStateErrorCode.MALFORMED_JSON, viewModel.localStateError.value?.code)
+    }
+
+    @Test
+    fun `write failure emits a focus neutral announcement that is acknowledged by id`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "disk full",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        viewModel.onArticleAction(article(1), ArticleAction.SAVE)
+
+        val announcement = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, announcement.kind)
+        viewModel.acknowledgeAnnouncement(announcement.id + 1)
+        assertEquals(announcement, viewModel.announcement.value)
+        viewModel.acknowledgeAnnouncement(announcement.id)
+        assertNull(viewModel.announcement.value)
+    }
+
+    @Test
+    fun `Open persistence warning is distinct from navigation failure`() {
+        val viewModel = viewModel()
+        val transition = ArticleTransition.Unchanged(emptyMap())
+        val failedPersistence = ArticleActionResult(
+            transition = transition,
+            persisted = false,
+            allowNavigation = true,
+            failure = LocalStateResult.Failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "disk full",
+            ),
+        )
+
+        viewModel.reportOpenResult(failedPersistence, navigationOpened = true)
+        val persistenceWarning = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.OPEN_NOT_PERSISTED, persistenceWarning.kind)
+
+        viewModel.reportOpenResult(failedPersistence, navigationOpened = false)
+        val navigationFailure = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.OPEN_NAVIGATION_FAILED, navigationFailure.kind)
+        assertTrue(navigationFailure.id > persistenceWarning.id)
+    }
+
+    @Test
+    fun `confirmed reset clears state projections defaults settings and dismisses recovery notice`() = runBlocking {
+        val saved = article(1)
+        val read = article(2)
+        val dismissed = article(3)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+            record(dismissed, ArticleStatus.DISMISSED),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.MALFORMED_JSON,
+                message = "reset required",
+                state = stored,
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.resetLocalData()
+
+        assertIs<LocalStateResult.Success>(result)
+        assertEquals(1, store.resetRequests)
+        assertEquals(Appearance.SYSTEM, viewModel.appearance.value)
+        assertNull(viewModel.selectedCategory.value)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+        assertNull(viewModel.localStateError.value)
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(AppAnnouncementKind.RESET_COMPLETE, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `failed reset preserves every visible state and keeps confirmation recoverable`() = runBlocking {
+        val saved = article(1)
+        val read = article(2)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val store = FakeLocalStateStore(success(stored)).apply {
+            resetBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "reset failed",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.resetLocalData()
+
+        assertIs<LocalStateResult.Failure>(result)
+        assertEquals(1, store.resetRequests)
+        assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, viewModel.localStateError.value?.code)
+        assertEquals(AppAnnouncementKind.RESET_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
     fun `concurrent actions are serialized and the second write includes the first`() = runBlocking {
         val firstSaveEntered = CompletableDeferred<Unit>()
         val releaseFirstSave = CompletableDeferred<Unit>()
@@ -497,11 +628,13 @@ class AppViewModelTest {
         store: FakeLocalStateStore = FakeLocalStateStore(),
         loadDataset: suspend () -> DatasetResult = { datasetResult },
         loadLocalState: suspend () -> LocalStateResult = store::load,
+        resetLocalState: suspend () -> LocalStateResult = store::reset,
         nowProvider: () -> Instant = { now },
     ): AppViewModel = AppViewModel(
         loadDataset = loadDataset,
         loadLocalState = loadLocalState,
         saveLocalState = store::save,
+        resetLocalState = resetLocalState,
         nowProvider = nowProvider,
         zoneProvider = { zone },
         localeProvider = { Locale.US },

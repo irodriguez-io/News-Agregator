@@ -14,13 +14,24 @@ internal class FakeLocalStateStore(
     var saveBehavior: suspend (LocalState) -> LocalStateResult = { state ->
         LocalStateResult.Success(state, LocalStateSource.STORAGE)
     }
+    var resetBehavior: suspend () -> LocalStateResult = {
+        LocalStateResult.Success(LocalState.default(), LocalStateSource.DEFAULT)
+    }
     val saveRequests = mutableListOf<LocalState>()
+    var resetRequests = 0
 
     suspend fun load(): LocalStateResult = loadResult
 
     suspend fun save(state: LocalState): LocalStateResult {
         saveRequests += state
         return saveBehavior(state).also { result ->
+            if (result is LocalStateResult.Success) loadResult = result
+        }
+    }
+
+    suspend fun reset(): LocalStateResult {
+        resetRequests += 1
+        return resetBehavior().also { result ->
             if (result is LocalStateResult.Success) loadResult = result
         }
     }
