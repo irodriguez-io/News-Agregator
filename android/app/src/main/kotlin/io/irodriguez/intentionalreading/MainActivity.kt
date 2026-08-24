@@ -12,8 +12,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val repository = (application as IntentionalReadingApplication).container.datasetRepository
-        val factory = AppViewModel.Factory(repository)
+        val container = (application as IntentionalReadingApplication).container
+        val factory = AppViewModel.Factory(
+            datasetRepository = container.datasetRepository,
+            localStateRepository = container.localStateRepository,
+        )
         setContent {
             val appViewModel: AppViewModel = viewModel(factory = factory)
             IntentionalReadingApp(viewModel = appViewModel)
