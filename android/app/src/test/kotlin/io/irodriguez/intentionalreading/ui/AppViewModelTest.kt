@@ -26,8 +26,11 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import kotlin.test.Test
@@ -263,6 +266,38 @@ class AppViewModelTest {
 
         assertTrue(result.persisted)
         assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+    }
+
+    @Test
+    fun `article write outlives the launching scope and adopts persisted state`() = runBlocking {
+        val enteredSave = CompletableDeferred<Unit>()
+        val releaseSave = CompletableDeferred<Unit>()
+        val completed = CompletableDeferred<ArticleActionResult>()
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { state ->
+                enteredSave.complete(Unit)
+                releaseSave.await()
+                success(state)
+            }
+        }
+        val target = article(1)
+        val viewModel = viewModel(store = store)
+        val launchingJob = Job()
+        val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
+
+        val caller = launchingScope.launch {
+            viewModel.launchArticleAction(target, ArticleAction.SAVE, completed::complete)
+            enteredSave.await()
+        }
+        enteredSave.await()
+        launchingJob.cancel()
+        caller.join()
+        releaseSave.complete(Unit)
+        val result = completed.await()
+
+        assertTrue(result.persisted)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(target.id, viewModel.uiState.value.readLater.rows.single().article.id)
     }
 
     @Test
