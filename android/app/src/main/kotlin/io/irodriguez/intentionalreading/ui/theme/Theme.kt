@@ -6,7 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import io.irodriguez.intentionalreading.ui.Appearance
+import io.irodriguez.intentionalreading.domain.model.Appearance
 
 @Composable
 fun IntentionalReadingTheme(

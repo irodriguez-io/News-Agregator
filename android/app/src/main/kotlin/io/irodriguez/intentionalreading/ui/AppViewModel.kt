@@ -8,6 +8,7 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
+import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
@@ -27,12 +28,6 @@ enum class Destination {
     READ_LATER,
     DISCOVER,
     HISTORY,
-}
-
-enum class Appearance {
-    LIGHT,
-    DARK,
-    SYSTEM,
 }
 
 class AppViewModel(

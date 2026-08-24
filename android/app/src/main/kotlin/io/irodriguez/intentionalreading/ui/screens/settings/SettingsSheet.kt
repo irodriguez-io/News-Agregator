@@ -37,7 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
-import io.irodriguez.intentionalreading.ui.Appearance
+import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 

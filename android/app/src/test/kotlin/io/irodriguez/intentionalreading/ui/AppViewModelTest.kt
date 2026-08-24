@@ -8,6 +8,7 @@ import io.irodriguez.intentionalreading.domain.model.ArticleScore
 import io.irodriguez.intentionalreading.domain.model.ArticleSource
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
+import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
