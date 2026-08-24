@@ -21,7 +21,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -38,7 +37,6 @@ import io.irodriguez.intentionalreading.ui.screens.settings.SettingsSheet
 import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingTheme
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,8 +49,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
     val destination by viewModel.destination.collectAsStateWithLifecycle()
     val settingsOpen by viewModel.settingsOpen.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val actionScope = rememberCoroutineScope()
+    val applicationContext = LocalContext.current.applicationContext
 
     IntentionalReadingTheme(appearance = appearance) {
         val tokens = LocalIntentionalReadingTokens.current
@@ -104,20 +101,15 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     state = uiState.readLater,
                     onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
                     onReadArticle = { article ->
-                        actionScope.launch {
-                            val result = viewModel.onArticleAction(article, ArticleAction.OPEN)
-                            if (result.allowNavigation) openPublisher(context, article.url)
+                        viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
+                            if (result.allowNavigation) openPublisher(applicationContext, article.url)
                         }
                     },
                     onMarkRead = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.MARK_READ)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
                     },
                     onRemove = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.REMOVE)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.REMOVE)
                     },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -126,30 +118,23 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     degraded = uiState.degraded,
                     selectedCategory = selectedCategory,
                     onCategorySelected = { category ->
-                        actionScope.launch { viewModel.selectCategory(category) }
+                        viewModel.launchCategorySelection(category)
                     },
                     onRetry = viewModel::reload,
                     onViewReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
                     onDismiss = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.DISMISS)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.DISMISS)
                     },
                     onReadArticle = { article ->
-                        actionScope.launch {
-                            val result = viewModel.onArticleAction(article, ArticleAction.OPEN)
-                            if (result.allowNavigation) openPublisher(context, article.url)
+                        viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
+                            if (result.allowNavigation) openPublisher(applicationContext, article.url)
                         }
                     },
                     onSave = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.SAVE)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.SAVE)
                     },
                     onMarkRead = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.MARK_READ)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
                     },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -158,15 +143,12 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     onReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
                     onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
                     onReopen = { article ->
-                        actionScope.launch {
-                            val result = viewModel.onArticleAction(article, ArticleAction.OPEN)
-                            if (result.allowNavigation) openPublisher(context, article.url)
+                        viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
+                            if (result.allowNavigation) openPublisher(applicationContext, article.url)
                         }
                     },
                     onMarkUnread = { article ->
-                        actionScope.launch {
-                            viewModel.onArticleAction(article, ArticleAction.MARK_UNREAD)
-                        }
+                        viewModel.launchArticleAction(article, ArticleAction.MARK_UNREAD)
                     },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -177,7 +159,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
             SettingsSheet(
                 appearance = appearance,
                 onAppearanceSelected = { selectedAppearance ->
-                    actionScope.launch { viewModel.setAppearance(selectedAppearance) }
+                    viewModel.launchAppearanceChange(selectedAppearance)
                 },
                 onDismiss = viewModel::closeSettings,
             )

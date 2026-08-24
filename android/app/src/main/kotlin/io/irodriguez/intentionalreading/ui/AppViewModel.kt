@@ -97,6 +97,28 @@ class AppViewModel(
         _settingsOpen.value = false
     }
 
+    fun launchAppearanceChange(appearance: Appearance) {
+        viewModelScope.launch(loadDispatcher) {
+            setAppearance(appearance)
+        }
+    }
+
+    fun launchCategorySelection(category: Category?) {
+        viewModelScope.launch(loadDispatcher) {
+            selectCategory(category)
+        }
+    }
+
+    fun launchArticleAction(
+        article: Article,
+        action: ArticleAction,
+        onComplete: (ArticleActionResult) -> Unit = {},
+    ) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(onArticleAction(article, action))
+        }
+    }
+
     suspend fun setAppearance(appearance: Appearance) {
         stateMutex.withLock {
             if (localState.settings.appearance == appearance) return@withLock
