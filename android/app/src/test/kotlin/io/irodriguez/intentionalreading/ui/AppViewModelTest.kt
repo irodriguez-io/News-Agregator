@@ -4,22 +4,33 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleContentType
 import io.irodriguez.intentionalreading.domain.model.ArticleDataset
+import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleScore
 import io.irodriguez.intentionalreading.domain.model.ArticleSource
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
+import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.domain.validation.DatasetErrorCode
 import io.irodriguez.intentionalreading.domain.validation.DatasetResult
+import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
+import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
+import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import java.time.Instant
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import kotlin.test.Test
@@ -36,7 +47,7 @@ class AppViewModelTest {
             listOf(Destination.READ_LATER, Destination.DISCOVER, Destination.HISTORY),
             Destination.entries,
         )
-        val viewModel = viewModel(DatasetResult.Success(dataset()))
+        val viewModel = viewModel()
 
         assertEquals(Destination.DISCOVER, viewModel.destination.value)
         viewModel.selectDestination(Destination.READ_LATER)
@@ -49,7 +60,7 @@ class AppViewModelTest {
 
     @Test
     fun `settings entry point toggles open and closed`() {
-        val viewModel = viewModel(DatasetResult.Success(dataset()))
+        val viewModel = viewModel()
 
         assertFalse(viewModel.settingsOpen.value)
         viewModel.toggleSettings()
@@ -59,23 +70,102 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `appearance changes between the three frozen values`() {
-        assertEquals(listOf(Appearance.LIGHT, Appearance.DARK, Appearance.SYSTEM), Appearance.entries)
-        val viewModel = viewModel(DatasetResult.Success(dataset()))
+    fun `state restoration gates dataset loading and applies appearance category and records`() = runBlocking {
+        val storedArticle = article(1, Category.TECHNOLOGY)
+        val stored = localState(
+            record(storedArticle, ArticleStatus.OPENED),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val stateResult = CompletableDeferred<LocalStateResult>()
+        var datasetLoadStarted = false
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            store = store,
+            loadLocalState = { stateResult.await() },
+            loadDataset = {
+                datasetLoadStarted = true
+                DatasetResult.Success(dataset(listOf(storedArticle, article(2))))
+            },
+        )
 
+        assertFalse(viewModel.localStateReady.value)
+        assertFalse(datasetLoadStarted)
         assertEquals(Appearance.SYSTEM, viewModel.appearance.value)
-        viewModel.setAppearance(Appearance.LIGHT)
-        assertEquals(Appearance.LIGHT, viewModel.appearance.value)
-        viewModel.setAppearance(Appearance.DARK)
+        stateResult.complete(LocalStateResult.Success(stored, LocalStateSource.STORAGE))
+        yield()
+
+        assertTrue(viewModel.localStateReady.value)
+        assertTrue(datasetLoadStarted)
         assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertNull(viewModel.heldArticleId.value)
+        val card = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(storedArticle.id, card.article.id)
+        assertTrue(card.isOpened)
+    }
+
+    @Test
+    fun `default launch and browsing create no writes or article records`() = runBlocking {
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+
+        viewModel.selectDestination(Destination.READ_LATER)
+        viewModel.selectDestination(Destination.HISTORY)
+        viewModel.selectDestination(Destination.DISCOVER)
+        viewModel.selectCategory(null)
         viewModel.setAppearance(Appearance.SYSTEM)
-        assertEquals(Appearance.SYSTEM, viewModel.appearance.value)
+
+        assertTrue(viewModel.localStateReady.value)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+        assertTrue(store.saveRequests.isEmpty())
+    }
+
+    @Test
+    fun `appearance and category persist and restore in a new view model`() = runBlocking {
+        val store = FakeLocalStateStore()
+        val first = viewModel(store = store)
+
+        first.setAppearance(Appearance.DARK)
+        first.selectCategory(Category.TECHNOLOGY)
+
+        assertEquals(2, store.saveRequests.size)
+        assertEquals(Appearance.DARK, store.saveRequests.last().settings.appearance)
+        assertEquals(Category.TECHNOLOGY, store.saveRequests.last().session.lastCategory)
+
+        val restored = viewModel(store = store)
+        assertEquals(Appearance.DARK, restored.appearance.value)
+        assertEquals(Category.TECHNOLOGY, restored.selectedCategory.value)
+    }
+
+    @Test
+    fun `restored Read Later and History use snapshots absent from the dataset`() {
+        val saved = article(41)
+        val read = article(42)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+        )
+        val store = FakeLocalStateStore(success(stored))
+        val viewModel = viewModel(
+            datasetResult = DatasetResult.Success(dataset(listOf(article(1)))),
+            store = store,
+        )
+
+        assertEquals(listOf(saved.id), viewModel.uiState.value.readLater.rows.map { it.article.id })
+        assertEquals(
+            listOf(read.id),
+            viewModel.uiState.value.history.groups.flatMap { group -> group.rows }.map { it.article.id },
+        )
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
     }
 
     @Test
     fun `load success maps loading to ready content`() = runBlocking {
         val result = CompletableDeferred<DatasetResult>()
-        val viewModel = viewModel { result.await() }
+        val viewModel = viewModel(loadDataset = { result.await() })
 
         assertIs<DiscoverUiState.Loading>(viewModel.uiState.value.discover)
         result.complete(DatasetResult.Success(dataset()))
@@ -88,7 +178,7 @@ class AppViewModelTest {
     @Test
     fun `load failure maps to the error phase without claiming an article`() {
         val viewModel = viewModel(
-            DatasetResult.Failure(
+            datasetResult = DatasetResult.Failure(
                 code = DatasetErrorCode.MALFORMED_DATASET,
                 message = "broken fixture",
             ),
@@ -98,32 +188,28 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `opened card is held and released when its record leaves opened`() {
+    fun `opened card is held after persistence and released when its record leaves opened`() = runBlocking {
         val articles = listOf(article(1), article(2))
-        val viewModel = viewModel(DatasetResult.Success(dataset(articles)))
+        val viewModel = viewModel(datasetResult = DatasetResult.Success(dataset(articles)))
 
-        val opened = assertIs<ArticleTransition.Applied>(
-            viewModel.onArticleAction(articles.first(), ArticleAction.OPEN),
-        )
+        val opened = applied(viewModel.onArticleAction(articles.first(), ArticleAction.OPEN))
         assertEquals(ArticleStatus.OPENED, opened.record.status)
         assertEquals(articles.first().id, viewModel.heldArticleId.value)
         val heldCard = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
         assertEquals(articles.first(), heldCard.article)
         assertTrue(heldCard.isOpened)
 
-        val saved = assertIs<ArticleTransition.Applied>(
-            viewModel.onArticleAction(articles.first(), ArticleAction.SAVE),
-        )
+        val saved = applied(viewModel.onArticleAction(articles.first(), ArticleAction.SAVE))
         assertEquals(ArticleStatus.SAVED, saved.record.status)
         assertNull(viewModel.heldArticleId.value)
         assertEquals(articles[1], assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article)
     }
 
     @Test
-    fun `changing category releases an opened held card`() {
+    fun `changing category releases an opened held card after persistence`() = runBlocking {
         val technology = article(1, Category.TECHNOLOGY)
         val iam = article(2, Category.IAM)
-        val viewModel = viewModel(DatasetResult.Success(dataset(listOf(technology, iam))))
+        val viewModel = viewModel(datasetResult = DatasetResult.Success(dataset(listOf(technology, iam))))
         viewModel.selectCategory(Category.IAM)
 
         viewModel.onArticleAction(iam, ArticleAction.OPEN)
@@ -135,9 +221,13 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `every article action is delegated to the state machine`() {
+    fun `every article action persists its state-machine transition`() = runBlocking {
         val articles = listOf(article(1), article(2), article(3))
-        val viewModel = viewModel(DatasetResult.Success(dataset(articles)))
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            datasetResult = DatasetResult.Success(dataset(articles)),
+            store = store,
+        )
 
         assertStatus(viewModel, articles[0], ArticleAction.OPEN, ArticleStatus.OPENED)
         assertStatus(viewModel, articles[0], ArticleAction.SAVE, ArticleStatus.SAVED)
@@ -145,13 +235,339 @@ class AppViewModelTest {
         assertStatus(viewModel, articles[1], ArticleAction.DISMISS, ArticleStatus.DISMISSED)
         assertStatus(viewModel, articles[2], ArticleAction.MARK_READ, ArticleStatus.READ)
         assertStatus(viewModel, articles[2], ArticleAction.MARK_UNREAD, ArticleStatus.SAVED)
+
+        assertEquals(ArticleAction.entries.size, store.saveRequests.size)
+        assertEquals(ArticleStatus.DISMISSED, store.saveRequests.last().articles.getValue(articles[0].id).status)
+        assertEquals(ArticleStatus.DISMISSED, store.saveRequests.last().articles.getValue(articles[1].id).status)
+        assertEquals(ArticleStatus.SAVED, store.saveRequests.last().articles.getValue(articles[2].id).status)
     }
 
     @Test
-    fun `Read Later row actions update queue and History projections immediately`() {
+    fun `records publish only after a successful write`() = runBlocking {
+        val enteredSave = CompletableDeferred<Unit>()
+        val releaseSave = CompletableDeferred<Unit>()
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { state ->
+                enteredSave.complete(Unit)
+                releaseSave.await()
+                success(state)
+            }
+        }
+        val target = article(1)
+        val viewModel = viewModel(store = store)
+
+        val pending = async { viewModel.onArticleAction(target, ArticleAction.SAVE) }
+        enteredSave.await()
+
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(target.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        releaseSave.complete(Unit)
+        val result = pending.await()
+
+        assertTrue(result.persisted)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+    }
+
+    @Test
+    fun `article write outlives the launching scope and adopts persisted state`() = runBlocking {
+        val enteredSave = CompletableDeferred<Unit>()
+        val releaseSave = CompletableDeferred<Unit>()
+        val completed = CompletableDeferred<ArticleActionResult>()
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { state ->
+                enteredSave.complete(Unit)
+                releaseSave.await()
+                success(state)
+            }
+        }
+        val target = article(1)
+        val viewModel = viewModel(store = store)
+        val launchingJob = Job()
+        val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
+
+        val caller = launchingScope.launch {
+            viewModel.launchArticleAction(target, ArticleAction.SAVE, completed::complete)
+            enteredSave.await()
+        }
+        enteredSave.await()
+        launchingJob.cancel()
+        caller.join()
+        releaseSave.complete(Unit)
+        val result = completed.await()
+
+        assertTrue(result.persisted)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(target.id, viewModel.uiState.value.readLater.rows.single().article.id)
+    }
+
+    @Test
+    fun `failed queue write leaves records counts and card unchanged and exposes state`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "disk full",
+                )
+            }
+        }
+        val target = article(1)
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.onArticleAction(target, ArticleAction.SAVE)
+
+        assertFalse(result.persisted)
+        assertFalse(result.allowNavigation)
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, result.failure?.code)
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, viewModel.localStateError.value?.code)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(target.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+    }
+
+    @Test
+    fun `failed Open permits publisher navigation without claiming opened state`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "disk full",
+                )
+            }
+        }
+        val target = article(1)
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.onArticleAction(target, ArticleAction.OPEN)
+
+        assertFalse(result.persisted)
+        assertTrue(result.allowNavigation)
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, result.failure?.code)
+        assertNull(viewModel.heldArticleId.value)
+        assertFalse(assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).isOpened)
+    }
+
+    @Test
+    fun `recovery locked store refuses actions without changing visible state`() = runBlocking {
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.MALFORMED_JSON,
+                message = "stored bytes are malformed",
+                state = LocalState.default(),
+            ),
+        ).apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.RECOVERY_REQUIRED,
+                    message = "reset required",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.localStateReady.value)
+        assertEquals(LocalStateErrorCode.MALFORMED_JSON, viewModel.localStateError.value?.code)
+        val result = viewModel.onArticleAction(article(1), ArticleAction.SAVE)
+
+        assertEquals(LocalStateErrorCode.RECOVERY_REQUIRED, result.failure?.code)
+        assertEquals(LocalStateErrorCode.RECOVERY_REQUIRED, viewModel.localStateError.value?.code)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+    }
+
+    @Test
+    fun `load failure remains a dismissible recovery notice without a transient announcement`() {
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.MALFORMED_JSON,
+                message = "stored bytes are malformed",
+                state = LocalState.default(),
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.recoveryNoticeVisible.value)
+        assertNull(viewModel.announcement.value)
+        viewModel.dismissRecoveryNotice()
+
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(LocalStateErrorCode.MALFORMED_JSON, viewModel.localStateError.value?.code)
+    }
+
+    @Test
+    fun `write failure emits a focus neutral announcement that is acknowledged by id`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "disk full",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        viewModel.onArticleAction(article(1), ArticleAction.SAVE)
+
+        val announcement = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, announcement.kind)
+        viewModel.acknowledgeAnnouncement(announcement.id + 1)
+        assertEquals(announcement, viewModel.announcement.value)
+        viewModel.acknowledgeAnnouncement(announcement.id)
+        assertNull(viewModel.announcement.value)
+    }
+
+    @Test
+    fun `Open persistence warning is distinct from navigation failure`() {
+        val viewModel = viewModel()
+        val transition = ArticleTransition.Unchanged(emptyMap())
+        val failedPersistence = ArticleActionResult(
+            transition = transition,
+            persisted = false,
+            allowNavigation = true,
+            failure = LocalStateResult.Failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "disk full",
+            ),
+        )
+
+        viewModel.reportOpenResult(failedPersistence, navigationOpened = true)
+        val persistenceWarning = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.OPEN_NOT_PERSISTED, persistenceWarning.kind)
+
+        viewModel.reportOpenResult(failedPersistence, navigationOpened = false)
+        val navigationFailure = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.OPEN_NAVIGATION_FAILED, navigationFailure.kind)
+        assertTrue(navigationFailure.id > persistenceWarning.id)
+    }
+
+    @Test
+    fun `confirmed reset clears state projections defaults settings and dismisses recovery notice`() = runBlocking {
+        val saved = article(1)
+        val read = article(2)
+        val dismissed = article(3)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+            record(dismissed, ArticleStatus.DISMISSED),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.MALFORMED_JSON,
+                message = "reset required",
+                state = stored,
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.resetLocalData()
+
+        assertIs<LocalStateResult.Success>(result)
+        assertEquals(1, store.resetRequests)
+        assertEquals(Appearance.SYSTEM, viewModel.appearance.value)
+        assertNull(viewModel.selectedCategory.value)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+        assertNull(viewModel.localStateError.value)
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(AppAnnouncementKind.RESET_COMPLETE, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `failed reset preserves every visible state and keeps confirmation recoverable`() = runBlocking {
+        val saved = article(1)
+        val read = article(2)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val store = FakeLocalStateStore(success(stored)).apply {
+            resetBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "reset failed",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.resetLocalData()
+
+        assertIs<LocalStateResult.Failure>(result)
+        assertEquals(1, store.resetRequests)
+        assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, viewModel.localStateError.value?.code)
+        assertEquals(AppAnnouncementKind.RESET_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `concurrent actions are serialized and the second write includes the first`() = runBlocking {
+        val firstSaveEntered = CompletableDeferred<Unit>()
+        val releaseFirstSave = CompletableDeferred<Unit>()
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { state ->
+                if (saveRequests.size == 1) {
+                    firstSaveEntered.complete(Unit)
+                    releaseFirstSave.await()
+                }
+                success(state)
+            }
+        }
+        val firstArticle = article(1)
+        val secondArticle = article(2)
+        val viewModel = viewModel(
+            datasetResult = DatasetResult.Success(dataset(listOf(firstArticle, secondArticle))),
+            store = store,
+        )
+
+        val first = async { viewModel.onArticleAction(firstArticle, ArticleAction.SAVE) }
+        firstSaveEntered.await()
+        val second = async { viewModel.onArticleAction(secondArticle, ArticleAction.SAVE) }
+        yield()
+
+        assertEquals(1, store.saveRequests.size)
+        releaseFirstSave.complete(Unit)
+        assertTrue(first.await().persisted)
+        assertTrue(second.await().persisted)
+
+        assertEquals(2, store.saveRequests.size)
+        assertEquals(setOf(firstArticle.id, secondArticle.id), store.saveRequests.last().articles.keys)
+        assertEquals(2, viewModel.uiState.value.navigationCounts.readLater)
+    }
+
+    @Test
+    fun `the validated state returned by save is adopted`() = runBlocking {
+        val preciseNow = Instant.parse("2026-08-22T12:00:00.123456Z")
+        val target = article(1)
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { state ->
+                val entry = state.articles.getValue(target.id)
+                val normalized = entry.copy(
+                    firstSeenAt = entry.firstSeenAt.truncatedTo(ChronoUnit.MILLIS),
+                    savedAt = entry.savedAt?.truncatedTo(ChronoUnit.MILLIS),
+                )
+                success(state.copy(articles = mapOf(entry.article.id to normalized)))
+            }
+        }
+        val viewModel = viewModel(store = store, nowProvider = { preciseNow })
+
+        val first = applied(viewModel.onArticleAction(target, ArticleAction.SAVE))
+        assertEquals(preciseNow.truncatedTo(ChronoUnit.MILLIS), first.record.savedAt)
+
+        val opened = applied(viewModel.onArticleAction(target, ArticleAction.OPEN))
+        assertEquals(preciseNow.truncatedTo(ChronoUnit.MILLIS), opened.record.firstSeenAt)
+    }
+
+    @Test
+    fun `Read Later row actions update queue and History projections immediately after writes`() = runBlocking {
         val savedArticle = article(1)
         val removedArticle = article(2)
-        val viewModel = viewModel(DatasetResult.Success(dataset(listOf(savedArticle, removedArticle))))
+        val viewModel = viewModel(
+            datasetResult = DatasetResult.Success(dataset(listOf(savedArticle, removedArticle))),
+        )
 
         viewModel.onArticleAction(savedArticle, ArticleAction.SAVE)
         viewModel.onArticleAction(removedArticle, ArticleAction.SAVE)
@@ -159,10 +575,10 @@ class AppViewModelTest {
 
         assertEquals(2, viewModel.uiState.value.navigationCounts.readLater)
         assertEquals(0, viewModel.uiState.value.navigationCounts.history)
-        val unchanged = assertIs<ArticleTransition.Unchanged>(
-            viewModel.onArticleAction(savedArticle, ArticleAction.SAVE),
-        )
-        assertEquals(ArticleStatus.SAVED, unchanged.records.getValue(savedArticle.id).status)
+        val unchanged = viewModel.onArticleAction(savedArticle, ArticleAction.SAVE)
+        val unchangedTransition = assertIs<ArticleTransition.Unchanged>(unchanged.transition)
+        assertTrue(unchanged.persisted)
+        assertEquals(ArticleStatus.SAVED, unchangedTransition.records.getValue(savedArticle.id).status)
 
         viewModel.onArticleAction(savedArticle, ArticleAction.MARK_READ)
         viewModel.onArticleAction(removedArticle, ArticleAction.REMOVE)
@@ -174,22 +590,18 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `History row actions reopen in place then mark unread back to Read Later`() {
+    fun `History row actions reopen in place then mark unread back to Read Later`() = runBlocking {
         val readArticle = article(1)
-        val viewModel = viewModel(DatasetResult.Success(dataset(listOf(readArticle))))
+        val viewModel = viewModel()
 
         viewModel.onArticleAction(readArticle, ArticleAction.MARK_READ)
-        val reopened = assertIs<ArticleTransition.Applied>(
-            viewModel.onArticleAction(readArticle, ArticleAction.OPEN),
-        )
+        val reopened = applied(viewModel.onArticleAction(readArticle, ArticleAction.OPEN))
 
         assertEquals(ArticleStatus.READ, reopened.record.status)
         assertEquals(1, viewModel.uiState.value.navigationCounts.history)
         assertEquals(readArticle.id, viewModel.uiState.value.history.groups.single().rows.single().article.id)
 
-        val unread = assertIs<ArticleTransition.Applied>(
-            viewModel.onArticleAction(readArticle, ArticleAction.MARK_UNREAD),
-        )
+        val unread = applied(viewModel.onArticleAction(readArticle, ArticleAction.MARK_UNREAD))
 
         assertEquals(ArticleStatus.SAVED, unread.record.status)
         assertEquals(readArticle.id, viewModel.uiState.value.readLater.rows.single().article.id)
@@ -197,25 +609,63 @@ class AppViewModelTest {
         assertEquals(0, viewModel.uiState.value.navigationCounts.history)
     }
 
-    private fun assertStatus(
+    private suspend fun assertStatus(
         viewModel: AppViewModel,
         article: Article,
         action: ArticleAction,
         expected: ArticleStatus,
     ) {
-        val transition = assertIs<ArticleTransition.Applied>(viewModel.onArticleAction(article, action))
-        assertEquals(expected, transition.record.status)
+        val result = viewModel.onArticleAction(article, action)
+        assertTrue(result.persisted)
+        assertEquals(expected, applied(result).record.status)
     }
 
-    private fun viewModel(result: DatasetResult): AppViewModel = viewModel { result }
+    private fun applied(result: ArticleActionResult): ArticleTransition.Applied =
+        assertIs<ArticleTransition.Applied>(result.transition)
 
-    private fun viewModel(loadDataset: suspend () -> DatasetResult): AppViewModel = AppViewModel(
+    private fun viewModel(
+        datasetResult: DatasetResult = DatasetResult.Success(dataset()),
+        store: FakeLocalStateStore = FakeLocalStateStore(),
+        loadDataset: suspend () -> DatasetResult = { datasetResult },
+        loadLocalState: suspend () -> LocalStateResult = store::load,
+        resetLocalState: suspend () -> LocalStateResult = store::reset,
+        nowProvider: () -> Instant = { now },
+    ): AppViewModel = AppViewModel(
         loadDataset = loadDataset,
-        nowProvider = { now },
+        loadLocalState = loadLocalState,
+        saveLocalState = store::save,
+        resetLocalState = resetLocalState,
+        nowProvider = nowProvider,
         zoneProvider = { zone },
         localeProvider = { Locale.US },
         loadDispatcher = Dispatchers.Unconfined,
     )
+
+    private fun localState(
+        vararg records: ArticleRecord,
+        appearance: Appearance = Appearance.SYSTEM,
+        category: Category? = null,
+    ): LocalState = LocalState.default().copy(
+        articles = records.associateBy { it.article.id },
+        settings = LocalState.Settings(appearance),
+        session = LocalState.Session(category),
+    )
+
+    private fun record(article: Article, status: ArticleStatus): ArticleRecord {
+        val actionAt = now.minusSeconds(article.id.takeLast(2).toLong(16).coerceAtLeast(1L) * 60L)
+        return ArticleRecord(
+            article = article,
+            status = status,
+            firstSeenAt = actionAt.minusSeconds(60),
+            openedAt = if (status == ArticleStatus.OPENED) actionAt else null,
+            savedAt = if (status == ArticleStatus.SAVED) actionAt else null,
+            dismissedAt = if (status == ArticleStatus.DISMISSED) actionAt else null,
+            readAt = if (status == ArticleStatus.READ) actionAt else null,
+        )
+    }
+
+    private fun success(state: LocalState): LocalStateResult.Success =
+        LocalStateResult.Success(state, LocalStateSource.STORAGE)
 
     private fun dataset(articles: List<Article> = listOf(article(1))): ArticleDataset = ArticleDataset(
         schemaVersion = 1,

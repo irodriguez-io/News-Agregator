@@ -10,6 +10,7 @@ import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -260,6 +261,70 @@ class ArticleStateMachineTest {
         assertEquals(ArticleStatus.SAVED, result.records.getValue(article().id).status)
     }
 
+    @Test
+    fun `Android transitions derive only the signals structurally forced by the record`() {
+        val opened = applied(emptyMap(), ArticleAction.OPEN)
+        assertSignals(opened, opened = true, saved = false, dismissed = false, read = false)
+
+        val read = applied(emptyMap(), ArticleAction.MARK_READ)
+        assertSignals(read, opened = false, saved = false, dismissed = false, read = true)
+
+        val savedRecord = record(status = ArticleStatus.SAVED, savedAt = oldActionTime)
+        val removed = applied(mapOf(article().id to savedRecord), ArticleAction.REMOVE)
+        assertSignals(removed, opened = false, saved = false, dismissed = false, read = false)
+    }
+
+    @Test
+    fun `Android actions preserve foreign learning signals while enforcing structural signals`() {
+        val savedSignal = record(
+            status = ArticleStatus.SAVED,
+            savedAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = true,
+                dismissed = false,
+                read = false,
+            ),
+        )
+        val read = applied(mapOf(article().id to savedSignal), ArticleAction.MARK_READ)
+        assertSignals(read, opened = false, saved = true, dismissed = false, read = true)
+
+        val dismissedSignal = record(
+            status = ArticleStatus.DISMISSED,
+            dismissedAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = false,
+                dismissed = true,
+                read = false,
+            ),
+        )
+        val records = mapOf(article().id to dismissedSignal)
+        val unchanged = assertIs<ArticleTransition.Unchanged>(
+            ArticleStateMachine.transition(records, article(), ArticleAction.DISMISS, actionTime),
+        )
+        assertSignals(
+            unchanged.records.getValue(article().id),
+            opened = false,
+            saved = false,
+            dismissed = true,
+            read = false,
+        )
+
+        val inconsistentDismissSignal = record(
+            status = ArticleStatus.OPENED,
+            openedAt = openedAt,
+            signalsApplied = SignalsApplied(
+                opened = true,
+                saved = false,
+                dismissed = true,
+                read = false,
+            ),
+        )
+        val saved = applied(mapOf(article().id to inconsistentDismissSignal), ArticleAction.SAVE)
+        assertSignals(saved, opened = true, saved = false, dismissed = false, read = false)
+    }
+
     private fun assertIdempotentNoOp(status: ArticleStatus, action: ArticleAction) {
         val existing = record(
             status = status,
@@ -278,6 +343,26 @@ class ArticleStateMachineTest {
         assertEquals(existing, result.records.getValue(article().id))
     }
 
+    private fun applied(
+        records: Map<String, ArticleRecord>,
+        action: ArticleAction,
+    ): ArticleRecord = assertIs<ArticleTransition.Applied>(
+        ArticleStateMachine.transition(records, article(), action, actionTime),
+    ).record
+
+    private fun assertSignals(
+        record: ArticleRecord,
+        opened: Boolean,
+        saved: Boolean,
+        dismissed: Boolean,
+        read: Boolean,
+    ) {
+        assertEquals(opened, record.signalsApplied.opened)
+        assertEquals(saved, record.signalsApplied.saved)
+        assertEquals(dismissed, record.signalsApplied.dismissed)
+        assertEquals(read, record.signalsApplied.read)
+    }
+
     private fun recordsFor(status: ArticleStatus): Map<String, ArticleRecord> = when (status) {
         ArticleStatus.UNSEEN -> emptyMap()
         ArticleStatus.OPENED -> mapOf(article().id to record(status, openedAt = openedAt))
@@ -292,6 +377,10 @@ class ArticleStateMachineTest {
         savedAt: Instant? = null,
         dismissedAt: Instant? = null,
         readAt: Instant? = null,
+        signalsApplied: SignalsApplied = SignalsApplied.derivedForAndroid(
+            status = status,
+            openedAtPresent = openedAt != null,
+        ),
     ): ArticleRecord = ArticleRecord(
         article = article(),
         status = status,
@@ -300,6 +389,7 @@ class ArticleStateMachineTest {
         savedAt = savedAt,
         dismissedAt = dismissedAt,
         readAt = readAt,
+        signalsApplied = signalsApplied,
     )
 
     private fun article(): Article = Article(

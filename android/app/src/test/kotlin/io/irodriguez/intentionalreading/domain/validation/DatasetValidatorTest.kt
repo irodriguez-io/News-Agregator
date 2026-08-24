@@ -132,6 +132,20 @@ class DatasetValidatorTest {
     }
 
     @Test
+    fun `an impossible dataset calendar date reports the specific validity error`() {
+        val document = validDocument.withArticle { article ->
+            article.with("publishedAt", JsonPrimitive("2026-02-30T12:00:00Z"))
+        }
+
+        val failure = assertIs<DatasetResult.Failure>(validator.validate(document.bytes()))
+
+        assertEquals(
+            "dataset.articles[0].publishedAt must be a real UTC calendar timestamp",
+            failure.message,
+        )
+    }
+
+    @Test
     fun `malformed JSON never throws across the data boundary`() {
         val result = validator.validate("{not json".encodeToByteArray())
 

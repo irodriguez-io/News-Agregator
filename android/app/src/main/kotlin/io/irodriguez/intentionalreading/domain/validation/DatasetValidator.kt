@@ -88,7 +88,7 @@ class DatasetValidator {
         )
     }
 
-    private fun validateArticle(dto: ArticleDto, path: String): Article {
+    internal fun validateArticle(dto: ArticleDto, path: String): Article {
         expectPattern(dto.id, ARTICLE_ID_PATTERN, "$path.id")
         expectLength(dto.title, minimum = 1, maximum = 500, path = "$path.title")
         if (!READABLE_TEXT_PATTERN.containsMatchIn(dto.title)) {
@@ -170,23 +170,8 @@ class DatasetValidator {
         parseTimestamp(value, path)
     }
 
-    private fun parseTimestamp(value: String, path: String): Instant {
-        val match = UTC_TIMESTAMP_PATTERN.matchEntire(value)
-            ?: invalid(path, "must be a UTC ISO-8601 timestamp")
-        try {
-            LocalDateTime.of(
-                match.groupValues[1].toInt(),
-                match.groupValues[2].toInt(),
-                match.groupValues[3].toInt(),
-                match.groupValues[4].toInt(),
-                match.groupValues[5].toInt(),
-                match.groupValues[6].toInt(),
-            )
-        } catch (failure: DateTimeException) {
-            invalid(path, "must be a real UTC calendar timestamp")
-        }
-        return Instant.parse(value)
-    }
+    private fun parseTimestamp(value: String, path: String): Instant =
+        parseUtcTimestamp(value, path)
 
     private fun expectPattern(value: String, pattern: Regex, path: String) {
         if (!pattern.matches(value)) invalid(path, "is invalid")
@@ -218,22 +203,51 @@ class DatasetValidator {
         code: DatasetErrorCode = DatasetErrorCode.MALFORMED_DATASET,
     ): Nothing = throw ContractViolation(code, path, "$path $message")
 
-    private class ContractViolation(
+    internal class ContractViolation(
         val code: DatasetErrorCode,
         val path: String,
         message: String,
     ) : Exception(message)
 
-    private companion object {
-        const val SUPPORTED_SCHEMA_VERSION = 1
-        const val MAX_ARTICLES = 500
-        const val MAX_TAGS = 6
+    internal companion object {
+        private const val SUPPORTED_SCHEMA_VERSION = 1
+        private const val MAX_ARTICLES = 500
+        private const val MAX_TAGS = 6
 
         val ARTICLE_ID_PATTERN = Regex("^[0-9a-f]{20}$")
         val IDENTIFIER_PATTERN = Regex("^[a-z0-9][a-z0-9_]{0,99}$")
-        val UTC_TIMESTAMP_PATTERN = Regex(
+        private val UTC_TIMESTAMP_PATTERN = Regex(
             "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{1,3}))?Z$",
         )
-        val READABLE_TEXT_PATTERN = Regex("[^\\p{Z}\\p{C}\\p{P}\\p{S}]")
+        private val READABLE_TEXT_PATTERN = Regex("[^\\p{Z}\\p{C}\\p{P}\\p{S}]")
+
+        fun parseUtcTimestamp(value: String, path: String): Instant {
+            val match = UTC_TIMESTAMP_PATTERN.matchEntire(value)
+                ?: timestampViolation(path, "must be a UTC ISO-8601 timestamp")
+            try {
+                LocalDateTime.of(
+                    match.groupValues[1].toInt(),
+                    match.groupValues[2].toInt(),
+                    match.groupValues[3].toInt(),
+                    match.groupValues[4].toInt(),
+                    match.groupValues[5].toInt(),
+                    match.groupValues[6].toInt(),
+                )
+            } catch (failure: DateTimeException) {
+                timestampViolation(path, "must be a real UTC calendar timestamp")
+            }
+            return try {
+                Instant.parse(value)
+            } catch (failure: DateTimeException) {
+                timestampViolation(path, "must be a UTC ISO-8601 timestamp")
+            }
+        }
+
+        private fun timestampViolation(path: String, message: String): Nothing =
+            throw ContractViolation(
+                code = DatasetErrorCode.MALFORMED_DATASET,
+                path = path,
+                message = "$path $message",
+            )
     }
 }

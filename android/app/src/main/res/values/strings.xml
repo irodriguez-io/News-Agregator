@@ -50,4 +50,19 @@
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
     <string name="appearance_system">System</string>
+    <string name="local_data">Local data</string>
+    <string name="local_data_copy">Clear the personal reading state stored on this device.</string>
+    <string name="reset_all_data">Reset all data</string>
+    <string name="reset_confirmation">Reset clears preferences, Read Later, History, dismissals, and settings on this device. This cannot be undone.</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="local_state_load_failure_title">Stored data could not be read</string>
+    <string name="local_state_load_failure_copy">A temporary empty state is in use. Reset local data in Settings to recover.</string>
+    <string name="dismiss_notice">Dismiss</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="local_state_write_failure">That change could not be saved locally. Nothing was changed.</string>
+    <string name="open_not_persisted">The publisher opened, but this Open interaction was not saved locally.</string>
+    <string name="open_navigation_failed">The publisher could not be opened.</string>
+    <string name="reset_failed">Local data could not be reset.</string>
+    <string name="reset_complete">Local data reset.</string>
 </resources>

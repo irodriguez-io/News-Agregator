@@ -4,6 +4,7 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import java.time.Instant
 
 sealed interface ArticleTransition {
@@ -51,7 +52,7 @@ object ArticleStateMachine {
             dismissedAt = null,
             readAt = null,
         )
-        val next = when (action) {
+        val transitioned = when (action) {
             ArticleAction.OPEN -> current.copy(
                 status = if (existing == null) ArticleStatus.OPENED else current.status,
                 openedAt = current.openedAt ?: now,
@@ -87,6 +88,15 @@ object ArticleStateMachine {
                 readAt = null,
             )
         }
+        val next = transitioned.copy(
+            signalsApplied = SignalsApplied(
+                opened = transitioned.openedAt != null,
+                saved = existing?.signalsApplied?.saved ?: false,
+                dismissed = existing?.signalsApplied?.dismissed == true &&
+                    transitioned.status == ArticleStatus.DISMISSED,
+                read = transitioned.status == ArticleStatus.READ,
+            ),
+        )
         val nextRecords = buildMap {
             putAll(records)
             put(article.id, next)

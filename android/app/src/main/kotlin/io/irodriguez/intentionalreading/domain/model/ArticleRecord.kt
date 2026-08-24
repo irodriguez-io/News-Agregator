@@ -10,4 +10,8 @@ data class ArticleRecord(
     val savedAt: Instant?,
     val dismissedAt: Instant?,
     val readAt: Instant?,
+    val signalsApplied: SignalsApplied = SignalsApplied.derivedForAndroid(
+        status = status,
+        openedAtPresent = openedAt != null,
+    ),
 )
