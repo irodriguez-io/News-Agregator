@@ -171,8 +171,7 @@ class DatasetValidator {
     }
 
     private fun parseTimestamp(value: String, path: String): Instant =
-        parseUtcTimestampOrNull(value)
-            ?: invalid(path, "must be a UTC ISO-8601 timestamp")
+        parseUtcTimestamp(value, path)
 
     private fun expectPattern(value: String, pattern: Regex, path: String) {
         if (!pattern.matches(value)) invalid(path, "is invalid")
@@ -222,8 +221,9 @@ class DatasetValidator {
         )
         private val READABLE_TEXT_PATTERN = Regex("[^\\p{Z}\\p{C}\\p{P}\\p{S}]")
 
-        fun parseUtcTimestampOrNull(value: String): Instant? {
-            val match = UTC_TIMESTAMP_PATTERN.matchEntire(value) ?: return null
+        fun parseUtcTimestamp(value: String, path: String): Instant {
+            val match = UTC_TIMESTAMP_PATTERN.matchEntire(value)
+                ?: timestampViolation(path, "must be a UTC ISO-8601 timestamp")
             try {
                 LocalDateTime.of(
                     match.groupValues[1].toInt(),
@@ -234,13 +234,20 @@ class DatasetValidator {
                     match.groupValues[6].toInt(),
                 )
             } catch (failure: DateTimeException) {
-                return null
+                timestampViolation(path, "must be a real UTC calendar timestamp")
             }
             return try {
                 Instant.parse(value)
             } catch (failure: DateTimeException) {
-                null
+                timestampViolation(path, "must be a UTC ISO-8601 timestamp")
             }
         }
+
+        private fun timestampViolation(path: String, message: String): Nothing =
+            throw ContractViolation(
+                code = DatasetErrorCode.MALFORMED_DATASET,
+                path = path,
+                message = "$path $message",
+            )
     }
 }

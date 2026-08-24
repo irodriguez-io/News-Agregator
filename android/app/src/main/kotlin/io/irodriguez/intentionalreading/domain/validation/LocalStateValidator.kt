@@ -182,8 +182,7 @@ class LocalStateValidator {
     }
 
     private fun timestamp(value: String, path: String): Instant =
-        DatasetValidator.parseUtcTimestampOrNull(value)
-            ?: invalid(path, "must be a UTC ISO-8601 timestamp")
+        DatasetValidator.parseUtcTimestamp(value, path)
 
     private fun nullableTimestamp(value: String?, path: String): Instant? =
         value?.let { timestamp(it, path) }
