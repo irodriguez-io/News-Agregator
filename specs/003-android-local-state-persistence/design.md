@@ -128,10 +128,16 @@ explicitly not negative training. An implication, not an equality, is the only r
 record. Deriving `dismissed` from the status would mark a Remove as negative training the reader never
 gave.
 
-Nothing is lost by setting the two forced flags. They are not a claim that a preference delta was
-applied; for `opened` and `read` they are structurally determined by data the record already carries,
-and `contracts.md` §22's duplicate-signal protection is keyed on exactly that state — a web client
-loading such a document would not have re-applied those signals anyway.
+Setting the two forced flags is close to free, but not entirely, and item 004 inherits the difference.
+`contracts.md` §22's duplicate-signal protection is keyed on state the record already carries, so a web
+client loading such a document would not have re-applied those signals anyway. §23 is the exception:
+`Mark Unread` reverses the Read signal *if one had previously been applied*, and it reads this flag to
+decide. An Android-read article carried into a web client and then marked unread would therefore
+decrement −0.25 on its source and −0.20 on each topic that were never incremented. The drift is bounded
+by the ±5.0 clamp and is unreachable until import/export exists, but it is a real consequence of the
+frozen equality rather than a cost-free derivation, and it belongs in item 004's design rather than
+being discovered there. Leaving `dismissed` and `saved` false is what keeps the same hazard away from
+the two reversals that would otherwise be far more common — Undo Save and Remove.
 
 ## Divergences from the web client, deliberate
 
