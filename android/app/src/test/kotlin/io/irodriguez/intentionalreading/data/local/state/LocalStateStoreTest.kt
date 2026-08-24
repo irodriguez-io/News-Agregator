@@ -10,6 +10,8 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTes
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.with
 import java.io.File
 import java.nio.file.Files
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.AfterTest
@@ -76,6 +78,33 @@ class LocalStateStoreTest {
     }
 
     @Test
+    fun `sub-millisecond timestamps round trip at contract precision`() {
+        val preciseSavedAt = Instant.parse("2026-08-20T12:00:00.123456Z")
+        val original = validState()
+        val preciseRecord = original.articles.getValue(LocalStateValidatorTest.ARTICLE_ID).copy(
+            savedAt = preciseSavedAt,
+        )
+        val preciseState = original.copy(
+            articles = mapOf(LocalStateValidatorTest.ARTICLE_ID to preciseRecord),
+        )
+        val expected = preciseState.copy(
+            articles = mapOf(
+                LocalStateValidatorTest.ARTICLE_ID to preciseRecord.copy(
+                    savedAt = preciseSavedAt.truncatedTo(ChronoUnit.MILLIS),
+                ),
+            ),
+        )
+        val store = LocalStateStore(directory)
+
+        val saved = assertIs<LocalStateResult.Success>(store.save(preciseState))
+        val loaded = assertIs<LocalStateResult.Success>(store.load())
+
+        assertEquals(expected, saved.state)
+        assertEquals(expected, loaded.state)
+        assertTrue(stateFile.readText().contains("2026-08-20T12:00:00.123Z"))
+    }
+
+    @Test
     fun `malformed stored state is preserved and locks subsequent writes`() {
         val original = "{not-json".encodeToByteArray()
         stateFile.writeBytes(original)
@@ -115,6 +144,19 @@ class LocalStateStoreTest {
 
         assertEquals(LocalStateErrorCode.INVALID_STATE, result.code)
         assertContentEquals(original, stateFile.readBytes())
+    }
+
+    @Test
+    fun `a transient read failure does not lock later writes`() {
+        assertTrue(stateFile.mkdir())
+        val store = LocalStateStore(directory)
+
+        val loaded = assertIs<LocalStateResult.Failure>(store.load())
+        assertEquals(LocalStateErrorCode.READ_FAILED, loaded.code)
+
+        assertTrue(stateFile.delete())
+        assertIs<LocalStateResult.Success>(store.save(validState()))
+        assertTrue(stateFile.isFile)
     }
 
     @Test

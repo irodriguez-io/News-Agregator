@@ -167,6 +167,21 @@ class LocalStateValidatorTest {
     }
 
     @Test
+    fun `unsupported future shape is classified before version one decoding`() {
+        val futureDocument = JsonObject(
+            mapOf(
+                "schemaVersion" to JsonPrimitive(2),
+                "settings" to JsonArray(listOf(JsonPrimitive("future-setting"))),
+                "futureTopLevelKey" to JsonObject(mapOf("enabled" to JsonPrimitive(true))),
+            ),
+        )
+
+        val failure = assertIs<LocalStateResult.Failure>(validator.validate(futureDocument.bytes()))
+
+        assertEquals(LocalStateErrorCode.UNSUPPORTED_SCHEMA, failure.code)
+    }
+
+    @Test
     fun `an impossible local-state calendar date reports the specific validity error`() {
         val document = validDocument.withRecord { record ->
             record.with("firstSeenAt", JsonPrimitive("2026-02-30T10:00:00Z"))
