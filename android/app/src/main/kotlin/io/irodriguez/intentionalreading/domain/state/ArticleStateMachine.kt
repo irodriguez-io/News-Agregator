@@ -89,9 +89,12 @@ object ArticleStateMachine {
             )
         }
         val next = transitioned.copy(
-            signalsApplied = SignalsApplied.derivedForAndroid(
-                status = transitioned.status,
-                openedAtPresent = transitioned.openedAt != null,
+            signalsApplied = SignalsApplied(
+                opened = transitioned.openedAt != null,
+                saved = existing?.signalsApplied?.saved ?: false,
+                dismissed = existing?.signalsApplied?.dismissed == true &&
+                    transitioned.status == ArticleStatus.DISMISSED,
+                read = transitioned.status == ArticleStatus.READ,
             ),
         )
         val nextRecords = buildMap {

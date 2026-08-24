@@ -34,11 +34,23 @@ class LocalStateValidator {
         } catch (failure: Exception) {
             return malformedJson()
         }
-        if (element !is JsonObject || element.containsDangerousKey()) {
+        if (element !is JsonObject) {
             return invalidState()
         }
         val schemaVersion = element["schemaVersion"] as? JsonPrimitive
         if (schemaVersion == null || schemaVersion.isString || schemaVersion.intOrNull == null) {
+            return invalidState()
+        }
+        val version = schemaVersion.intOrNull
+        if (version != LocalState.SCHEMA_VERSION) {
+            return LocalStateResult.Failure(
+                code = LocalStateErrorCode.UNSUPPORTED_SCHEMA,
+                message = "No Local State migration exists from version $version to ${LocalState.SCHEMA_VERSION}",
+                state = LocalState.default(),
+                path = "state.schemaVersion",
+            )
+        }
+        if (element.containsDangerousKey()) {
             return invalidState()
         }
         val dto = try {

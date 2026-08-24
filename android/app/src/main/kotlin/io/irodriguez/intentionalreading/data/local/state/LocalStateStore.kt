@@ -33,7 +33,6 @@ class LocalStateStore internal constructor(
                 }
             }
             LocalStateFileRead.Failed -> {
-                recoveryLocked = true
                 failure(
                     code = LocalStateErrorCode.READ_FAILED,
                     message = "Local state could not be read",

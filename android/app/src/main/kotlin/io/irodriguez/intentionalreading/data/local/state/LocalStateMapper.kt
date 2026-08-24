@@ -15,6 +15,8 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidator
 import io.irodriguez.intentionalreading.domain.validation.LocalStateViolation
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlinx.serialization.encodeToString
 
 internal object LocalStateMapper {
@@ -91,11 +93,11 @@ internal object LocalStateMapper {
     private fun ArticleRecord.toDto(): ArticleRecordDto = ArticleRecordDto(
         article = article.toDto(),
         status = status.wireValue ?: error("Unseen articles cannot be persisted"),
-        firstSeenAt = firstSeenAt.toString(),
-        openedAt = openedAt?.toString(),
-        savedAt = savedAt?.toString(),
-        dismissedAt = dismissedAt?.toString(),
-        readAt = readAt?.toString(),
+        firstSeenAt = firstSeenAt.toContractTimestamp(),
+        openedAt = openedAt?.toContractTimestamp(),
+        savedAt = savedAt?.toContractTimestamp(),
+        dismissedAt = dismissedAt?.toContractTimestamp(),
+        readAt = readAt?.toContractTimestamp(),
         signalsApplied = SignalsAppliedDto(
             opened = signalsApplied.opened,
             saved = signalsApplied.saved,
@@ -110,7 +112,7 @@ internal object LocalStateMapper {
         url = url,
         source = ArticleSourceDto(id = source.id, name = source.name),
         category = category.id,
-        publishedAt = publishedAt?.toString(),
+        publishedAt = publishedAt?.toContractTimestamp(),
         author = author,
         excerpt = excerpt,
         readingTimeMinutes = readingTimeMinutes,
@@ -125,4 +127,7 @@ internal object LocalStateMapper {
             metadata = score.metadata,
         ),
     )
+
+    private fun Instant.toContractTimestamp(): String =
+        truncatedTo(ChronoUnit.MILLIS).toString()
 }
