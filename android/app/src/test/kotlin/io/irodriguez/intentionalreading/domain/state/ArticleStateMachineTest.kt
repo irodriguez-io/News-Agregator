@@ -260,6 +260,19 @@ class ArticleStateMachineTest {
         assertEquals(ArticleStatus.SAVED, result.records.getValue(article().id).status)
     }
 
+    @Test
+    fun `Android transitions derive only the signals structurally forced by the record`() {
+        val opened = applied(emptyMap(), ArticleAction.OPEN)
+        assertSignals(opened, opened = true, saved = false, dismissed = false, read = false)
+
+        val read = applied(emptyMap(), ArticleAction.MARK_READ)
+        assertSignals(read, opened = false, saved = false, dismissed = false, read = true)
+
+        val savedRecord = record(status = ArticleStatus.SAVED, savedAt = oldActionTime)
+        val removed = applied(mapOf(article().id to savedRecord), ArticleAction.REMOVE)
+        assertSignals(removed, opened = false, saved = false, dismissed = false, read = false)
+    }
+
     private fun assertIdempotentNoOp(status: ArticleStatus, action: ArticleAction) {
         val existing = record(
             status = status,
@@ -276,6 +289,31 @@ class ArticleStateMachineTest {
 
         assertSame(records, result.records)
         assertEquals(existing, result.records.getValue(article().id))
+    }
+
+    private fun applied(
+        records: Map<String, ArticleRecord>,
+        action: ArticleAction,
+    ): ArticleRecord = assertIs<ArticleTransition.Applied>(
+        ArticleStateMachine.transition(records, article(), action, actionTime),
+    ).record
+
+    private fun assertSignals(
+        record: ArticleRecord,
+        opened: Boolean,
+        saved: Boolean,
+        dismissed: Boolean,
+        read: Boolean,
+    ) {
+        val signals = record.javaClass.getMethod("getSignalsApplied").invoke(record)
+        fun signal(name: String): Boolean = signals.javaClass
+            .getMethod("get${name.replaceFirstChar(Char::uppercaseChar)}")
+            .invoke(signals) as Boolean
+
+        assertEquals(opened, signal("opened"))
+        assertEquals(saved, signal("saved"))
+        assertEquals(dismissed, signal("dismissed"))
+        assertEquals(read, signal("read"))
     }
 
     private fun recordsFor(status: ArticleStatus): Map<String, ArticleRecord> = when (status) {
