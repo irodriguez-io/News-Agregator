@@ -1,6 +1,10 @@
 package io.irodriguez.intentionalreading.data.local.state
 
-import io.irodriguez.intentionalreading.domain.validation.LocalStateTestApi
+import io.irodriguez.intentionalreading.domain.model.LocalState
+import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
+import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
+import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
+import io.irodriguez.intentionalreading.domain.validation.LocalStateValidator
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.bytes
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.with
@@ -14,6 +18,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class LocalStateStoreTest {
@@ -33,39 +38,38 @@ class LocalStateStoreTest {
 
     @Test
     fun `a fresh install returns the default state without creating a document`() {
-        val result = LocalStateTestApi.call(LocalStateTestApi.store(directory), "load")
+        val result = assertIs<LocalStateResult.Success>(LocalStateStore(directory).load())
 
-        LocalStateTestApi.successState(result)
-        assertEquals("DEFAULT", LocalStateTestApi.source(result))
+        assertEquals(LocalState.default(), result.state)
+        assertEquals(LocalStateSource.DEFAULT, result.source)
         assertFalse(stateFile.exists())
     }
 
     @Test
     fun `triage document round trips every field through a real directory`() {
         val document = LocalStateValidatorTest.fullyPopulatedDocument()
-        val state = LocalStateTestApi.successState(LocalStateTestApi.validate(document.bytes()))
-        val store = LocalStateTestApi.store(directory)
+        val state = validState(document)
+        val store = LocalStateStore(directory)
 
-        val saved = LocalStateTestApi.call(store, "save", state)
-        LocalStateTestApi.successState(saved)
-        val loaded = LocalStateTestApi.call(store, "load")
-        LocalStateTestApi.successState(loaded)
+        assertIs<LocalStateResult.Success>(store.save(state))
+        val loaded = assertIs<LocalStateResult.Success>(store.load())
 
         assertEquals(
             Json.parseToJsonElement(document.toString()),
             Json.parseToJsonElement(stateFile.readText()),
         )
-        assertEquals("STORAGE", LocalStateTestApi.source(loaded))
+        assertEquals(state, loaded.state)
+        assertEquals(LocalStateSource.STORAGE, loaded.source)
     }
 
     @Test
     fun `foreign preferences and true signals survive a rewrite unchanged`() {
         val document = LocalStateValidatorTest.fullyPopulatedDocument()
         stateFile.writeBytes(document.bytes())
-        val store = LocalStateTestApi.store(directory)
-        val state = LocalStateTestApi.successState(LocalStateTestApi.call(store, "load"))
+        val store = LocalStateStore(directory)
+        val state = assertIs<LocalStateResult.Success>(store.load()).state
 
-        LocalStateTestApi.successState(LocalStateTestApi.call(store, "save", state))
+        assertIs<LocalStateResult.Success>(store.save(state))
 
         val rewritten = Json.parseToJsonElement(stateFile.readText())
         assertEquals(Json.parseToJsonElement(document.toString()), rewritten)
@@ -75,15 +79,15 @@ class LocalStateStoreTest {
     fun `malformed stored state is preserved and locks subsequent writes`() {
         val original = "{not-json".encodeToByteArray()
         stateFile.writeBytes(original)
-        val store = LocalStateTestApi.store(directory)
+        val store = LocalStateStore(directory)
 
-        val loaded = LocalStateTestApi.call(store, "load")
-        assertEquals("MALFORMED_JSON", LocalStateTestApi.failureCode(loaded))
+        val loaded = assertIs<LocalStateResult.Failure>(store.load())
+        assertEquals(LocalStateErrorCode.MALFORMED_JSON, loaded.code)
         assertContentEquals(original, stateFile.readBytes())
 
         val validState = validState()
-        val saved = LocalStateTestApi.call(store, "save", validState)
-        assertEquals("RECOVERY_REQUIRED", LocalStateTestApi.failureCode(saved))
+        val saved = assertIs<LocalStateResult.Failure>(store.save(validState))
+        assertEquals(LocalStateErrorCode.RECOVERY_REQUIRED, saved.code)
         assertContentEquals(original, stateFile.readBytes())
     }
 
@@ -94,9 +98,9 @@ class LocalStateStoreTest {
             .bytes()
         stateFile.writeBytes(original)
 
-        val result = LocalStateTestApi.call(LocalStateTestApi.store(directory), "load")
+        val result = assertIs<LocalStateResult.Failure>(LocalStateStore(directory).load())
 
-        assertEquals("UNSUPPORTED_SCHEMA", LocalStateTestApi.failureCode(result))
+        assertEquals(LocalStateErrorCode.UNSUPPORTED_SCHEMA, result.code)
         assertContentEquals(original, stateFile.readBytes())
     }
 
@@ -107,26 +111,25 @@ class LocalStateStoreTest {
             .bytes()
         stateFile.writeBytes(original)
 
-        val result = LocalStateTestApi.call(LocalStateTestApi.store(directory), "load")
+        val result = assertIs<LocalStateResult.Failure>(LocalStateStore(directory).load())
 
-        assertEquals("INVALID_STATE", LocalStateTestApi.failureCode(result))
+        assertEquals(LocalStateErrorCode.INVALID_STATE, result.code)
         assertContentEquals(original, stateFile.readBytes())
     }
 
     @Test
     fun `reset removes the document and lifts the recovery lock`() {
         stateFile.writeText("{not-json")
-        val store = LocalStateTestApi.store(directory)
+        val store = LocalStateStore(directory)
         assertEquals(
-            "MALFORMED_JSON",
-            LocalStateTestApi.failureCode(LocalStateTestApi.call(store, "load")),
+            LocalStateErrorCode.MALFORMED_JSON,
+            assertIs<LocalStateResult.Failure>(store.load()).code,
         )
 
-        val reset = LocalStateTestApi.call(store, "reset")
-        LocalStateTestApi.successState(reset)
+        assertIs<LocalStateResult.Success>(store.reset())
         assertFalse(stateFile.exists())
 
-        LocalStateTestApi.successState(LocalStateTestApi.call(store, "save", validState()))
+        assertIs<LocalStateResult.Success>(store.save(validState()))
         assertTrue(stateFile.isFile)
     }
 
@@ -142,25 +145,28 @@ class LocalStateStoreTest {
                 ),
             ),
         )
-        val failingStore = LocalStateTestApi.storeThatFailsBeforeRename(directory)
+        val failingFile = LocalStateFile(directory) { error("injected failure before rename") }
+        val failingStore = LocalStateStore(failingFile)
 
-        val result = LocalStateTestApi.call(failingStore, "save", replacement)
+        val result = assertIs<LocalStateResult.Failure>(failingStore.save(replacement))
 
-        assertEquals("WRITE_FAILED", LocalStateTestApi.failureCode(result))
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, result.code)
         assertContentEquals(original, stateFile.readBytes())
     }
 
     @Test
     fun `file failures return results instead of crossing the store boundary`() {
         val notDirectory = File(directory, "not-a-directory").apply { writeText("occupied") }
-        val store = LocalStateTestApi.store(notDirectory)
+        val store = LocalStateStore(notDirectory)
 
-        val result = LocalStateTestApi.call(store, "save", validState())
+        val result = assertIs<LocalStateResult.Failure>(store.save(validState()))
 
-        assertEquals("WRITE_FAILED", LocalStateTestApi.failureCode(result))
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, result.code)
     }
 
     private fun validState(
         document: kotlinx.serialization.json.JsonObject = LocalStateValidatorTest.validDocument,
-    ): Any = LocalStateTestApi.successState(LocalStateTestApi.validate(document.bytes()))
+    ): LocalState = assertIs<LocalStateResult.Success>(
+        LocalStateValidator().validate(document.bytes()),
+    ).state
 }

@@ -9,13 +9,16 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class LocalStateValidatorTest {
+    private val validator = LocalStateValidator()
+
     @Test
     fun `one valid state document maps through the migration entry point`() {
-        val result = LocalStateTestApi.validate(validDocument.bytes())
+        val result = validator.validate(validDocument.bytes())
 
-        LocalStateTestApi.successState(result)
+        assertIs<LocalStateResult.Success>(result)
     }
 
     @Test
@@ -23,10 +26,10 @@ class LocalStateValidatorTest {
         val cases = listOf(
             InvalidCase("unknown top-level key") { it.with("unexpected", JsonPrimitive(true)) },
             InvalidCase("missing top-level key") { it.without("session") },
-            InvalidCase("schemaVersion 0", "UNSUPPORTED_SCHEMA") {
+            InvalidCase("schemaVersion 0", LocalStateErrorCode.UNSUPPORTED_SCHEMA) {
                 it.with("schemaVersion", JsonPrimitive(0))
             },
-            InvalidCase("schemaVersion 2", "UNSUPPORTED_SCHEMA") {
+            InvalidCase("schemaVersion 2", LocalStateErrorCode.UNSUPPORTED_SCHEMA) {
                 it.with("schemaVersion", JsonPrimitive(2))
             },
             InvalidCase("schemaVersion string") { it.with("schemaVersion", JsonPrimitive("1")) },
@@ -147,16 +150,34 @@ class LocalStateValidatorTest {
         )
 
         cases.forEach { case ->
-            val result = LocalStateTestApi.validate(case.mutate(validDocument).bytes())
-            assertEquals(case.expectedCode, LocalStateTestApi.failureCode(result), case.name)
+            val result = validator.validate(case.mutate(validDocument).bytes())
+            val failure = assertIs<LocalStateResult.Failure>(result, case.name)
+            assertEquals(case.expectedCode, failure.code, case.name)
         }
     }
 
     @Test
     fun `malformed JSON is distinct from a structurally invalid state`() {
-        val result = LocalStateTestApi.validate("{not json".encodeToByteArray())
+        val result = validator.validate("{not json".encodeToByteArray())
 
-        assertEquals("MALFORMED_JSON", LocalStateTestApi.failureCode(result))
+        assertEquals(
+            LocalStateErrorCode.MALFORMED_JSON,
+            assertIs<LocalStateResult.Failure>(result).code,
+        )
+    }
+
+    @Test
+    fun `an impossible local-state calendar date reports the specific validity error`() {
+        val document = validDocument.withRecord { record ->
+            record.with("firstSeenAt", JsonPrimitive("2026-02-30T10:00:00Z"))
+        }
+
+        val failure = assertIs<LocalStateResult.Failure>(validator.validate(document.bytes()))
+
+        assertEquals(
+            "state.articles.$ARTICLE_ID.firstSeenAt must be a real UTC calendar timestamp",
+            failure.message,
+        )
     }
 
     @Test
@@ -173,12 +194,12 @@ class LocalStateValidatorTest {
                 }
         }
 
-        LocalStateTestApi.successState(LocalStateTestApi.validate(removed.bytes()))
+        assertIs<LocalStateResult.Success>(validator.validate(removed.bytes()))
     }
 
     private data class InvalidCase(
         val name: String,
-        val expectedCode: String = "INVALID_STATE",
+        val expectedCode: LocalStateErrorCode = LocalStateErrorCode.INVALID_STATE,
         val mutate: (JsonObject) -> JsonObject,
     )
 

@@ -305,15 +305,10 @@ class ArticleStateMachineTest {
         dismissed: Boolean,
         read: Boolean,
     ) {
-        val signals = record.javaClass.getMethod("getSignalsApplied").invoke(record)
-        fun signal(name: String): Boolean = signals.javaClass
-            .getMethod("get${name.replaceFirstChar(Char::uppercaseChar)}")
-            .invoke(signals) as Boolean
-
-        assertEquals(opened, signal("opened"))
-        assertEquals(saved, signal("saved"))
-        assertEquals(dismissed, signal("dismissed"))
-        assertEquals(read, signal("read"))
+        assertEquals(opened, record.signalsApplied.opened)
+        assertEquals(saved, record.signalsApplied.saved)
+        assertEquals(dismissed, record.signalsApplied.dismissed)
+        assertEquals(read, record.signalsApplied.read)
     }
 
     private fun recordsFor(status: ArticleStatus): Map<String, ArticleRecord> = when (status) {
