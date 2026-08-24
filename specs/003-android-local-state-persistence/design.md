@@ -104,6 +104,35 @@ repainting dark is a visible defect. So the app composes no content until local 
 state load starts in `AppViewModel.init`, and the shell renders nothing above the window background
 until it completes. The read is a few kilobytes from app-private storage; the gap is a frame or two.
 
+## D9 — `signalsApplied` is derived where the contract forces it, and false everywhere else
+
+Discovered during slice 1 dispatch, and it corrects an error in this note's first draft. The web record
+validator does not treat `signalsApplied` as free-standing bookkeeping; it asserts cross-field
+consistency (`js/state/storage.js:105-112`):
+
+```text
+signalsApplied.opened  === (openedAt !== null)      // equality — forced
+signalsApplied.read    === (status === "read")      // equality — forced
+signalsApplied.dismissed ==> status === "dismissed" // implication only
+signalsApplied.saved                                 // unconstrained
+```
+
+So "Android writes all-`false`" produces a document the frozen validator rejects the moment a record is
+opened or read, which would defeat D1 outright. Android therefore derives the two forced flags from the
+record's own state and leaves the other two `false`.
+
+The asymmetry is not an oversight in the web validator, and it must be preserved rather than tidied into
+a uniform "mirror the status" rule: `contracts.md` §24 and `05-personalization-state.md:714-730` make
+Remove-from-Read-Later produce a `dismissed` status carrying **no** dismiss signal, because Remove is
+explicitly not negative training. An implication, not an equality, is the only rule that admits that
+record. Deriving `dismissed` from the status would mark a Remove as negative training the reader never
+gave.
+
+Nothing is lost by setting the two forced flags. They are not a claim that a preference delta was
+applied; for `opened` and `read` they are structurally determined by data the record already carries,
+and `contracts.md` §22's duplicate-signal protection is keyed on exactly that state — a web client
+loading such a document would not have re-applied those signals anyway.
+
 ## Divergences from the web client, deliberate
 
 - **No import/export, so no `MAX_IMPORT_BYTES` and no import validator.** The *state* validator is

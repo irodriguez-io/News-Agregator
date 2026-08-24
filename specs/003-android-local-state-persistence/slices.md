@@ -23,6 +23,10 @@ Fixed for every slice — do not re-decide these mid-implementation:
 - Values read from a document written by another client — non-empty `preferences`, `signalsApplied`
   entries that are `true` — are preserved on rewrite, never zeroed. Android does not apply learning
   signals; it must not destroy someone else's.
+- `signalsApplied` on records Android itself creates is **derived, not authored** (`design.md` D9):
+  `opened = (openedAt != null)`, `read = (status == "read")`, and `dismissed` and `saved` stay `false`.
+  Do not "tidy" this into mirroring the status — `contracts.md` §24 requires that a removed article be
+  `dismissed` with no dismiss signal.
 - Persist before publish (`design.md` D5). No UI state changes on a failed write, with the Open
   exception as the single carve-out.
 
@@ -72,8 +76,13 @@ JVM tests against a temp directory.
     valid identifier, a 19-character and an uppercase-hex article ID, a record key that disagrees with
     the snapshot's `article.id`, a status of `unseen` and of `archived`, a non-UTC and a
     non-ISO-8601 timestamp, a `firstSeenAt` of `null`, a `signalsApplied` missing a key and carrying an
-    extra one, an Article snapshot that fails the item-002 article rules, an appearance of `Light`, and
-    a `lastCategory` of `everything`;
+    extra one, a non-boolean signal, an `opened` signal disagreeing with `openedAt` in both directions,
+    a `read` signal disagreeing with a `read` status in both directions, a `dismissed` signal set on a
+    non-dismissed record, a status whose required timestamp is null, a timestamp not applicable to the
+    status, a timestamp predating `firstSeenAt`, an Article snapshot that fails the item-002 article
+    rules, an appearance of `Light`, and a `lastCategory` of `everything`;
+  - a removed article — `dismissed` status, `savedAt` null, `signalsApplied.dismissed` false — is
+    accepted, because `contracts.md` §24 makes it a legal record, and a test says so by name;
   - `LocalStateStoreTest` exercises a real temp directory: absent file, round trip of a document
     carrying every field populated, a document with non-empty `preferences` and `signalsApplied` that
     survives a save unchanged, each failure outcome, the recovery lock, and reset;

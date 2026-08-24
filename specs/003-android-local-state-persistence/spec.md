@@ -60,9 +60,11 @@ rather than a list that empties itself every time Android reclaims the process.
   stored state; persistence without it can strand the reader in an app that refuses every write.
 - **Preference learning.** `preferences.sources` and `preferences.topics` are persisted, validated
   against the bounds in `contracts.md:632-655`, and round-tripped, but nothing in this item ever writes
-  a non-empty entry. `signalsApplied` is likewise persisted and always all-`false`, which is the truth:
-  the Android client applies no learning signals. Learning arrives with personalised ranking in a later
-  item, and it will find its storage already in place.
+  a non-empty entry. `signalsApplied` is persisted and derived, not authored: `opened` and `read` are
+  set to what `js/state/storage.js:105-112` structurally requires of any valid record — `openedAt`
+  being non-null, and the status being `read` — while `dismissed` and `saved` stay `false`, which the
+  same validator permits and which is the truth, since the Android client applies no learning signals.
+  Learning arrives with personalised ranking in a later item, and it will find its storage in place.
 - **Undo.** `contracts.md:1043-1064` states Undo is *not* persisted; it is memory-only and cleared by
   reload. This item therefore changes nothing about Undo, which remains unimplemented from 002 §3.
 - **Networking.** No dataset fetch, no `INTERNET` permission. The bundled snapshot remains the only
