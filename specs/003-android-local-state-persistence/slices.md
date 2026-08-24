@@ -131,7 +131,11 @@ JVM tests against a temp directory.
     recovery-locked store, and the default-state launch;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green.
 
-- **Status:** pending
+- **Status:** done (gate: PASS, slice review at `4b87aed`; 93 JVM tests). Reviewed at `b29d119` with two
+  findings — persistence launched from a composition-scoped coroutine, so a rotation timed mid-write left
+  the ViewModel holding stale state against a written document; and item 002's frozen `Appearance.entries`
+  assertion lost in a rename. Fixed in `13fdb3a` + `4b87aed`, which also pinned the `wireValue` mapping
+  that nothing had covered.
 
 ## Slice 3: the surfaces — storage errors and Reset
 
