@@ -168,7 +168,11 @@ JVM tests against a temp directory.
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green, plus the owner walkthrough in
     `spec.md` §5 on a device or emulator, with the `run-as` byte checks recorded in `evidence.md`.
 
-- **Status:** pending
+- **Status:** done (gate: PASS, slice review at `3fe6435`; 99 JVM tests, plus the instrumented smoke test
+  and the `spec.md` §5 walkthrough on a Pixel_10 API 37 emulator with `run-as` byte inspection). Passed
+  first review with no findings. Two inaccuracies in this slice's own brief surfaced during the work and
+  are recorded in `evidence.md`: no Android live-region mechanism existed to reuse, and the pre-Compose
+  system splash is outside what D8's composition gate can control.
 
 ## Gates
 
