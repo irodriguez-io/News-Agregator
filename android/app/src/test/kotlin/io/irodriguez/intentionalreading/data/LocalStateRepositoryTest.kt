@@ -43,5 +43,6 @@ class LocalStateRepositoryTest {
         assertIs<LocalStateResult.Success>(repository.reset())
         assertTrue(!stateFile.exists())
         assertIs<LocalStateResult.Success>(repository.save(LocalState.default()))
+        Unit
     }
 }

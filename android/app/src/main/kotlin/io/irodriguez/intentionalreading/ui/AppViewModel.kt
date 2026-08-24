@@ -41,10 +41,24 @@ data class ArticleActionResult(
     val failure: LocalStateResult.Failure? = null,
 )
 
+enum class AppAnnouncementKind {
+    PERSISTENCE_FAILED,
+    OPEN_NOT_PERSISTED,
+    OPEN_NAVIGATION_FAILED,
+    RESET_FAILED,
+    RESET_COMPLETE,
+}
+
+data class AppAnnouncement(
+    val id: Long,
+    val kind: AppAnnouncementKind,
+)
+
 class AppViewModel(
     private val loadDataset: suspend () -> DatasetResult,
     private val loadLocalState: suspend () -> LocalStateResult,
     private val saveLocalState: suspend (LocalState) -> LocalStateResult,
+    private val resetLocalState: suspend () -> LocalStateResult,
     private val nowProvider: () -> Instant,
     private val zoneProvider: () -> ZoneId,
     private val localeProvider: () -> Locale,
@@ -75,6 +89,16 @@ class AppViewModel(
     private val _localStateError = MutableStateFlow<LocalStateResult.Failure?>(null)
     val localStateError: StateFlow<LocalStateResult.Failure?> = _localStateError.asStateFlow()
 
+    private val _recoveryNoticeVisible = MutableStateFlow(false)
+    val recoveryNoticeVisible: StateFlow<Boolean> = _recoveryNoticeVisible.asStateFlow()
+
+    private val _announcement = MutableStateFlow<AppAnnouncement?>(null)
+    val announcement: StateFlow<AppAnnouncement?> = _announcement.asStateFlow()
+    private var nextAnnouncementId = 0L
+
+    private val _resetInProgress = MutableStateFlow(false)
+    val resetInProgress: StateFlow<Boolean> = _resetInProgress.asStateFlow()
+
     private val _uiState = MutableStateFlow(mapUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
@@ -91,6 +115,10 @@ class AppViewModel(
 
     fun toggleSettings() {
         _settingsOpen.value = !_settingsOpen.value
+    }
+
+    fun openSettings() {
+        _settingsOpen.value = true
     }
 
     fun closeSettings() {
@@ -119,13 +147,37 @@ class AppViewModel(
         }
     }
 
+    fun launchResetLocalData(onComplete: (LocalStateResult) -> Unit = {}) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(resetLocalData())
+        }
+    }
+
+    fun dismissRecoveryNotice() {
+        _recoveryNoticeVisible.value = false
+    }
+
+    fun acknowledgeAnnouncement(id: Long) {
+        if (_announcement.value?.id == id) _announcement.value = null
+    }
+
+    fun reportOpenResult(result: ArticleActionResult, navigationOpened: Boolean) {
+        when {
+            !navigationOpened -> announce(AppAnnouncementKind.OPEN_NAVIGATION_FAILED)
+            !result.persisted -> announce(AppAnnouncementKind.OPEN_NOT_PERSISTED)
+        }
+    }
+
     suspend fun setAppearance(appearance: Appearance) {
         stateMutex.withLock {
             if (localState.settings.appearance == appearance) return@withLock
             val candidate = localState.copy(settings = LocalState.Settings(appearance))
             when (val result = saveLocalState(candidate)) {
-                is LocalStateResult.Success -> adoptPersistedState(result.state)
-                is LocalStateResult.Failure -> _localStateError.value = result
+                is LocalStateResult.Success -> {
+                    adoptPersistedState(result.state)
+                    _localStateError.value = null
+                }
+                is LocalStateResult.Failure -> recordPersistenceFailure(result)
             }
         }
     }
@@ -137,11 +189,36 @@ class AppViewModel(
             when (val result = saveLocalState(candidate)) {
                 is LocalStateResult.Success -> {
                     adoptPersistedState(result.state)
+                    _localStateError.value = null
                     _heldArticleId.value = null
                     publish()
                 }
-                is LocalStateResult.Failure -> _localStateError.value = result
+                is LocalStateResult.Failure -> recordPersistenceFailure(result)
             }
+        }
+    }
+
+    suspend fun resetLocalData(): LocalStateResult = stateMutex.withLock {
+        _resetInProgress.value = true
+        try {
+            when (val result = resetLocalState()) {
+                is LocalStateResult.Success -> {
+                    adoptPersistedState(result.state)
+                    _heldArticleId.value = null
+                    _localStateError.value = null
+                    _recoveryNoticeVisible.value = false
+                    publish()
+                    announce(AppAnnouncementKind.RESET_COMPLETE)
+                    result
+                }
+                is LocalStateResult.Failure -> {
+                    _localStateError.value = result
+                    announce(AppAnnouncementKind.RESET_FAILED)
+                    result
+                }
+            }
+        } finally {
+            _resetInProgress.value = false
         }
     }
 
@@ -179,6 +256,7 @@ class AppViewModel(
     ): ArticleActionResult = when (val result = saveLocalState(localState)) {
         is LocalStateResult.Failure -> {
             _localStateError.value = result
+            if (action != ArticleAction.OPEN) announce(AppAnnouncementKind.PERSISTENCE_FAILED)
             ArticleActionResult(
                 transition = transition,
                 persisted = false,
@@ -188,6 +266,7 @@ class AppViewModel(
         }
         is LocalStateResult.Success -> {
             adoptPersistedState(result.state)
+            _localStateError.value = null
             val persistedTransition = ArticleTransition.Unchanged(localState.articles)
             if (
                 action == ArticleAction.OPEN &&
@@ -213,6 +292,7 @@ class AppViewModel(
         return when (val result = saveLocalState(candidate)) {
             is LocalStateResult.Failure -> {
                 _localStateError.value = result
+                if (action != ArticleAction.OPEN) announce(AppAnnouncementKind.PERSISTENCE_FAILED)
                 ArticleActionResult(
                     transition = transition,
                     persisted = false,
@@ -222,6 +302,7 @@ class AppViewModel(
             }
             is LocalStateResult.Success -> {
                 adoptPersistedState(result.state)
+                _localStateError.value = null
                 val persistedRecord = localState.articles.getValue(article.id)
                 val persistedTransition = ArticleTransition.Applied(
                     records = localState.articles,
@@ -248,6 +329,7 @@ class AppViewModel(
                 is LocalStateResult.Failure -> {
                     adoptPersistedState(result.state ?: LocalState.default())
                     _localStateError.value = result
+                    _recoveryNoticeVisible.value = true
                 }
             }
             _heldArticleId.value = null
@@ -277,6 +359,16 @@ class AppViewModel(
         }
     }
 
+    private fun recordPersistenceFailure(result: LocalStateResult.Failure) {
+        _localStateError.value = result
+        announce(AppAnnouncementKind.PERSISTENCE_FAILED)
+    }
+
+    private fun announce(kind: AppAnnouncementKind) {
+        nextAnnouncementId += 1
+        _announcement.value = AppAnnouncement(nextAnnouncementId, kind)
+    }
+
     private fun publish() {
         _uiState.value = mapUiState()
     }
@@ -301,6 +393,7 @@ class AppViewModel(
         private val loadDataset: suspend () -> DatasetResult = datasetRepository::load
         private val loadLocalState: suspend () -> LocalStateResult = localStateRepository::load
         private val saveLocalState: suspend (LocalState) -> LocalStateResult = localStateRepository::save
+        private val resetLocalState: suspend () -> LocalStateResult = localStateRepository::reset
 
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -309,6 +402,7 @@ class AppViewModel(
                 loadDataset = loadDataset,
                 loadLocalState = loadLocalState,
                 saveLocalState = saveLocalState,
+                resetLocalState = resetLocalState,
                 nowProvider = nowProvider,
                 zoneProvider = zoneProvider,
                 localeProvider = localeProvider,

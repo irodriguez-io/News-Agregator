@@ -24,4 +24,10 @@ class LocalStateRepository(
             store.save(state)
         }
     }
+
+    suspend fun reset(): LocalStateResult = withContext(ioDispatcher) {
+        writeMutex.withLock {
+            store.reset()
+        }
+    }
 }
