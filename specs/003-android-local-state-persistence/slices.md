@@ -90,6 +90,11 @@ JVM tests against a temp directory.
     file excludes the state document from both backup and device transfer;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green.
 
+- **Status:** done (gate: PASS, slice review at `d5efa5b`; 82 JVM tests). Reviewed at
+  `cefe5b6` with four findings — foreign learning signals clobbered on transition, sub-millisecond
+  timestamps failing their own validator, a transient read failure permanently locking writes, and an
+  unsupported schema reported as invalid state — all fixed in `3afaf3c` + `d5efa5b`.
+
 ## Slice 2: wiring — restore at launch, persist on every action
 
 - **Scenarios:** "a fresh install starts from the default local state", "displaying an article creates
@@ -126,6 +131,8 @@ JVM tests against a temp directory.
     recovery-locked store, and the default-state launch;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green.
 
+- **Status:** pending
+
 ## Slice 3: the surfaces — storage errors and Reset
 
 - **Scenarios:** "reset clears the device state after explicit confirmation", plus the user-visible
@@ -156,6 +163,8 @@ JVM tests against a temp directory.
   - the Open-failed-to-persist warning is distinct from the Open-failed-to-navigate error;
   - `./gradlew :app:testDebugUnitTest` and `:app:assembleDebug` green, plus the owner walkthrough in
     `spec.md` §5 on a device or emulator, with the `run-as` byte checks recorded in `evidence.md`.
+
+- **Status:** pending
 
 ## Gates
 
