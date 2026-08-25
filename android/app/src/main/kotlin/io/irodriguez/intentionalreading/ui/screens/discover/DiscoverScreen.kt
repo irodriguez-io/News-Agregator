@@ -64,6 +64,7 @@ fun DiscoverScreen(
         EditorialHeader(
             availableCount = cardState?.availableCount,
             contentFreshness = state.contentFreshness,
+            failedRefreshDisclosure = state.failedRefreshDisclosure,
             degraded = degraded,
             selectedCategory = selectedCategory,
             onCategorySelected = onCategorySelected,

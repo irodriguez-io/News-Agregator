@@ -10,11 +10,13 @@ enum class DiscoverRefreshAffordance {
 
 sealed interface DiscoverUiState {
     val contentFreshness: String?
+    val failedRefreshDisclosure: String?
     val refreshAffordance: DiscoverRefreshAffordance
 
     data class Loading(
         val copy: String,
         override val contentFreshness: String?,
+        override val failedRefreshDisclosure: String?,
         override val refreshAffordance: DiscoverRefreshAffordance,
     ) : DiscoverUiState
 
@@ -23,6 +25,7 @@ sealed interface DiscoverUiState {
         val copy: String,
         val actionLabel: String,
         override val contentFreshness: String?,
+        override val failedRefreshDisclosure: String?,
         override val refreshAffordance: DiscoverRefreshAffordance,
     ) : DiscoverUiState
 
@@ -31,6 +34,7 @@ sealed interface DiscoverUiState {
         val copy: String,
         val actionLabel: String,
         override val contentFreshness: String?,
+        override val failedRefreshDisclosure: String?,
         override val refreshAffordance: DiscoverRefreshAffordance,
     ) : DiscoverUiState
 
@@ -41,6 +45,7 @@ sealed interface DiscoverUiState {
         val remainingCount: Int,
         val isOpened: Boolean,
         override val contentFreshness: String?,
+        override val failedRefreshDisclosure: String?,
         override val refreshAffordance: DiscoverRefreshAffordance,
     ) : DiscoverUiState
 }

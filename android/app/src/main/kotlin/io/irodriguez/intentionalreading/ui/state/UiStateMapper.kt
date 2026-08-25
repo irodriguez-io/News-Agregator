@@ -48,6 +48,7 @@ object UiStateMapper {
                 zone = zone,
                 locale = locale,
                 contentFreshness = contentFreshness,
+                failedRefreshDisclosure = failedRefreshDisclosure(phase, refresh),
                 refreshAffordance = refreshAffordance(phase, refresh),
             ),
             readLater = readLater(records, now, zone, locale),
@@ -124,11 +125,13 @@ object UiStateMapper {
         zone: ZoneId,
         locale: Locale,
         contentFreshness: String?,
+        failedRefreshDisclosure: String?,
         refreshAffordance: DiscoverRefreshAffordance,
     ): DiscoverUiState = when (phase) {
         DatasetPhase.Loading -> DiscoverUiState.Loading(
             copy = Labels.DISCOVER_LOADING_COPY,
             contentFreshness = contentFreshness,
+            failedRefreshDisclosure = failedRefreshDisclosure,
             refreshAffordance = refreshAffordance,
         )
         DatasetPhase.Error -> DiscoverUiState.Error(
@@ -136,6 +139,7 @@ object UiStateMapper {
             copy = Labels.DISCOVER_ERROR_COPY,
             actionLabel = Labels.DISCOVER_ERROR_ACTION,
             contentFreshness = contentFreshness,
+            failedRefreshDisclosure = failedRefreshDisclosure,
             refreshAffordance = refreshAffordance,
         )
         is DatasetPhase.Ready -> {
@@ -152,6 +156,7 @@ object UiStateMapper {
                     copy = Labels.DISCOVER_EMPTY_COPY,
                     actionLabel = Labels.DISCOVER_EMPTY_ACTION,
                     contentFreshness = contentFreshness,
+                    failedRefreshDisclosure = failedRefreshDisclosure,
                     refreshAffordance = refreshAffordance,
                 )
             } else {
@@ -162,6 +167,7 @@ object UiStateMapper {
                     remainingCount = deck.remainingCount,
                     isOpened = records[article.id]?.status == ArticleStatus.OPENED,
                     contentFreshness = contentFreshness,
+                    failedRefreshDisclosure = failedRefreshDisclosure,
                     refreshAffordance = refreshAffordance,
                 )
             }
@@ -175,6 +181,13 @@ object UiStateMapper {
         refresh == DatasetRefreshPhase.Refreshing -> DiscoverRefreshAffordance.IN_PROGRESS
         phase is DatasetPhase.Ready -> DiscoverRefreshAffordance.AVAILABLE
         else -> DiscoverRefreshAffordance.HIDDEN
+    }
+
+    private fun failedRefreshDisclosure(
+        phase: DatasetPhase,
+        refresh: DatasetRefreshPhase,
+    ): String? = Labels.DISCOVER_REFRESH_FAILED.takeIf {
+        phase is DatasetPhase.Ready && refresh == DatasetRefreshPhase.Failed
     }
 
     private fun refreshOutcome(refresh: DatasetRefreshPhase): String = when (refresh) {

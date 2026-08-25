@@ -15,7 +15,8 @@ object Labels {
     const val DISCOVER_EMPTY_COPY =
         "You are caught up for this category. Leave without missing anything, or return to your saved reading."
     const val DISCOVER_EMPTY_ACTION = "View Read Later"
-    const val DEGRADED_NOTICE = "Some sources were unavailable during the latest refresh."
+    const val DEGRADED_NOTICE = "Some sources were unavailable when this content was gathered."
+    const val DISCOVER_REFRESH_FAILED = "Refresh failed. Showing the last available content."
     const val CONTENT_GENERATION_UNAVAILABLE = "Content generated · Unavailable"
     const val LAST_REFRESH_IDLE = "Last refresh · Not requested yet"
     const val LAST_REFRESH_REFRESHING = "Last refresh · Refreshing now…"

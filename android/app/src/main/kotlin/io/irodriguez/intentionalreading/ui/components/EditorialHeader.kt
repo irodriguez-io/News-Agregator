@@ -23,6 +23,7 @@ import java.util.Locale
 fun EditorialHeader(
     availableCount: Int?,
     contentFreshness: String?,
+    failedRefreshDisclosure: String?,
     degraded: Boolean,
     selectedCategory: Category?,
     onCategorySelected: (Category?) -> Unit,
@@ -44,6 +45,13 @@ fun EditorialHeader(
         if (contentFreshness != null) {
             Text(
                 text = contentFreshness,
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalIntentionalReadingTokens.current.muted,
+            )
+        }
+        if (failedRefreshDisclosure != null) {
+            Text(
+                text = failedRefreshDisclosure,
                 style = MaterialTheme.typography.bodyLarge,
                 color = LocalIntentionalReadingTokens.current.muted,
             )
