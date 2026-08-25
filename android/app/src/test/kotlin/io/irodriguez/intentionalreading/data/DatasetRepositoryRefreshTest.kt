@@ -135,6 +135,26 @@ class DatasetRepositoryRefreshTest {
     }
 
     @Test
+    fun `an unreadable cached payload does not prevent adopting a valid replacement`() = runBlocking {
+        val unreadablePayload = payloadFile()
+        assertTrue(unreadablePayload.mkdir())
+        val replacement = DatasetTestFixtures.validDatasetBytes(title = "Recovered article")
+        val requestedEtags = mutableListOf<String?>()
+        val fetcher = DatasetFetcher { etag ->
+            requestedEtags += etag
+            assertTrue(unreadablePayload.delete())
+            DatasetFetchResult.Body(replacement, "\"recovered-dataset\"")
+        }
+
+        val updated = assertIs<DatasetRefreshResult.Updated>(repository(fetcher).refresh())
+
+        assertEquals(listOf<String?>(null), requestedEtags)
+        assertEquals("Recovered article", updated.dataset.articles.single().title)
+        assertEquals("\"recovered-dataset\"", updated.metadata.etag)
+        assertContentEquals(replacement, payloadFile().readBytes())
+    }
+
+    @Test
     fun `304 without a cached payload is a typed failure rather than false success`() = runBlocking {
         val result = assertIs<DatasetRefreshResult.Failed>(
             repository(FakeDatasetFetcher(DatasetFetchResult.NotModified)).refresh(),

@@ -12,6 +12,19 @@ import kotlin.test.assertNull
 
 class HttpDatasetFetcherTest {
     @Test
+    fun `the default endpoint is exactly the client's own HTTPS dataset origin`() {
+        val expectedEndpoint = "https://irodriguez.io/News-Agregator/data/articles.json"
+        val endpointField = HttpDatasetFetcher::class.java.getDeclaredField("endpoint").apply {
+            isAccessible = true
+        }
+        val defaultEndpoint = endpointField.get(HttpDatasetFetcher()) as String
+
+        assertEquals(expectedEndpoint, HttpDatasetFetcher.DATASET_URL)
+        assertEquals(expectedEndpoint, defaultEndpoint)
+        assertEquals("https", URL(defaultEndpoint).protocol)
+    }
+
+    @Test
     fun `only the client HTTPS origin is contacted because HTTP is refused before connecting`() {
         var connectionAttempts = 0
         val fetcher = HttpDatasetFetcher(
