@@ -25,7 +25,9 @@ data class AppUiState(
     val history: HistoryUiState,
     val navigationCounts: NavigationCounts,
     val degraded: Boolean,
-    val refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
+    val generatedAtLabel: String,
+    val lastRefreshOutcome: String,
+    val refresh: DatasetRefreshPhase,
 )
 
 data class NavigationCounts(

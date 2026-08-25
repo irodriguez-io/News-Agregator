@@ -50,6 +50,9 @@ enum class AppAnnouncementKind {
     OPEN_NAVIGATION_FAILED,
     RESET_FAILED,
     RESET_COMPLETE,
+    REFRESH_UPDATED,
+    REFRESH_CURRENT,
+    REFRESH_FAILED,
 }
 
 data class AppAnnouncement(
@@ -230,7 +233,7 @@ class AppViewModel(
 
     fun reload() {
         viewModelScope.launch(loadDispatcher) {
-            refreshDatasetNow()
+            refreshDatasetNow(announceOutcome = true)
         }
     }
 
@@ -352,7 +355,7 @@ class AppViewModel(
         }
     }
 
-    private suspend fun refreshDatasetNow() {
+    private suspend fun refreshDatasetNow(announceOutcome: Boolean = false) {
         val started = stateMutex.withLock {
             if (refreshPhase == DatasetRefreshPhase.Refreshing) {
                 false
@@ -366,23 +369,27 @@ class AppViewModel(
 
         val result = refreshDataset()
         stateMutex.withLock {
-            when (result) {
+            val announcementKind = when (result) {
                 is DatasetRefreshResult.Updated -> {
                     adoptDataset(result.dataset)
                     refreshPhase = DatasetRefreshPhase.Updated
+                    AppAnnouncementKind.REFRESH_UPDATED
                 }
                 is DatasetRefreshResult.Current -> {
                     if (phase !is DatasetPhase.Ready) {
                         phase = DatasetPhase.Ready(result.dataset)
                     }
                     refreshPhase = DatasetRefreshPhase.Current
+                    AppAnnouncementKind.REFRESH_CURRENT
                 }
                 is DatasetRefreshResult.Failed -> {
                     if (phase !is DatasetPhase.Ready) phase = DatasetPhase.Error
                     refreshPhase = DatasetRefreshPhase.Failed
+                    AppAnnouncementKind.REFRESH_FAILED
                 }
             }
             publish()
+            if (announceOutcome) announce(announcementKind)
         }
     }
 
@@ -429,7 +436,8 @@ class AppViewModel(
         now = nowProvider(),
         zone = zoneProvider(),
         locale = localeProvider(),
-    ).copy(refresh = refreshPhase)
+        refresh = refreshPhase,
+    )
 
     class Factory(
         datasetRepository: DatasetRepository,

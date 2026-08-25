@@ -16,6 +16,12 @@ object Labels {
         "You are caught up for this category. Leave without missing anything, or return to your saved reading."
     const val DISCOVER_EMPTY_ACTION = "View Read Later"
     const val DEGRADED_NOTICE = "Some sources were unavailable during the latest refresh."
+    const val CONTENT_GENERATION_UNAVAILABLE = "Content generated · Unavailable"
+    const val LAST_REFRESH_IDLE = "Last refresh · Not requested yet"
+    const val LAST_REFRESH_REFRESHING = "Last refresh · Refreshing now…"
+    const val LAST_REFRESH_UPDATED = "Last refresh · Updated"
+    const val LAST_REFRESH_CURRENT = "Last refresh · Already current"
+    const val LAST_REFRESH_FAILED = "Last refresh · Failed. Saved reading and History are unchanged."
 
     val categoryOptions: List<CategoryOption> = listOf(
         CategoryOption("all", "All"),
@@ -29,6 +35,10 @@ object Labels {
     )
 
     fun categoryLabel(id: String): String = categoryOptions.firstOrNull { it.id == id }?.label.orEmpty()
+
+    fun contentFreshness(relativeAge: String): String = "Content age · $relativeAge"
+
+    fun generatedAt(localDateTime: String): String = "Content generated · $localDateTime"
 
     fun remainingChoices(remainingCount: Int): String? = when {
         remainingCount <= 0 -> null

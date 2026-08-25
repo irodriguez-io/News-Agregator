@@ -8,6 +8,8 @@
     <string name="discover_eyebrow">A finite reading queue</string>
     <string name="discover_description">Choose what deserves your attention. Save what matters, dismiss what does not, and leave when you are done.</string>
     <string name="discover_context">%1$d available in %2$s</string>
+    <string name="refresh_content">Refresh</string>
+    <string name="refreshing_content">Refreshing…</string>
     <string name="discover_category_group">Discover category</string>
     <string name="article_topics">Article topics</string>
     <string name="article_actions">Article actions</string>
@@ -50,6 +52,7 @@
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
     <string name="appearance_system">System</string>
+    <string name="content_status">Content</string>
     <string name="local_data">Local data</string>
     <string name="local_data_copy">Clear the personal reading state stored on this device.</string>
     <string name="reset_all_data">Reset all data</string>
@@ -65,4 +68,7 @@
     <string name="open_navigation_failed">The publisher could not be opened.</string>
     <string name="reset_failed">Local data could not be reset.</string>
     <string name="reset_complete">Local data reset.</string>
+    <string name="refresh_updated">Content updated.</string>
+    <string name="refresh_current">Content is already current.</string>
+    <string name="refresh_failed">Content could not be refreshed. Your saved reading and History are unchanged.</string>
 </resources>

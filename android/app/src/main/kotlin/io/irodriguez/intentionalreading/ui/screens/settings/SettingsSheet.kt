@@ -58,6 +58,8 @@ fun SettingsSheet(
     appearance: Appearance,
     resetInProgress: Boolean,
     statusMessage: String?,
+    generatedAtLabel: String,
+    lastRefreshOutcome: String,
     onAppearanceSelected: (Appearance) -> Unit,
     onReset: (onComplete: (Boolean) -> Unit) -> Unit,
     onDismiss: () -> Unit,
@@ -122,6 +124,24 @@ fun SettingsSheet(
                         style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
                     )
                 }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.content_status),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = tokens.fg,
+                )
+                Text(
+                    text = generatedAtLabel,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = tokens.muted,
+                )
+                Text(
+                    text = lastRefreshOutcome,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = tokens.muted,
+                )
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
