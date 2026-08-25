@@ -2,7 +2,7 @@
 
 **Item branch:** `feat/004-android-dataset-refresh`, cut from `main` at `8f5706a`\
 **Slices:** 3, each gated by an independent non-author review before the next was dispatched\
-**Suite:** 99 JVM tests at item start (`18f4ce3`) → **131** at `8c052b6`, zero deleted
+**Suite:** 99 JVM tests at item start (`18f4ce3`) → **135** at `bcc18f1`, zero deleted
 
 ---
 
@@ -20,11 +20,16 @@
 | `4735adb` | slice 2 green |
 | `059d531` | slice 2 marked done |
 | `e9a40ca` → `8c052b6` | slice 3 red → green |
+| `de60f88` | first evidence draft, PR #6 opened |
+| `8ae661c` | spec corrections — D3's ETag form, D12 amended after the walkthrough |
+| `c4ef24c` → `bcc18f1` | slice 3 walkthrough finding: failed-refresh disclosure on Discover |
 
 Every slice closed as a failing-first test commit followed by an implementation commit. No test was
-edited to pass. No existing assertion was removed in this item — the only change to an existing test
-file was giving a `dataset(…)` fixture helper a defaulted `generatedAt` parameter, which left every
-prior call site's behaviour unchanged.
+edited to pass. Exactly one existing assertion changed in this item, in `bcc18f1`: the frozen-copy
+assertion pinning `Labels.DEGRADED_NOTICE`, updated because the owner amended that copy. It remains an
+exact-string assertion. The only other change to an existing test file was giving a `dataset(…)`
+fixture helper a defaulted `generatedAt` parameter, which left every prior call site's behaviour
+unchanged.
 
 Each RED was verified by the orchestrator in a throwaway worktree at the test commit, not accepted from
 a report. Slices 1 and 3 failed to compile against absent production contracts; the slice 1 follow-up
@@ -35,7 +40,7 @@ replacement`) out of 118.
 
 Verified by the orchestrator with `--rerun-tasks`, not read from the implementer's report:
 
-- `./gradlew :app:testDebugUnitTest` — **131 tests, 0 failures, 0 errors, 0 skipped** (42 tasks executed).
+- `./gradlew :app:testDebugUnitTest` — **135 tests, 0 failures, 0 errors, 0 skipped** (42 tasks executed).
 - `./gradlew :app:assembleDebug` — BUILD SUCCESSFUL.
 - Merged manifest (`app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml`)
   — exactly **one** `uses-permission` line, `android.permission.INTERNET`, and
@@ -49,8 +54,49 @@ Untouched and unaffected: `pipeline/**`, `config/**`, `js/**`, `css/**`, `index.
 
 ## Owner walkthrough — `spec.md` §5
 
-**Not yet performed.** Requires a Pixel API 37 emulator and reader-level interaction (triaging
-articles, airplane-mode relaunch, `run-as` inspection). Outstanding before merge.
+Walked on a Pixel_10 API 37 emulator on 2026-08-25, against the debug APK built from the PR head.
+
+| Check | Result |
+|---|---|
+| Fresh install, online | **214** articles offered — not the 166 the old APK shipped — and the header stated `Content age · 1h`, derived from `generatedAt` |
+| Airplane mode, force-stop, relaunch | Cached articles still offered; Read Later 1 / History 1 intact; 211 available after three triages; cache byte-unchanged. **Disclosure gap found — see below** |
+| Clear data, offline launch | `Discover is unavailable right now` with **Try again**; copy stated saved reading remains on the device; Read Later, History, Settings all reachable; `files/` empty, nothing written |
+| Leave airplane mode, retry | Queue arrived, `Content updated.` announced through the live region, cache written |
+| Triage then refresh | Saved, dismissed, and read articles all stayed out of Discover across both a refresh and an offline relaunch; Read Later and History still listed them |
+| `run-as` inspection of `filesDir` | Payload (220,122 B) and sidecar (73 B) both present alongside item 003's local-state document |
+| Stored `ETag` vs served header | Matched — see the D3 correction below; `304` confirmed, and the payload's mtime did not move across a refresh, proving the `304` rewrote nothing |
+| `aapt dump permissions` | `uses-permission: name='android.permission.INTERNET'` and nothing else |
+
+Beyond the checklist, three things were verified that no unit test covers: the conditional GET was
+exercised against the live endpoint with both the weak and strong ETag forms (both `304`, zero bytes);
+the cached payload's mtime was compared before and after a refresh to prove `304` is not a rewrite; and
+Settings was read on device to confirm the `304` surfaces as `Last refresh · Already current` rather
+than as a failure.
+
+### What the walkthrough caught that no test could
+
+On an offline relaunch with a cached dataset, the Discover header rendered **pixel-identical to the
+online header**:
+
+> Refresh · Content age · 1h · *Some sources were unavailable during the latest refresh.* · 214 available in All
+
+Nothing said the app could not reach the server — that fact lived only in Settings. Worse, the one line
+that *sounded* like it described the failed fetch described something else entirely:
+`DEGRADED_NOTICE` fires on `failedSourceCount` from the displayed dataset's pipeline metadata, i.e. the
+sources unavailable when the **pipeline generated the content**, hours earlier. An offline reader would
+read it as the story of their failed refresh, conclude that was what went wrong, and never learn that
+no refresh happened at all.
+
+Every unit test passed throughout. The defect was in what two independently-correct lines meant when
+placed next to each other, which is only visible on a screen.
+
+The owner amended `design.md` D12 (`8ae661c`) and the fix landed in `c4ef24c` → `bcc18f1`. The offline
+header now reads three distinct facts:
+
+> Content age · 2h · **Refresh failed. Showing the last available content.** · Some sources were unavailable **when this content was gathered.** · 214 available in All
+
+Both surfaces were re-verified on the emulator after the fix: the failure line appears offline and is
+absent online.
 
 ## What review caught that the gates did not
 
@@ -103,6 +149,16 @@ required and deleted `NOT_CONFIGURED`; slice 3 removed the `AppUiState.refresh` 
 - **The degraded notice moved from the card body into the editorial header**, beside the freshness
   line, as D12 directs. Its trigger (`failedSourceCount > 0`) is unchanged. It now also renders in the
   Empty state, which is correct — the notice describes the dataset, not the card.
+- **Only the failed refresh outcome is disclosed persistently on Discover.** `Updated` and
+  `Already current` keep the transient announcement plus the Settings line. A permanent "we succeeded"
+  is noise; a permanent "this is not current" changes what the reader should believe about what is on
+  screen. The disclosure is also suppressed when there is no cached dataset, because the existing
+  `DiscoverUiState.Error` panel already covers that case and a second failure line would be redundant.
+- **`design.md` D3 was corrected, not the code.** The note claimed the endpoint "serves a strong ETag".
+  It serves strong uncompressed and **weak** (`W/"…"`) over gzip, which `HttpURLConnection` requests on
+  its own — so the client stores the weak form, which is correct, because it stores what it was served.
+  `If-None-Match` uses weak comparison and the `304` still arrives. Verified both directly and on
+  device.
 
 ## Deviations from the plan, and why
 
@@ -131,7 +187,6 @@ required and deleted `NOT_CONFIGURED`; slice 3 removed the `AppUiState.refresh` 
 
 ## Outstanding
 
-- **The owner walkthrough (`spec.md` §5) has not been run.** See above.
 - **`AppViewModel.adoptDataset()` derives the displayed article by reading back its own published UI
   state** (`uiState.value.discover as? DiscoverUiState.Card`) to apply D8. It is correct and covered —
   the D8 test fails if the cast stops matching — but it is inverted data flow, and it couples a domain

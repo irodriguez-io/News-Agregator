@@ -109,4 +109,4 @@ entirely from JVM tests against fakes and a temp directory.
   time, pinned by a test; the refresh outcome — updated, already current, failed — announced and
   pinned by a test; a second refresh refused while one is in flight; `spec.md` §5 owner walkthrough
   performed and recorded in `evidence.md`.
-- **Status:** pending
+- **Status:** done
