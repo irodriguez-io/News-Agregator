@@ -43,10 +43,20 @@ origin and nothing else. No publisher is fetched at runtime, on any surface, eve
 
 ## D3 — Conditional GET, and `304` is a success
 
-The cached `ETag` is sent as `If-None-Match`. Verified against the live endpoint on 2026-08-24: it
-serves a strong ETag and answers a matching `If-None-Match` with `304` and a zero-byte body, so the
-common launch — the pipeline refreshes every six hours (§43), the reader opens the app more often than
-that — costs one round trip and no payload.
+The cached `ETag` is sent as `If-None-Match`. Verified against the live endpoint on 2026-08-24, and
+again on device on 2026-08-25: it answers a matching `If-None-Match` with `304` and a zero-byte body,
+so the common launch — the pipeline refreshes every six hours (§43), the reader opens the app more
+often than that — costs one round trip and no payload.
+
+**Corrected 2026-08-25, from the owner walkthrough.** The first draft of this note said the endpoint
+"serves a strong ETag". It serves a strong ETag *uncompressed* (`"6a8d946f-35bda"`) and a **weak** one
+over gzip (`W/"6a8d946f-35bda"`), because compression is a transformation that makes the representation
+non-byte-identical and RFC 9110 requires the validator to be weakened accordingly. `HttpURLConnection`
+adds `Accept-Encoding: gzip` on its own, so the client stores the weak form — which is correct, since
+it stores what it was served. `If-None-Match` uses weak comparison, so the conditional GET still
+answers `304`; confirmed both by direct request and on device, where Settings read
+`Last refresh · Already current` and the cached payload's mtime did not move. No code change follows
+from this; the note was simply imprecise.
 
 `304` therefore means *the cache is current*. It is reported as a successful refresh, it updates the
 "last refreshed" fact, and it must not be routed through the failure path or cause a rewrite of the
@@ -169,11 +179,28 @@ The last refresh outcome is stated separately, because "content generated 3 hour
 not reach the server just now" are two different facts and collapsing them into one line loses the
 one that explains the other. Settings carries the absolute timestamp for when something looks wrong.
 
-The existing degraded notice (`Labels.DEGRADED_NOTICE`, driven by `failedSourceCount > 0`) stays as it
-is and sits beside the freshness line; §23 of the deployment spec is what authorizes the frontend to
-surface pipeline metadata this way. Note that the notice will now actually appear in the app, because
-the live dataset currently reports three failed sources under Amendments 4 and 5 — that is correct
-behaviour finally getting real data, not a regression introduced here.
+The degraded notice (`Labels.DEGRADED_NOTICE`, driven by `failedSourceCount > 0`) sits beside the
+freshness line; §23 of the deployment spec is what authorizes the frontend to surface pipeline metadata
+this way. Note that the notice now actually appears in the app, because the live dataset currently
+reports three failed sources under Amendments 4 and 5 — that is correct behaviour finally getting real
+data, not a regression introduced here.
+
+**Amended 2026-08-25, by the owner, from the walkthrough.** The first draft said the notice "stays as
+it is". Its *trigger* does — `failedSourceCount > 0`, read from the displayed dataset's pipeline
+metadata, unchanged. Its *wording* does not. On an offline launch the walkthrough showed a Discover
+header pixel-identical to an online one, whose only refresh-sounding line — "Some sources were
+unavailable during the latest refresh." — describes the **pipeline run that generated the content**,
+not the client's fetch. A reader offline reads it as the story of their failed refresh and never learns
+that no refresh happened. The notice must therefore attribute itself to the content's generation and
+must not use the word "refresh", which this item has given a second and more immediate meaning.
+
+**And the failed refresh must be disclosed on Discover, not only in Settings.** The scenario *no
+network keeps the last good dataset and says so* is satisfied in the letter by the Settings line, but
+not in the spirit: the fact that explains why the content is old belongs where the reader is deciding
+what to read. It stays a line of its own — this does not collapse the two facts, it places both. Only
+the **failed** outcome is disclosed persistently on Discover; `Updated` and `Already current` remain
+transient announcements plus the Settings line, because a permanent "we succeeded" is noise, while a
+permanent "this is not current" changes what the reader should believe about what is on screen.
 
 ## Divergences from the web client, deliberate
 
