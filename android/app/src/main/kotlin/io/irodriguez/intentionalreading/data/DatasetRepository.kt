@@ -19,7 +19,6 @@ import kotlinx.coroutines.withContext
 enum class DatasetRefreshErrorCode {
     FETCH,
     VALIDATION,
-    CACHE_READ,
     CACHE_WRITE,
     NO_CACHED_DATASET,
     NOT_CONFIGURED,
@@ -82,9 +81,6 @@ class DatasetRepository(
         )
         val cached = when (val read = configuredCache.read()) {
             DatasetCacheRead.Absent -> null
-            DatasetCacheRead.Failed -> return@withContext DatasetRefreshResult.Failed(
-                code = DatasetRefreshErrorCode.CACHE_READ,
-            )
             is DatasetCacheRead.Present -> read
         }
 

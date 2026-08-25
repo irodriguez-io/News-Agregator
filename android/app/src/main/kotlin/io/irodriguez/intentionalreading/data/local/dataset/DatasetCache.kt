@@ -13,8 +13,6 @@ sealed interface DatasetCacheRead {
         val dataset: ArticleDataset,
         val metadata: DatasetCacheMetadata?,
     ) : DatasetCacheRead
-
-    data object Failed : DatasetCacheRead
 }
 
 class DatasetCache internal constructor(
