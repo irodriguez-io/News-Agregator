@@ -1,5 +1,9 @@
 package io.irodriguez.intentionalreading.ui
 
+import io.irodriguez.intentionalreading.data.DatasetRefreshErrorCode
+import io.irodriguez.intentionalreading.data.DatasetRefreshResult
+import io.irodriguez.intentionalreading.data.local.dataset.DatasetCacheMetadata
+import io.irodriguez.intentionalreading.data.local.dataset.DatasetCacheRead
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleContentType
@@ -15,8 +19,6 @@ import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
-import io.irodriguez.intentionalreading.domain.validation.DatasetErrorCode
-import io.irodriguez.intentionalreading.domain.validation.DatasetResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
@@ -83,9 +85,9 @@ class AppViewModelTest {
         val viewModel = viewModel(
             store = store,
             loadLocalState = { stateResult.await() },
-            loadDataset = {
+            refreshDataset = {
                 datasetLoadStarted = true
-                DatasetResult.Success(dataset(listOf(storedArticle, article(2))))
+                updated(dataset(listOf(storedArticle, article(2))))
             },
         )
 
@@ -149,7 +151,7 @@ class AppViewModelTest {
         )
         val store = FakeLocalStateStore(success(stored))
         val viewModel = viewModel(
-            datasetResult = DatasetResult.Success(dataset(listOf(article(1)))),
+            refreshResult = updated(dataset(listOf(article(1)))),
             store = store,
         )
 
@@ -164,11 +166,11 @@ class AppViewModelTest {
 
     @Test
     fun `load success maps loading to ready content`() = runBlocking {
-        val result = CompletableDeferred<DatasetResult>()
-        val viewModel = viewModel(loadDataset = { result.await() })
+        val result = CompletableDeferred<DatasetRefreshResult>()
+        val viewModel = viewModel(refreshDataset = { result.await() })
 
         assertIs<DiscoverUiState.Loading>(viewModel.uiState.value.discover)
-        result.complete(DatasetResult.Success(dataset()))
+        result.complete(updated(dataset()))
         yield()
 
         assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
@@ -177,20 +179,207 @@ class AppViewModelTest {
 
     @Test
     fun `load failure maps to the error phase without claiming an article`() {
-        val viewModel = viewModel(
-            datasetResult = DatasetResult.Failure(
-                code = DatasetErrorCode.MALFORMED_DATASET,
-                message = "broken fixture",
-            ),
-        )
+        val viewModel = viewModel(refreshResult = failedRefresh())
 
         assertIs<DiscoverUiState.Error>(viewModel.uiState.value.discover)
     }
 
     @Test
+    fun `cold start publishes the cache before a reachable refresh adopts its replacement`() = runBlocking {
+        val cachedDataset = dataset(listOf(article(2), article(3)))
+        val replacement = dataset(listOf(article(1), article(2), article(3)))
+        val refreshEntered = CompletableDeferred<Unit>()
+        val releaseRefresh = CompletableDeferred<Unit>()
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(cachedDataset),
+            initialRefreshResult = failedRefresh(),
+        ).apply {
+            refreshBehavior = {
+                refreshEntered.complete(Unit)
+                releaseRefresh.await()
+                updated(replacement)
+            }
+        }
+
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+        refreshEntered.await()
+
+        assertEquals(1, datasets.cacheReadRequests)
+        assertEquals(article(2).id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(DatasetRefreshPhase.Refreshing, viewModel.uiState.value.refresh)
+
+        releaseRefresh.complete(Unit)
+        yield()
+
+        assertEquals(article(1).id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(DatasetRefreshPhase.Updated, viewModel.uiState.value.refresh)
+    }
+
+    @Test
+    fun `first launch offline is recoverable and retry adopts the reachable dataset`() = runBlocking {
+        val datasets = FakeDatasetRepository(initialRefreshResult = failedRefresh())
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+
+        assertIs<DiscoverUiState.Error>(viewModel.uiState.value.discover)
+        assertEquals(DatasetRefreshPhase.Failed, viewModel.uiState.value.refresh)
+
+        datasets.refreshBehavior = { updated(dataset(listOf(article(7)))) }
+        viewModel.reload()
+        yield()
+
+        assertEquals(article(7).id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(DatasetRefreshPhase.Updated, viewModel.uiState.value.refresh)
+        assertEquals(2, datasets.refreshRequests)
+    }
+
+    @Test
+    fun `triaged articles stay excluded when a newer dataset is adopted`() {
+        val saved = article(1)
+        val dismissed = article(2)
+        val read = article(3)
+        val newArticle = article(4)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(dismissed, ArticleStatus.DISMISSED),
+            record(read, ArticleStatus.READ),
+        )
+        val datasets = FakeDatasetRepository(
+            initialRefreshResult = updated(dataset(listOf(saved, dismissed, read, newArticle))),
+        )
+
+        val viewModel = viewModel(
+            store = FakeLocalStateStore(success(stored)),
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+
+        val card = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(newArticle.id, card.article.id)
+        assertEquals(1, card.availableCount)
+        assertEquals(0, card.remainingCount)
+        assertEquals(listOf(saved.id), viewModel.uiState.value.readLater.rows.map { it.article.id })
+        assertEquals(
+            listOf(read.id),
+            viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+        )
+    }
+
+    @Test
+    fun `failed refresh leaves Read Later and History populated from local state`() {
+        val saved = article(1)
+        val read = article(2)
+        val cachedArticle = article(3)
+        val stored = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+        )
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(dataset(listOf(cachedArticle))),
+            initialRefreshResult = failedRefresh(),
+        )
+
+        val viewModel = viewModel(
+            store = FakeLocalStateStore(success(stored)),
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+
+        assertEquals(cachedArticle.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(listOf(saved.id), viewModel.uiState.value.readLater.rows.map { it.article.id })
+        assertEquals(
+            listOf(read.id),
+            viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+        )
+        assertEquals(DatasetRefreshPhase.Failed, viewModel.uiState.value.refresh)
+    }
+
+    @Test
+    fun `displayed article survives adoption when present and deck advances when absent`() = runBlocking {
+        val displayed = article(1)
+        val oldFollower = article(2)
+        val newLeader = article(3)
+        val refreshEntered = CompletableDeferred<Unit>()
+        val releaseRefresh = CompletableDeferred<Unit>()
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(dataset(listOf(displayed, oldFollower))),
+            initialRefreshResult = failedRefresh(),
+        ).apply {
+            refreshBehavior = {
+                refreshEntered.complete(Unit)
+                releaseRefresh.await()
+                updated(dataset(listOf(newLeader, displayed, oldFollower)))
+            }
+        }
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+        refreshEntered.await()
+        assertEquals(displayed.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+
+        releaseRefresh.complete(Unit)
+        yield()
+
+        val held = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(displayed.id, held.article.id)
+        assertEquals(3, held.availableCount)
+        assertEquals(2, held.remainingCount)
+
+        val replacementLeader = article(4)
+        datasets.refreshBehavior = { updated(dataset(listOf(replacementLeader, oldFollower))) }
+        viewModel.reload()
+        yield()
+
+        val advanced = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(replacementLeader.id, advanced.article.id)
+        assertEquals(2, advanced.availableCount)
+        assertEquals(1, advanced.remainingCount)
+        assertNull(viewModel.heldArticleId.value)
+    }
+
+    @Test
+    fun `a second refresh is not started while one is in flight`() = runBlocking {
+        val cachedDataset = dataset(listOf(article(1)))
+        val refreshEntered = CompletableDeferred<Unit>()
+        val releaseRefresh = CompletableDeferred<Unit>()
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(cachedDataset),
+            initialRefreshResult = failedRefresh(),
+        ).apply {
+            refreshBehavior = {
+                refreshEntered.complete(Unit)
+                releaseRefresh.await()
+                DatasetRefreshResult.Current(cachedDataset, metadata())
+            }
+        }
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+        refreshEntered.await()
+
+        viewModel.reload()
+        viewModel.reload()
+        yield()
+
+        assertEquals(1, datasets.refreshRequests)
+        assertEquals(DatasetRefreshPhase.Refreshing, viewModel.uiState.value.refresh)
+
+        releaseRefresh.complete(Unit)
+        yield()
+        assertEquals(DatasetRefreshPhase.Current, viewModel.uiState.value.refresh)
+    }
+
+    @Test
     fun `opened card is held after persistence and released when its record leaves opened`() = runBlocking {
         val articles = listOf(article(1), article(2))
-        val viewModel = viewModel(datasetResult = DatasetResult.Success(dataset(articles)))
+        val viewModel = viewModel(refreshResult = updated(dataset(articles)))
 
         val opened = applied(viewModel.onArticleAction(articles.first(), ArticleAction.OPEN))
         assertEquals(ArticleStatus.OPENED, opened.record.status)
@@ -209,7 +398,7 @@ class AppViewModelTest {
     fun `changing category releases an opened held card after persistence`() = runBlocking {
         val technology = article(1, Category.TECHNOLOGY)
         val iam = article(2, Category.IAM)
-        val viewModel = viewModel(datasetResult = DatasetResult.Success(dataset(listOf(technology, iam))))
+        val viewModel = viewModel(refreshResult = updated(dataset(listOf(technology, iam))))
         viewModel.selectCategory(Category.IAM)
 
         viewModel.onArticleAction(iam, ArticleAction.OPEN)
@@ -225,7 +414,7 @@ class AppViewModelTest {
         val articles = listOf(article(1), article(2), article(3))
         val store = FakeLocalStateStore()
         val viewModel = viewModel(
-            datasetResult = DatasetResult.Success(dataset(articles)),
+            refreshResult = updated(dataset(articles)),
             store = store,
         )
 
@@ -519,7 +708,7 @@ class AppViewModelTest {
         val firstArticle = article(1)
         val secondArticle = article(2)
         val viewModel = viewModel(
-            datasetResult = DatasetResult.Success(dataset(listOf(firstArticle, secondArticle))),
+            refreshResult = updated(dataset(listOf(firstArticle, secondArticle))),
             store = store,
         )
 
@@ -566,7 +755,7 @@ class AppViewModelTest {
         val savedArticle = article(1)
         val removedArticle = article(2)
         val viewModel = viewModel(
-            datasetResult = DatasetResult.Success(dataset(listOf(savedArticle, removedArticle))),
+            refreshResult = updated(dataset(listOf(savedArticle, removedArticle))),
         )
 
         viewModel.onArticleAction(savedArticle, ArticleAction.SAVE)
@@ -624,14 +813,16 @@ class AppViewModelTest {
         assertIs<ArticleTransition.Applied>(result.transition)
 
     private fun viewModel(
-        datasetResult: DatasetResult = DatasetResult.Success(dataset()),
+        refreshResult: DatasetRefreshResult = updated(dataset()),
         store: FakeLocalStateStore = FakeLocalStateStore(),
-        loadDataset: suspend () -> DatasetResult = { datasetResult },
+        readCachedDataset: suspend () -> DatasetCacheRead = { DatasetCacheRead.Absent },
+        refreshDataset: suspend () -> DatasetRefreshResult = { refreshResult },
         loadLocalState: suspend () -> LocalStateResult = store::load,
         resetLocalState: suspend () -> LocalStateResult = store::reset,
         nowProvider: () -> Instant = { now },
     ): AppViewModel = AppViewModel(
-        loadDataset = loadDataset,
+        readCachedDataset = readCachedDataset,
+        refreshDataset = refreshDataset,
         loadLocalState = loadLocalState,
         saveLocalState = store::save,
         resetLocalState = resetLocalState,
@@ -666,6 +857,25 @@ class AppViewModelTest {
 
     private fun success(state: LocalState): LocalStateResult.Success =
         LocalStateResult.Success(state, LocalStateSource.STORAGE)
+
+    private fun updated(dataset: ArticleDataset): DatasetRefreshResult.Updated =
+        DatasetRefreshResult.Updated(
+            dataset = dataset,
+            metadata = metadata(),
+        )
+
+    private fun cached(dataset: ArticleDataset): DatasetCacheRead.Present = DatasetCacheRead.Present(
+        bytes = byteArrayOf(),
+        dataset = dataset,
+        metadata = metadata(),
+    )
+
+    private fun metadata(): DatasetCacheMetadata =
+        DatasetCacheMetadata(etag = "\"fixture\"", fetchedAt = now)
+
+    private fun failedRefresh(): DatasetRefreshResult.Failed = DatasetRefreshResult.Failed(
+        code = DatasetRefreshErrorCode.FETCH,
+    )
 
     private fun dataset(articles: List<Article> = listOf(article(1))): ArticleDataset = ArticleDataset(
         schemaVersion = 1,
