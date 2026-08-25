@@ -58,7 +58,7 @@ entirely from JVM tests against fakes and a temp directory.
   fetcher's HTTPS refusal, redirect refusal, ceiling, and `304` mapping each pinned by a test; a
   cache write proven atomic-by-rename and a failed refresh proven to leave the payload byte-identical;
   no assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 2: wiring — cold-start refresh, and the APK stops carrying articles
 
