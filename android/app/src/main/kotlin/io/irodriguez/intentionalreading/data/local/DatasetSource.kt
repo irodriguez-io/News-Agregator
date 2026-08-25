@@ -2,7 +2,8 @@ package io.irodriguez.intentionalreading.data.local
 
 import android.content.res.AssetManager
 
-fun interface DatasetSource {
+/** Bundled-asset compatibility boundary retained until Slice 2 replaces its wiring. */
+interface DatasetSource {
     fun read(): ByteArray
 }
 
