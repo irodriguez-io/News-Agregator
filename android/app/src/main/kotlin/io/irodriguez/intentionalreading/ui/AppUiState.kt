@@ -11,12 +11,21 @@ sealed interface DatasetPhase {
     data class Ready(val dataset: ArticleDataset) : DatasetPhase
 }
 
+sealed interface DatasetRefreshPhase {
+    data object Idle : DatasetRefreshPhase
+    data object Refreshing : DatasetRefreshPhase
+    data object Updated : DatasetRefreshPhase
+    data object Current : DatasetRefreshPhase
+    data object Failed : DatasetRefreshPhase
+}
+
 data class AppUiState(
     val discover: DiscoverUiState,
     val readLater: ReadLaterUiState,
     val history: HistoryUiState,
     val navigationCounts: NavigationCounts,
     val degraded: Boolean,
+    val refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
 )
 
 data class NavigationCounts(
