@@ -23,6 +23,7 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -380,6 +381,144 @@ class AppViewModelTest {
         yield()
         assertEquals(DatasetRefreshPhase.Current, viewModel.uiState.value.refresh)
     }
+
+    @Test
+    fun `content freshness uses generatedAt even when the dataset was fetched moments ago`() {
+        val staleDataset = dataset(
+            articles = listOf(article(1)),
+            generatedAt = "2026-08-20T12:00:00Z",
+        )
+        val fetchedMomentsAgo = now.minusSeconds(5)
+        val viewModel = viewModel(
+            refreshResult = DatasetRefreshResult.Current(
+                dataset = staleDataset,
+                metadata = metadata(fetchedAt = fetchedMomentsAgo),
+            ),
+        )
+
+        val card = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals("Content age · 2d", card.contentFreshness)
+        assertEquals("Content generated · Aug 20, 2026, 6:00 AM", viewModel.uiState.value.generatedAtLabel)
+    }
+
+    @Test
+    fun `explicit refresh exposes an in progress affordance and cannot offer a second request`() = runBlocking {
+        val cachedDataset = dataset(listOf(article(1)))
+        val refreshEntered = CompletableDeferred<Unit>()
+        val releaseRefresh = CompletableDeferred<Unit>()
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(cachedDataset),
+            initialRefreshResult = DatasetRefreshResult.Current(cachedDataset, metadata()),
+        ).apply {
+            refreshBehavior = {
+                if (refreshRequests == 1) {
+                    DatasetRefreshResult.Current(cachedDataset, metadata())
+                } else {
+                    refreshEntered.complete(Unit)
+                    releaseRefresh.await()
+                    DatasetRefreshResult.Current(cachedDataset, metadata())
+                }
+            }
+        }
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+
+        viewModel.reload()
+        refreshEntered.await()
+        viewModel.reload()
+        yield()
+
+        val card = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(DiscoverRefreshAffordance.IN_PROGRESS, card.refreshAffordance)
+        assertEquals(2, datasets.refreshRequests)
+
+        releaseRefresh.complete(Unit)
+        yield()
+    }
+
+    @Test
+    fun `explicit refresh announces updated content`() = runBlocking {
+        val initial = dataset(listOf(article(1)))
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(initial),
+            initialRefreshResult = DatasetRefreshResult.Current(initial, metadata()),
+        )
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+        assertNull(viewModel.announcement.value)
+
+        datasets.refreshBehavior = { updated(dataset(listOf(article(2)))) }
+        viewModel.reload()
+        yield()
+
+        assertEquals(AppAnnouncementKind.REFRESH_UPDATED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `explicit refresh announces already current`() = runBlocking {
+        val current = dataset(listOf(article(1)))
+        val datasets = FakeDatasetRepository(
+            initialCacheRead = cached(current),
+            initialRefreshResult = DatasetRefreshResult.Current(current, metadata()),
+        )
+        val viewModel = viewModel(
+            readCachedDataset = datasets::readCache,
+            refreshDataset = datasets::refresh,
+        )
+        assertNull(viewModel.announcement.value)
+
+        datasets.refreshBehavior = { DatasetRefreshResult.Current(current, metadata()) }
+        viewModel.reload()
+        yield()
+
+        assertEquals(AppAnnouncementKind.REFRESH_CURRENT, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `failed explicit refresh announces only content failure while local destinations and Settings remain available`() =
+        runBlocking {
+            val saved = article(1)
+            val read = article(2)
+            val cachedArticle = article(3)
+            val stored = localState(
+                record(saved, ArticleStatus.SAVED),
+                record(read, ArticleStatus.READ),
+            )
+            val cachedDataset = dataset(listOf(cachedArticle))
+            val datasets = FakeDatasetRepository(
+                initialCacheRead = cached(cachedDataset),
+                initialRefreshResult = DatasetRefreshResult.Current(cachedDataset, metadata()),
+            )
+            val viewModel = viewModel(
+                store = FakeLocalStateStore(success(stored)),
+                readCachedDataset = datasets::readCache,
+                refreshDataset = datasets::refresh,
+            )
+
+            datasets.refreshBehavior = { failedRefresh() }
+            viewModel.reload()
+            yield()
+
+            assertEquals(AppAnnouncementKind.REFRESH_FAILED, viewModel.announcement.value?.kind)
+            assertEquals(
+                "Last refresh · Failed. Saved reading and History are unchanged.",
+                viewModel.uiState.value.lastRefreshOutcome,
+            )
+            viewModel.selectDestination(Destination.READ_LATER)
+            assertEquals(listOf(saved.id), viewModel.uiState.value.readLater.rows.map { it.article.id })
+            viewModel.selectDestination(Destination.HISTORY)
+            assertEquals(
+                listOf(read.id),
+                viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+            )
+            viewModel.openSettings()
+            assertTrue(viewModel.settingsOpen.value)
+            assertEquals("Content generated · Aug 22, 2026, 6:00 AM", viewModel.uiState.value.generatedAtLabel)
+        }
 
     @Test
     fun `opened card is held after persistence and released when its record leaves opened`() = runBlocking {
@@ -875,16 +1014,19 @@ class AppViewModelTest {
         metadata = metadata(),
     )
 
-    private fun metadata(): DatasetCacheMetadata =
-        DatasetCacheMetadata(etag = "\"fixture\"", fetchedAt = now)
+    private fun metadata(fetchedAt: Instant = now): DatasetCacheMetadata =
+        DatasetCacheMetadata(etag = "\"fixture\"", fetchedAt = fetchedAt)
 
     private fun failedRefresh(): DatasetRefreshResult.Failed = DatasetRefreshResult.Failed(
         code = DatasetRefreshErrorCode.FETCH,
     )
 
-    private fun dataset(articles: List<Article> = listOf(article(1))): ArticleDataset = ArticleDataset(
+    private fun dataset(
+        articles: List<Article> = listOf(article(1)),
+        generatedAt: String = "2026-08-22T12:00:00Z",
+    ): ArticleDataset = ArticleDataset(
         schemaVersion = 1,
-        generatedAt = "2026-08-22T12:00:00Z",
+        generatedAt = generatedAt,
         pipeline = PipelineMetadata(
             enabledSourceCount = 1,
             successfulSourceCount = 1,

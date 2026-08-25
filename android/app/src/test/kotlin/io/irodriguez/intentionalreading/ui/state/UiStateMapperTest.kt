@@ -15,7 +15,9 @@ import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.DatasetPhase
+import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
 import io.irodriguez.intentionalreading.ui.format.Labels
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryPeriod
 import java.time.Instant
@@ -309,6 +311,38 @@ class UiStateMapperTest {
     }
 
     @Test
+    fun `known generatedAt maps relative Discover age and exact local Settings time beside the refresh outcome`() {
+        val state = map(
+            dataset = dataset(
+                articles = listOf(article(1)),
+                generatedAt = "2026-08-20T12:00:00Z",
+            ),
+            refresh = DatasetRefreshPhase.Current,
+        )
+
+        val card = assertIs<DiscoverUiState.Card>(state.discover)
+        assertEquals("Content age · 2d", card.contentFreshness)
+        assertEquals("Content generated · Aug 20, 2026, 6:00 AM", state.generatedAtLabel)
+        assertEquals("Last refresh · Already current", state.lastRefreshOutcome)
+    }
+
+    @Test
+    fun `ready Discover exposes Refresh until the in flight state replaces it with a disabled status`() {
+        val available = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(listOf(article(1)))).discover,
+        )
+        val refreshing = assertIs<DiscoverUiState.Card>(
+            map(
+                dataset = dataset(listOf(article(1))),
+                refresh = DatasetRefreshPhase.Refreshing,
+            ).discover,
+        )
+
+        assertEquals(DiscoverRefreshAffordance.AVAILABLE, available.refreshAffordance)
+        assertEquals(DiscoverRefreshAffordance.IN_PROGRESS, refreshing.refreshAffordance)
+    }
+
+    @Test
     fun `the eight category options retain exact order ids and labels`() {
         assertEquals(
             listOf(
@@ -330,6 +364,7 @@ class UiStateMapperTest {
         records: Map<String, ArticleRecord> = emptyMap(),
         selectedCategory: Category? = null,
         heldArticleId: String? = null,
+        refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
     ) = UiStateMapper.map(
         phase = DatasetPhase.Ready(dataset),
         records = records,
@@ -338,11 +373,16 @@ class UiStateMapperTest {
         now = now,
         zone = zone,
         locale = Locale.US,
+        refresh = refresh,
     )
 
-    private fun dataset(articles: List<Article>, failedSourceCount: Int = 0): ArticleDataset = ArticleDataset(
+    private fun dataset(
+        articles: List<Article>,
+        failedSourceCount: Int = 0,
+        generatedAt: String = "2026-08-22T12:00:00Z",
+    ): ArticleDataset = ArticleDataset(
         schemaVersion = 1,
-        generatedAt = "2026-08-22T12:00:00Z",
+        generatedAt = generatedAt,
         pipeline = PipelineMetadata(
             enabledSourceCount = 2,
             successfulSourceCount = 2 - failedSourceCount,
