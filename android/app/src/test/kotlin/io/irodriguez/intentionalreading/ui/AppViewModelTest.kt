@@ -214,7 +214,12 @@ class AppViewModelTest {
         releaseRefresh.complete(Unit)
         yield()
 
-        assertEquals(article(1).id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(
+            Triple(article(2).id, 3, 2),
+            assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).let { card ->
+                Triple(card.article.id, card.availableCount, card.remainingCount)
+            },
+        )
         assertEquals(DatasetRefreshPhase.Updated, viewModel.uiState.value.refresh)
     }
 
