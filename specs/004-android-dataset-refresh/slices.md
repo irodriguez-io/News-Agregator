@@ -88,7 +88,7 @@ entirely from JVM tests against fakes and a temp directory.
   populated; a test proving the displayed article survives adoption when still present and the deck
   advances when it is not; `SampleDatasetTest` still validating the real dataset bytes; the merged
   manifest carrying `INTERNET` and no other permission.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 3: the disclosure surfaces
 
