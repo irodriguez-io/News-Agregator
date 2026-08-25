@@ -15,7 +15,9 @@ import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.DatasetPhase
+import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
 import io.irodriguez.intentionalreading.ui.format.Labels
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryPeriod
 import java.time.Instant
@@ -304,8 +306,107 @@ class UiStateMapperTest {
         assertEquals(1, state.navigationCounts.readLater)
         assertEquals(1, state.navigationCounts.history)
         assertTrue(state.degraded)
-        assertEquals("Some sources were unavailable during the latest refresh.", Labels.DEGRADED_NOTICE)
+        assertEquals("Some sources were unavailable when this content was gathered.", Labels.DEGRADED_NOTICE)
         assertFalse(map(dataset = dataset(emptyList(), failedSourceCount = 0)).degraded)
+    }
+
+    @Test
+    fun `failed refresh with cached content discloses failure beside distinct content freshness`() {
+        val card = assertIs<DiscoverUiState.Card>(
+            map(
+                dataset = dataset(
+                    articles = listOf(article(1)),
+                    generatedAt = "2026-08-20T12:00:00Z",
+                ),
+                refresh = DatasetRefreshPhase.Failed,
+            ).discover,
+        )
+
+        assertEquals("Content age · 2d", card.contentFreshness)
+        assertEquals(
+            "Refresh failed. Showing the last available content.",
+            card.failedRefreshDisclosure,
+        )
+        assertTrue(card.contentFreshness != card.failedRefreshDisclosure)
+    }
+
+    @Test
+    fun `successful and in progress outcomes do not persist a Discover failure disclosure`() {
+        listOf(
+            DatasetRefreshPhase.Idle,
+            DatasetRefreshPhase.Refreshing,
+            DatasetRefreshPhase.Updated,
+            DatasetRefreshPhase.Current,
+        ).forEach { refresh ->
+            val card = assertIs<DiscoverUiState.Card>(
+                map(dataset = dataset(listOf(article(1))), refresh = refresh).discover,
+            )
+
+            assertNull(card.failedRefreshDisclosure, "Unexpected disclosure for $refresh")
+        }
+    }
+
+    @Test
+    fun `failed refresh without cached content relies on the existing Discover error panel`() {
+        val state = UiStateMapper.map(
+            phase = DatasetPhase.Error,
+            records = emptyMap(),
+            selectedCategory = null,
+            heldArticleId = null,
+            now = now,
+            zone = zone,
+            locale = Locale.US,
+            refresh = DatasetRefreshPhase.Failed,
+        )
+
+        assertNull(assertIs<DiscoverUiState.Error>(state.discover).failedRefreshDisclosure)
+    }
+
+    @Test
+    fun `pipeline degradation follows failed source count independently of client refresh failure`() {
+        val degradedPipeline = map(
+            dataset = dataset(listOf(article(1)), failedSourceCount = 1),
+            refresh = DatasetRefreshPhase.Current,
+        )
+        val failedClientRefresh = map(
+            dataset = dataset(listOf(article(1)), failedSourceCount = 0),
+            refresh = DatasetRefreshPhase.Failed,
+        )
+
+        assertTrue(degradedPipeline.degraded)
+        assertFalse(failedClientRefresh.degraded)
+    }
+
+    @Test
+    fun `known generatedAt maps relative Discover age and exact local Settings time beside the refresh outcome`() {
+        val state = map(
+            dataset = dataset(
+                articles = listOf(article(1)),
+                generatedAt = "2026-08-20T12:00:00Z",
+            ),
+            refresh = DatasetRefreshPhase.Current,
+        )
+
+        val card = assertIs<DiscoverUiState.Card>(state.discover)
+        assertEquals("Content age · 2d", card.contentFreshness)
+        assertEquals("Content generated · Aug 20, 2026, 6:00 AM", state.generatedAtLabel)
+        assertEquals("Last refresh · Already current", state.lastRefreshOutcome)
+    }
+
+    @Test
+    fun `ready Discover exposes Refresh until the in flight state replaces it with a disabled status`() {
+        val available = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(listOf(article(1)))).discover,
+        )
+        val refreshing = assertIs<DiscoverUiState.Card>(
+            map(
+                dataset = dataset(listOf(article(1))),
+                refresh = DatasetRefreshPhase.Refreshing,
+            ).discover,
+        )
+
+        assertEquals(DiscoverRefreshAffordance.AVAILABLE, available.refreshAffordance)
+        assertEquals(DiscoverRefreshAffordance.IN_PROGRESS, refreshing.refreshAffordance)
     }
 
     @Test
@@ -330,6 +431,7 @@ class UiStateMapperTest {
         records: Map<String, ArticleRecord> = emptyMap(),
         selectedCategory: Category? = null,
         heldArticleId: String? = null,
+        refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
     ) = UiStateMapper.map(
         phase = DatasetPhase.Ready(dataset),
         records = records,
@@ -338,11 +440,16 @@ class UiStateMapperTest {
         now = now,
         zone = zone,
         locale = Locale.US,
+        refresh = refresh,
     )
 
-    private fun dataset(articles: List<Article>, failedSourceCount: Int = 0): ArticleDataset = ArticleDataset(
+    private fun dataset(
+        articles: List<Article>,
+        failedSourceCount: Int = 0,
+        generatedAt: String = "2026-08-22T12:00:00Z",
+    ): ArticleDataset = ArticleDataset(
         schemaVersion = 1,
-        generatedAt = "2026-08-22T12:00:00Z",
+        generatedAt = generatedAt,
         pipeline = PipelineMetadata(
             enabledSourceCount = 2,
             successfulSourceCount = 2 - failedSourceCount,

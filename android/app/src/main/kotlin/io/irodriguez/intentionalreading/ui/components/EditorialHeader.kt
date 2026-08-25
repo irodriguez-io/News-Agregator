@@ -15,25 +15,54 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Category
+import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 
 @Composable
 fun EditorialHeader(
     availableCount: Int?,
+    contentFreshness: String?,
+    failedRefreshDisclosure: String?,
+    degraded: Boolean,
     selectedCategory: Category?,
     onCategorySelected: (Category?) -> Unit,
+    actionLabel: String?,
+    onAction: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val selectedLabel = selectedCategory?.let { category ->
-        io.irodriguez.intentionalreading.ui.format.Labels.categoryLabel(category.id)
-    } ?: io.irodriguez.intentionalreading.ui.format.Labels.categoryLabel("all")
+        Labels.categoryLabel(category.id)
+    } ?: Labels.categoryLabel("all")
     EditorialHeader(
         eyebrow = stringResource(R.string.discover_eyebrow),
         title = stringResource(R.string.discover),
         description = stringResource(R.string.discover_description),
+        actionLabel = actionLabel,
+        onAction = onAction,
         modifier = modifier,
     ) {
+        if (contentFreshness != null) {
+            Text(
+                text = contentFreshness,
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalIntentionalReadingTokens.current.muted,
+            )
+        }
+        if (failedRefreshDisclosure != null) {
+            Text(
+                text = failedRefreshDisclosure,
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalIntentionalReadingTokens.current.muted,
+            )
+        }
+        if (degraded) {
+            Text(
+                text = Labels.DEGRADED_NOTICE,
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalIntentionalReadingTokens.current.muted,
+            )
+        }
         if (availableCount != null) {
             Text(
                 text = stringResource(R.string.discover_context, availableCount, selectedLabel),
@@ -79,9 +108,10 @@ fun EditorialHeader(
             style = MaterialTheme.typography.bodyLarge,
             color = tokens.muted,
         )
-        if (actionLabel != null && onAction != null) {
+        if (actionLabel != null) {
             OutlinedButton(
-                onClick = onAction,
+                onClick = { onAction?.invoke() },
+                enabled = onAction != null,
                 border = BorderStroke(1.dp, tokens.strongBorder),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {

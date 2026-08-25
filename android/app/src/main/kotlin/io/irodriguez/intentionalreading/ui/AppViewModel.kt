@@ -3,18 +3,21 @@ package io.irodriguez.intentionalreading.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import io.irodriguez.intentionalreading.data.DatasetRefreshResult
 import io.irodriguez.intentionalreading.data.DatasetRepository
 import io.irodriguez.intentionalreading.data.LocalStateRepository
+import io.irodriguez.intentionalreading.data.local.dataset.DatasetCacheRead
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
+import io.irodriguez.intentionalreading.domain.model.ArticleDataset
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
-import io.irodriguez.intentionalreading.domain.validation.DatasetResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.state.UiStateMapper
 import java.time.Instant
 import java.time.ZoneId
@@ -47,6 +50,9 @@ enum class AppAnnouncementKind {
     OPEN_NAVIGATION_FAILED,
     RESET_FAILED,
     RESET_COMPLETE,
+    REFRESH_UPDATED,
+    REFRESH_CURRENT,
+    REFRESH_FAILED,
 }
 
 data class AppAnnouncement(
@@ -55,7 +61,8 @@ data class AppAnnouncement(
 )
 
 class AppViewModel(
-    private val loadDataset: suspend () -> DatasetResult,
+    private val readCachedDataset: suspend () -> DatasetCacheRead,
+    private val refreshDataset: suspend () -> DatasetRefreshResult,
     private val loadLocalState: suspend () -> LocalStateResult,
     private val saveLocalState: suspend (LocalState) -> LocalStateResult,
     private val resetLocalState: suspend () -> LocalStateResult,
@@ -65,6 +72,7 @@ class AppViewModel(
     private val loadDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) : ViewModel() {
     private var phase: DatasetPhase = DatasetPhase.Loading
+    private var refreshPhase: DatasetRefreshPhase = DatasetRefreshPhase.Idle
     private var localState: LocalState = LocalState.default()
     private val stateMutex = Mutex()
 
@@ -105,7 +113,8 @@ class AppViewModel(
     init {
         viewModelScope.launch(loadDispatcher) {
             restoreLocalState()
-            loadDatasetNow()
+            loadCachedDatasetNow()
+            refreshDatasetNow()
         }
     }
 
@@ -223,10 +232,8 @@ class AppViewModel(
     }
 
     fun reload() {
-        phase = DatasetPhase.Loading
-        publish()
         viewModelScope.launch(loadDispatcher) {
-            loadDatasetNow()
+            refreshDatasetNow(announceOutcome = true)
         }
     }
 
@@ -338,12 +345,60 @@ class AppViewModel(
         }
     }
 
-    private suspend fun loadDatasetNow() {
-        phase = when (val result = loadDataset()) {
-            is DatasetResult.Success -> DatasetPhase.Ready(result.dataset)
-            is DatasetResult.Failure -> DatasetPhase.Error
+    private suspend fun loadCachedDatasetNow() {
+        val cached = readCachedDataset()
+        stateMutex.withLock {
+            if (cached is DatasetCacheRead.Present) {
+                phase = DatasetPhase.Ready(cached.dataset)
+            }
+            publish()
         }
-        publish()
+    }
+
+    private suspend fun refreshDatasetNow(announceOutcome: Boolean = false) {
+        val started = stateMutex.withLock {
+            if (refreshPhase == DatasetRefreshPhase.Refreshing) {
+                false
+            } else {
+                refreshPhase = DatasetRefreshPhase.Refreshing
+                publish()
+                true
+            }
+        }
+        if (!started) return
+
+        val result = refreshDataset()
+        stateMutex.withLock {
+            val announcementKind = when (result) {
+                is DatasetRefreshResult.Updated -> {
+                    adoptDataset(result.dataset)
+                    refreshPhase = DatasetRefreshPhase.Updated
+                    AppAnnouncementKind.REFRESH_UPDATED
+                }
+                is DatasetRefreshResult.Current -> {
+                    if (phase !is DatasetPhase.Ready) {
+                        phase = DatasetPhase.Ready(result.dataset)
+                    }
+                    refreshPhase = DatasetRefreshPhase.Current
+                    AppAnnouncementKind.REFRESH_CURRENT
+                }
+                is DatasetRefreshResult.Failed -> {
+                    if (phase !is DatasetPhase.Ready) phase = DatasetPhase.Error
+                    refreshPhase = DatasetRefreshPhase.Failed
+                    AppAnnouncementKind.REFRESH_FAILED
+                }
+            }
+            publish()
+            if (announceOutcome) announce(announcementKind)
+        }
+    }
+
+    private fun adoptDataset(dataset: ArticleDataset) {
+        val displayedArticleId = (uiState.value.discover as? DiscoverUiState.Card)?.article?.id
+        _heldArticleId.value = displayedArticleId?.takeIf { candidate ->
+            dataset.articles.any { article -> article.id == candidate }
+        }
+        phase = DatasetPhase.Ready(dataset)
     }
 
     private fun adoptPersistedState(state: LocalState) {
@@ -381,6 +436,7 @@ class AppViewModel(
         now = nowProvider(),
         zone = zoneProvider(),
         locale = localeProvider(),
+        refresh = refreshPhase,
     )
 
     class Factory(
@@ -390,7 +446,8 @@ class AppViewModel(
         private val zoneProvider: () -> ZoneId = ZoneId::systemDefault,
         private val localeProvider: () -> Locale = Locale::getDefault,
     ) : ViewModelProvider.Factory {
-        private val loadDataset: suspend () -> DatasetResult = datasetRepository::load
+        private val readCachedDataset: suspend () -> DatasetCacheRead = datasetRepository::readCache
+        private val refreshDataset: suspend () -> DatasetRefreshResult = datasetRepository::refresh
         private val loadLocalState: suspend () -> LocalStateResult = localStateRepository::load
         private val saveLocalState: suspend (LocalState) -> LocalStateResult = localStateRepository::save
         private val resetLocalState: suspend () -> LocalStateResult = localStateRepository::reset
@@ -399,7 +456,8 @@ class AppViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(AppViewModel::class.java))
             return AppViewModel(
-                loadDataset = loadDataset,
+                readCachedDataset = readCachedDataset,
+                refreshDataset = refreshDataset,
                 loadLocalState = loadLocalState,
                 saveLocalState = saveLocalState,
                 resetLocalState = resetLocalState,

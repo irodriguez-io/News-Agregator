@@ -18,22 +18,23 @@ printf 'sdk.dir=%s\n' "$HOME/Library/Android/sdk" > local.properties
 
 `local.properties` is machine-specific and ignored by Git.
 
-## Bundled dataset
+## Test fixture provenance
 
-The app ships a snapshot of the public production dataset from
+The unit suite uses a frozen snapshot of the public production dataset from
 `https://irodriguez.io/News-Agregator/data/articles.json`.
 
-The committed snapshot was fetched on 2026-08-22. It reports `generatedAt` `2026-08-22T12:59:34Z`, and
+The committed fixture is not shipped in the APK. It was fetched on 2026-08-22, reports `generatedAt`
+`2026-08-22T12:59:34Z`, and
 the response ETag was `"6a899d51-29708"`. Its SHA-256 is
 `235e4df614b66108d1a471dddfa0b3ce06d838ac058d8570d440a5d7ac93f27f`.
 
 Refresh it from the repository root without editing or trimming the response:
 
 ```sh
-curl -fsS -o android/app/src/main/assets/sample_articles.json \
+curl -fsS -o android/app/src/test/resources/sample_articles.json \
   https://irodriguez.io/News-Agregator/data/articles.json
 ```
 
 After a refresh, update this provenance and the snapshot profile in
-`specs/002-android-client-foundation/evidence.md`, then run both Android gates. The unit suite reads the
-same bytes that ship in the APK and rejects invalid UTF-8 or a contract violation.
+`specs/002-android-client-foundation/evidence.md`, then run both Android gates. The unit suite rejects
+invalid UTF-8 or a contract violation in the frozen fixture.

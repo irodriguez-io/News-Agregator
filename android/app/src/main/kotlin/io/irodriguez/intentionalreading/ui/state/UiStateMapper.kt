@@ -7,9 +7,11 @@ import io.irodriguez.intentionalreading.domain.state.DiscoverDeck
 import io.irodriguez.intentionalreading.ui.AggregateUiState
 import io.irodriguez.intentionalreading.ui.AppUiState
 import io.irodriguez.intentionalreading.ui.DatasetPhase
+import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
 import io.irodriguez.intentionalreading.ui.NavigationCounts
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.format.RelativeTime
+import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryGroupUiState
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryPeriod
@@ -30,13 +32,36 @@ object UiStateMapper {
         now: Instant,
         zone: ZoneId,
         locale: Locale,
-    ): AppUiState = AppUiState(
-        discover = discover(phase, records, selectedCategory, heldArticleId, now, zone, locale),
-        readLater = readLater(records, now, zone, locale),
-        history = history(records, now, zone, locale),
-        navigationCounts = navigationCounts(records),
-        degraded = phase is DatasetPhase.Ready && phase.dataset.pipeline.failedSourceCount > 0,
-    )
+        refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
+    ): AppUiState {
+        val generatedAt = (phase as? DatasetPhase.Ready)?.dataset?.generatedAt?.let(Instant::parse)
+        val contentFreshness = generatedAt?.let { value ->
+            Labels.contentFreshness(RelativeTime.relativeDate(value, now, zone, locale))
+        }
+        return AppUiState(
+            discover = discover(
+                phase = phase,
+                records = records,
+                selectedCategory = selectedCategory,
+                heldArticleId = heldArticleId,
+                now = now,
+                zone = zone,
+                locale = locale,
+                contentFreshness = contentFreshness,
+                failedRefreshDisclosure = failedRefreshDisclosure(phase, refresh),
+                refreshAffordance = refreshAffordance(phase, refresh),
+            ),
+            readLater = readLater(records, now, zone, locale),
+            history = history(records, now, zone, locale),
+            navigationCounts = navigationCounts(records),
+            degraded = phase is DatasetPhase.Ready && phase.dataset.pipeline.failedSourceCount > 0,
+            generatedAtLabel = generatedAt?.let { value ->
+                Labels.generatedAt(RelativeTime.localDateTime(value, zone, locale))
+            } ?: Labels.CONTENT_GENERATION_UNAVAILABLE,
+            lastRefreshOutcome = refreshOutcome(refresh),
+            refresh = refresh,
+        )
+    }
 
     fun readLater(
         records: Map<String, ArticleRecord>,
@@ -99,12 +124,23 @@ object UiStateMapper {
         now: Instant,
         zone: ZoneId,
         locale: Locale,
+        contentFreshness: String?,
+        failedRefreshDisclosure: String?,
+        refreshAffordance: DiscoverRefreshAffordance,
     ): DiscoverUiState = when (phase) {
-        DatasetPhase.Loading -> DiscoverUiState.Loading(Labels.DISCOVER_LOADING_COPY)
+        DatasetPhase.Loading -> DiscoverUiState.Loading(
+            copy = Labels.DISCOVER_LOADING_COPY,
+            contentFreshness = contentFreshness,
+            failedRefreshDisclosure = failedRefreshDisclosure,
+            refreshAffordance = refreshAffordance,
+        )
         DatasetPhase.Error -> DiscoverUiState.Error(
             title = Labels.DISCOVER_ERROR_TITLE,
             copy = Labels.DISCOVER_ERROR_COPY,
             actionLabel = Labels.DISCOVER_ERROR_ACTION,
+            contentFreshness = contentFreshness,
+            failedRefreshDisclosure = failedRefreshDisclosure,
+            refreshAffordance = refreshAffordance,
         )
         is DatasetPhase.Ready -> {
             val deck = DiscoverDeck.build(
@@ -119,6 +155,9 @@ object UiStateMapper {
                     title = Labels.DISCOVER_EMPTY_TITLE,
                     copy = Labels.DISCOVER_EMPTY_COPY,
                     actionLabel = Labels.DISCOVER_EMPTY_ACTION,
+                    contentFreshness = contentFreshness,
+                    failedRefreshDisclosure = failedRefreshDisclosure,
+                    refreshAffordance = refreshAffordance,
                 )
             } else {
                 DiscoverUiState.Card(
@@ -127,9 +166,36 @@ object UiStateMapper {
                     availableCount = deck.availableCount,
                     remainingCount = deck.remainingCount,
                     isOpened = records[article.id]?.status == ArticleStatus.OPENED,
+                    contentFreshness = contentFreshness,
+                    failedRefreshDisclosure = failedRefreshDisclosure,
+                    refreshAffordance = refreshAffordance,
                 )
             }
         }
+    }
+
+    private fun refreshAffordance(
+        phase: DatasetPhase,
+        refresh: DatasetRefreshPhase,
+    ): DiscoverRefreshAffordance = when {
+        refresh == DatasetRefreshPhase.Refreshing -> DiscoverRefreshAffordance.IN_PROGRESS
+        phase is DatasetPhase.Ready -> DiscoverRefreshAffordance.AVAILABLE
+        else -> DiscoverRefreshAffordance.HIDDEN
+    }
+
+    private fun failedRefreshDisclosure(
+        phase: DatasetPhase,
+        refresh: DatasetRefreshPhase,
+    ): String? = Labels.DISCOVER_REFRESH_FAILED.takeIf {
+        phase is DatasetPhase.Ready && refresh == DatasetRefreshPhase.Failed
+    }
+
+    private fun refreshOutcome(refresh: DatasetRefreshPhase): String = when (refresh) {
+        DatasetRefreshPhase.Idle -> Labels.LAST_REFRESH_IDLE
+        DatasetRefreshPhase.Refreshing -> Labels.LAST_REFRESH_REFRESHING
+        DatasetRefreshPhase.Updated -> Labels.LAST_REFRESH_UPDATED
+        DatasetRefreshPhase.Current -> Labels.LAST_REFRESH_CURRENT
+        DatasetRefreshPhase.Failed -> Labels.LAST_REFRESH_FAILED
     }
 
     private fun aggregate(records: List<ArticleRecord>): AggregateUiState {

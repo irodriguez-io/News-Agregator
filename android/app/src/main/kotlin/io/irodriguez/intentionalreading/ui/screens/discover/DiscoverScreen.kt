@@ -17,7 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
@@ -40,6 +42,14 @@ fun DiscoverScreen(
     modifier: Modifier = Modifier,
 ) {
     val cardState = state as? DiscoverUiState.Card
+    val refreshActionLabel = when (state.refreshAffordance) {
+        DiscoverRefreshAffordance.HIDDEN -> null
+        DiscoverRefreshAffordance.AVAILABLE -> stringResource(R.string.refresh_content)
+        DiscoverRefreshAffordance.IN_PROGRESS -> stringResource(R.string.refreshing_content)
+    }
+    val onRefreshAction = onRetry.takeIf {
+        state.refreshAffordance == DiscoverRefreshAffordance.AVAILABLE
+    }
     val scrollState = rememberScrollState()
     LaunchedEffect(selectedCategory, cardState?.article?.id, state::class) {
         scrollState.scrollTo(0)
@@ -53,8 +63,13 @@ fun DiscoverScreen(
     ) {
         EditorialHeader(
             availableCount = cardState?.availableCount,
+            contentFreshness = state.contentFreshness,
+            failedRefreshDisclosure = state.failedRefreshDisclosure,
+            degraded = degraded,
             selectedCategory = selectedCategory,
             onCategorySelected = onCategorySelected,
+            actionLabel = refreshActionLabel,
+            onAction = onRefreshAction,
         )
 
         when (state) {
@@ -63,7 +78,9 @@ fun DiscoverScreen(
                 title = state.title,
                 copy = state.copy,
                 actionLabel = state.actionLabel,
-                onAction = onRetry,
+                onAction = onRetry.takeUnless {
+                    state.refreshAffordance == DiscoverRefreshAffordance.IN_PROGRESS
+                },
             )
             is DiscoverUiState.Empty -> StatePanel(
                 title = state.title,
@@ -73,7 +90,6 @@ fun DiscoverScreen(
             )
             is DiscoverUiState.Card -> CardBody(
                 state = state,
-                degraded = degraded,
                 onDismiss = onDismiss,
                 onReadArticle = onReadArticle,
                 onSave = onSave,
@@ -108,7 +124,7 @@ private fun StatePanel(
     title: String,
     copy: String,
     actionLabel: String,
-    onAction: () -> Unit,
+    onAction: (() -> Unit)?,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
     Surface(
@@ -126,7 +142,8 @@ private fun StatePanel(
             Text(text = title, style = MaterialTheme.typography.headlineLarge)
             Text(text = copy, style = MaterialTheme.typography.bodyLarge, color = tokens.muted)
             OutlinedButton(
-                onClick = onAction,
+                onClick = { onAction?.invoke() },
+                enabled = onAction != null,
                 border = BorderStroke(1.dp, tokens.strongBorder),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {
@@ -139,7 +156,6 @@ private fun StatePanel(
 @Composable
 private fun CardBody(
     state: DiscoverUiState.Card,
-    degraded: Boolean,
     onDismiss: (Article) -> Unit,
     onReadArticle: (Article) -> Unit,
     onSave: (Article) -> Unit,
@@ -154,13 +170,6 @@ private fun CardBody(
             onSave = onSave,
             onMarkRead = onMarkRead,
         )
-        if (degraded) {
-            Text(
-                text = Labels.DEGRADED_NOTICE,
-                style = MaterialTheme.typography.bodyLarge,
-                color = tokens.muted,
-            )
-        }
         Labels.remainingChoices(state.remainingCount)?.let { sideNote ->
             Text(
                 text = sideNote,

@@ -96,6 +96,9 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     AppAnnouncementKind.OPEN_NAVIGATION_FAILED -> R.string.open_navigation_failed
                     AppAnnouncementKind.RESET_FAILED -> R.string.reset_failed
                     AppAnnouncementKind.RESET_COMPLETE -> R.string.reset_complete
+                    AppAnnouncementKind.REFRESH_UPDATED -> R.string.refresh_updated
+                    AppAnnouncementKind.REFRESH_CURRENT -> R.string.refresh_current
+                    AppAnnouncementKind.REFRESH_FAILED -> R.string.refresh_failed
                 },
             )
         }
@@ -224,6 +227,8 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 appearance = appearance,
                 resetInProgress = resetInProgress,
                 statusMessage = announcementText,
+                generatedAtLabel = uiState.generatedAtLabel,
+                lastRefreshOutcome = uiState.lastRefreshOutcome,
                 onAppearanceSelected = { selectedAppearance ->
                     viewModel.launchAppearanceChange(selectedAppearance)
                 },
