@@ -29,7 +29,7 @@ class DatasetCache internal constructor(
 
     fun read(): DatasetCacheRead = when (val payload = payloadFile.read()) {
         DatasetCacheFileRead.Absent -> DatasetCacheRead.Absent
-        DatasetCacheFileRead.Failed -> DatasetCacheRead.Failed
+        DatasetCacheFileRead.Failed -> DatasetCacheRead.Absent
         is DatasetCacheFileRead.Present -> when (val validated = validator.validate(payload.bytes)) {
             is DatasetResult.Failure -> DatasetCacheRead.Absent
             is DatasetResult.Success -> DatasetCacheRead.Present(
