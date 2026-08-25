@@ -6,6 +6,10 @@ item; none of them is approved scope, and none of them binds `docs/v1/**`.
 
 Item numbers below are indicative. Numbers are allocated at design time, not here.
 
+`backlog.md` tracks the whole queue — shipped items, everything still deferred, and what was
+parked on purpose. The two notes here are the long-form detail behind two of its entries (005 and
+009); the backlog carries the one-line version and points back at this file.
+
 ---
 
 ## The item that ports preference learning
