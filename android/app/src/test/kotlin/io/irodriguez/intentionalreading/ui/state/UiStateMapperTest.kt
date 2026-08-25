@@ -306,8 +306,75 @@ class UiStateMapperTest {
         assertEquals(1, state.navigationCounts.readLater)
         assertEquals(1, state.navigationCounts.history)
         assertTrue(state.degraded)
-        assertEquals("Some sources were unavailable during the latest refresh.", Labels.DEGRADED_NOTICE)
+        assertEquals("Some sources were unavailable when this content was gathered.", Labels.DEGRADED_NOTICE)
         assertFalse(map(dataset = dataset(emptyList(), failedSourceCount = 0)).degraded)
+    }
+
+    @Test
+    fun `failed refresh with cached content discloses failure beside distinct content freshness`() {
+        val card = assertIs<DiscoverUiState.Card>(
+            map(
+                dataset = dataset(
+                    articles = listOf(article(1)),
+                    generatedAt = "2026-08-20T12:00:00Z",
+                ),
+                refresh = DatasetRefreshPhase.Failed,
+            ).discover,
+        )
+
+        assertEquals("Content age · 2d", card.contentFreshness)
+        assertEquals(
+            "Refresh failed. Showing the last available content.",
+            card.failedRefreshDisclosure,
+        )
+        assertTrue(card.contentFreshness != card.failedRefreshDisclosure)
+    }
+
+    @Test
+    fun `successful and in progress outcomes do not persist a Discover failure disclosure`() {
+        listOf(
+            DatasetRefreshPhase.Idle,
+            DatasetRefreshPhase.Refreshing,
+            DatasetRefreshPhase.Updated,
+            DatasetRefreshPhase.Current,
+        ).forEach { refresh ->
+            val card = assertIs<DiscoverUiState.Card>(
+                map(dataset = dataset(listOf(article(1))), refresh = refresh).discover,
+            )
+
+            assertNull(card.failedRefreshDisclosure, "Unexpected disclosure for $refresh")
+        }
+    }
+
+    @Test
+    fun `failed refresh without cached content relies on the existing Discover error panel`() {
+        val state = UiStateMapper.map(
+            phase = DatasetPhase.Error,
+            records = emptyMap(),
+            selectedCategory = null,
+            heldArticleId = null,
+            now = now,
+            zone = zone,
+            locale = Locale.US,
+            refresh = DatasetRefreshPhase.Failed,
+        )
+
+        assertNull(assertIs<DiscoverUiState.Error>(state.discover).failedRefreshDisclosure)
+    }
+
+    @Test
+    fun `pipeline degradation follows failed source count independently of client refresh failure`() {
+        val degradedPipeline = map(
+            dataset = dataset(listOf(article(1)), failedSourceCount = 1),
+            refresh = DatasetRefreshPhase.Current,
+        )
+        val failedClientRefresh = map(
+            dataset = dataset(listOf(article(1)), failedSourceCount = 0),
+            refresh = DatasetRefreshPhase.Failed,
+        )
+
+        assertTrue(degradedPipeline.degraded)
+        assertFalse(failedClientRefresh.degraded)
     }
 
     @Test
