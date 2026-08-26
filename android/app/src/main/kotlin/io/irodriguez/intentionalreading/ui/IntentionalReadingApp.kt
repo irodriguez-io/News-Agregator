@@ -99,6 +99,8 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     AppAnnouncementKind.REFRESH_UPDATED -> R.string.refresh_updated
                     AppAnnouncementKind.REFRESH_CURRENT -> R.string.refresh_current
                     AppAnnouncementKind.REFRESH_FAILED -> R.string.refresh_failed
+                    AppAnnouncementKind.UNDO_COMPLETED -> R.string.undo_completed
+                    AppAnnouncementKind.UNDO_FAILED -> R.string.undo_failed
                 },
             )
         }
