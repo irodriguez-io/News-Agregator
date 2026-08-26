@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         val factory = AppViewModel.Factory(
             datasetRepository = container.datasetRepository,
             localStateRepository = container.localStateRepository,
+            applyNightMode = container.applyNightMode,
         )
         setContent {
             val appViewModel: AppViewModel = viewModel(factory = factory)

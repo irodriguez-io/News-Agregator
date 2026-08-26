@@ -70,10 +70,12 @@ class AppViewModel(
     private val zoneProvider: () -> ZoneId,
     private val localeProvider: () -> Locale,
     private val loadDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
+    private val applyNightMode: (Appearance) -> Unit = {},
 ) : ViewModel() {
     private var phase: DatasetPhase = DatasetPhase.Loading
     private var refreshPhase: DatasetRefreshPhase = DatasetRefreshPhase.Idle
     private var localState: LocalState = LocalState.default()
+    private var lastAppliedAppearance: Appearance? = null
     private val stateMutex = Mutex()
 
     private val _destination = MutableStateFlow(Destination.DISCOVER)
@@ -403,7 +405,12 @@ class AppViewModel(
 
     private fun adoptPersistedState(state: LocalState) {
         localState = state
-        _appearance.value = state.settings.appearance
+        val appearance = state.settings.appearance
+        if (lastAppliedAppearance != appearance) {
+            applyNightMode(appearance)
+            lastAppliedAppearance = appearance
+        }
+        _appearance.value = appearance
         _selectedCategory.value = state.session.lastCategory
     }
 
@@ -445,6 +452,7 @@ class AppViewModel(
         private val nowProvider: () -> Instant = Instant::now,
         private val zoneProvider: () -> ZoneId = ZoneId::systemDefault,
         private val localeProvider: () -> Locale = Locale::getDefault,
+        private val applyNightMode: (Appearance) -> Unit = {},
     ) : ViewModelProvider.Factory {
         private val readCachedDataset: suspend () -> DatasetCacheRead = datasetRepository::readCache
         private val refreshDataset: suspend () -> DatasetRefreshResult = datasetRepository::refresh
@@ -464,6 +472,7 @@ class AppViewModel(
                 nowProvider = nowProvider,
                 zoneProvider = zoneProvider,
                 localeProvider = localeProvider,
+                applyNightMode = applyNightMode,
             ) as T
         }
     }
