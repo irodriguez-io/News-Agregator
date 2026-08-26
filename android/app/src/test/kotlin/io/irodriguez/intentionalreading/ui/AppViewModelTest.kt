@@ -35,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
@@ -1079,6 +1080,41 @@ class AppViewModelTest {
         assertTrue(completed.await().persisted)
         assertTrue(viewModel.uiState.value.undoAvailable)
         assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoOffer?.message)
+    }
+
+    @Test
+    fun `Undo through the launcher completes on the view model scope`() = runBlocking {
+        // Given an undo-eligible commit and an Undo write that is still in progress
+        val target = article(1)
+        val enteredUndoWrite = CompletableDeferred<Unit>()
+        val releaseUndoWrite = CompletableDeferred<Unit>()
+        val completed = CompletableDeferred<ArticleActionResult>()
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        assertTrue(viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true).persisted)
+        store.saveBehavior = { state ->
+            enteredUndoWrite.complete(Unit)
+            releaseUndoWrite.await()
+            success(state)
+        }
+        val launchingJob = Job()
+        val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
+
+        // When the calling scope leaves while Undo is persisting
+        val caller = launchingScope.launch {
+            viewModel.launchUndo(onComplete = completed::complete)
+            awaitCancellation()
+        }
+        enteredUndoWrite.await()
+        launchingJob.cancel()
+        caller.join()
+        releaseUndoWrite.complete(Unit)
+        val result = completed.await()
+
+        // Then the ViewModel-owned work adopts the persisted result and completes its callback
+        assertTrue(result.persisted)
+        assertFalse(target.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
+        assertFalse(viewModel.uiState.value.undoAvailable)
     }
 
     @Test
