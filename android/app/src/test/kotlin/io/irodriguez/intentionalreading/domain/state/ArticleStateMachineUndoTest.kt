@@ -188,6 +188,28 @@ class ArticleStateMachineUndoTest {
     }
 
     @Test
+    fun `reverse success owns nullable record shape while forward applied stays non-null`() {
+        // Given a forward save whose resulting record exists and whose prior record did not
+        val save = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                emptyMap(),
+                article(),
+                ArticleAction.SAVE,
+                actionTime,
+                undoable = true,
+            ),
+        )
+
+        // When the save is reversed
+        val reversed = ArticleStateMachine.reverse(save.records, save.undoRecord)
+
+        // Then forward Applied is non-null by type and reverse has its own nullable-record success type
+        assertEquals("non-null", forwardRecordType(save.record))
+        assertEquals("Reverted", reversed.javaClass.simpleName)
+        assertNull(reversed.javaClass.getMethod("getRecord").invoke(reversed))
+    }
+
+    @Test
     fun `undoing a dismiss restores the exact record it replaced`() {
         // Given an undo-eligible dismiss of a fully populated opened record
         val beforeDismiss = openedRecord()
@@ -351,6 +373,12 @@ class ArticleStateMachineUndoTest {
         contentType = ArticleContentType(ContentTypeId.STANDARDS_UPDATE, "Standards Update"),
         score = ArticleScore(91, 50, 20, 15, 5, 1),
     )
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun forwardRecordType(record: ArticleRecord): String = "non-null"
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun forwardRecordType(record: Any?): String = "nullable"
 
     private companion object {
         val firstSeenAt: Instant = Instant.parse("2026-08-20T10:00:00Z")
