@@ -9,6 +9,7 @@ enum class LocalStateErrorCode {
     READ_FAILED,
     WRITE_FAILED,
     RECOVERY_REQUIRED,
+    IMPORT_TOO_LARGE,
 }
 
 enum class LocalStateSource {
