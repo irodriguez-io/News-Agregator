@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Appearance
+import io.irodriguez.intentionalreading.ui.components.ImportConfirmation
 import io.irodriguez.intentionalreading.ui.components.LiveStatusMessage
 import io.irodriguez.intentionalreading.ui.components.ResetConfirmation
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
@@ -60,7 +61,15 @@ fun SettingsSheet(
     statusMessage: String?,
     generatedAtLabel: String,
     lastRefreshOutcome: String,
+    importFileName: String?,
+    importInProgress: Boolean,
+    importTooLarge: Boolean,
+    importUnreadable: Boolean,
     onAppearanceSelected: (Appearance) -> Unit,
+    onExport: () -> Unit,
+    onSelectImport: () -> Unit,
+    onCancelImport: () -> Unit,
+    onConfirmImport: () -> Unit,
     onReset: (onComplete: (Boolean) -> Unit) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -220,6 +229,58 @@ fun SettingsSheet(
                     ) {
                         Text(stringResource(R.string.reset_all_data))
                     }
+                }
+                Text(
+                    text = stringResource(R.string.local_data_import_copy),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = tokens.muted,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = onExport,
+                        enabled = !importInProgress,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = tokens.surface.copy(alpha = 0f),
+                            contentColor = tokens.fg,
+                        ),
+                        border = BorderStroke(1.dp, tokens.strongBorder),
+                    ) {
+                        Text(stringResource(R.string.export_local_data))
+                    }
+                    OutlinedButton(
+                        onClick = onSelectImport,
+                        enabled = !importInProgress,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = tokens.surface.copy(alpha = 0f),
+                            contentColor = tokens.fg,
+                        ),
+                        border = BorderStroke(1.dp, tokens.strongBorder),
+                    ) {
+                        Text(stringResource(R.string.import_local_data))
+                    }
+                }
+                if (importTooLarge) {
+                    LiveStatusMessage(
+                        message = stringResource(R.string.local_data_import_too_large),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (importUnreadable) {
+                    LiveStatusMessage(
+                        message = stringResource(R.string.local_data_import_unreadable),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (importFileName != null) {
+                    ImportConfirmation(
+                        fileName = importFileName,
+                        importInProgress = importInProgress,
+                        onCancel = onCancelImport,
+                        onConfirm = onConfirmImport,
+                    )
                 }
             }
 
