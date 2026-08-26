@@ -327,7 +327,7 @@ export function renderDiscover(viewModel = {}, handlers = {}, target = "#app-vie
   if (remaining !== null && remaining > 1) {
     content.append(element("p", {
       className: "discover-side-note",
-      text: `${Math.trunc(remaining - 1)} more ${remaining - 1 === 1 ? "choice" : "choices"} wait quietly behind this one.`,
+      text: `${Math.trunc(remaining - 1)} more ${remaining - 1 === 1 ? "choice waits" : "choices wait"} quietly behind this one.`,
     }));
   }
   layout.append(content);

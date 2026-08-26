@@ -142,9 +142,10 @@ export function validateArticle(candidate, path = "article") {
   const excerpt = expectString(candidate.excerpt, `${path}.excerpt`, { max: 800 });
   const readingTimeMinutes = candidate.readingTimeMinutes === null
     ? null
-    : expectInteger(candidate.readingTimeMinutes, `${path}.readingTimeMinutes`, 1);
+    : expectInteger(candidate.readingTimeMinutes, `${path}.readingTimeMinutes`, 2);
 
   if (!Array.isArray(candidate.tags)) fail(`${path}.tags`, "must be an array");
+  if (candidate.tags.length > 6) fail(`${path}.tags`, "is invalid");
   const seenTags = new Set();
   const tags = candidate.tags.map((tag, index) => {
     const tagPath = `${path}.tags[${index}]`;
