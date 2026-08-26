@@ -17,6 +17,7 @@ import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.AppUiState
 import io.irodriguez.intentionalreading.ui.DatasetPhase
 import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
+import io.irodriguez.intentionalreading.ui.PendingUndoOffer
 import io.irodriguez.intentionalreading.ui.PendingUndoMessage
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
@@ -444,24 +445,32 @@ class UiStateMapperTest {
     }
 
     @Test
-    fun `undo availability and pending message reflect the in-memory slot`() {
-        // Given no pending undo action
-        val unavailable = mapWithUndoAction(null)
+    fun `undo availability and pending offer reflect separate in-memory state`() {
+        // Given no pending undo action or offer
+        val unavailable = mapWithUndoState(null, null)
 
-        // When the mapper receives each eligible action from the slot
-        val saved = mapWithUndoAction(ArticleAction.SAVE)
-        val dismissed = mapWithUndoAction(ArticleAction.DISMISS)
+        // When the mapper receives eligible slot actions and identified offers
+        val savedOffer = PendingUndoOffer(7L, PendingUndoMessage.SAVED)
+        val dismissedOffer = PendingUndoOffer(8L, PendingUndoMessage.DISMISSED)
+        val saved = mapWithUndoState(ArticleAction.SAVE, savedOffer)
+        val dismissed = mapWithUndoState(ArticleAction.DISMISS, dismissedOffer)
+        val acknowledged = mapWithUndoState(ArticleAction.SAVE, null)
 
-        // Then availability and the pending message are exposed for the rendering item
+        // Then slot availability and offer presentation remain independently observable
         assertFalse(unavailable.undoAvailable)
-        assertNull(unavailable.pendingUndoMessage)
+        assertNull(unavailable.pendingUndoOffer)
         assertTrue(saved.undoAvailable)
-        assertEquals(PendingUndoMessage.SAVED, saved.pendingUndoMessage)
+        assertEquals(savedOffer, saved.pendingUndoOffer)
         assertTrue(dismissed.undoAvailable)
-        assertEquals(PendingUndoMessage.DISMISSED, dismissed.pendingUndoMessage)
+        assertEquals(dismissedOffer, dismissed.pendingUndoOffer)
+        assertTrue(acknowledged.undoAvailable)
+        assertNull(acknowledged.pendingUndoOffer)
     }
 
-    private fun mapWithUndoAction(action: ArticleAction?): AppUiState = UiStateMapper.map(
+    private fun mapWithUndoState(
+        action: ArticleAction?,
+        offer: PendingUndoOffer?,
+    ): AppUiState = UiStateMapper.map(
         phase = DatasetPhase.Ready(dataset(listOf(article(1)))),
         records = emptyMap(),
         selectedCategory = null,
@@ -471,6 +480,7 @@ class UiStateMapperTest {
         locale = Locale.US,
         refresh = DatasetRefreshPhase.Idle,
         undoAction = action,
+        pendingUndoOffer = offer,
     )
 
     private fun map(
