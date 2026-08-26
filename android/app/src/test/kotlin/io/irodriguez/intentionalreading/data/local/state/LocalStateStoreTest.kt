@@ -22,6 +22,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class LocalStateStoreTest {
@@ -215,7 +216,8 @@ class LocalStateStoreTest {
         val store = LocalStateStore(directory)
 
         // When
-        val exported = store.exportState(state)
+        val result: LocalStateResult = store.exportState(state)
+        val exported = assertNotNull(assertIs<LocalStateResult.Success>(result).encodedBytes)
 
         // Then
         assertEquals(
@@ -233,14 +235,28 @@ class LocalStateStoreTest {
         val store = LocalStateStore(directory)
 
         // When
-        val imported = assertIs<LocalStateResult.Success>(
-            store.importState(store.exportState(original)),
+        val exported = assertNotNull(
+            assertIs<LocalStateResult.Success>(store.exportState(original)).encodedBytes,
         )
+        val imported = assertIs<LocalStateResult.Success>(store.importState(exported))
         val loaded = assertIs<LocalStateResult.Success>(store.load())
 
         // Then
         assertEquals(original, imported.state)
         assertEquals(original, loaded.state)
+    }
+
+    @Test
+    fun `export validation failures return results instead of crossing the store boundary`() {
+        val invalidState = validState().copy(schemaVersion = 2)
+        val store = LocalStateStore(directory)
+
+        val result: LocalStateResult = store.exportState(invalidState)
+
+        assertEquals(
+            LocalStateErrorCode.UNSUPPORTED_SCHEMA,
+            assertIs<LocalStateResult.Failure>(result).code,
+        )
     }
 
     @Test
@@ -251,8 +267,14 @@ class LocalStateStoreTest {
         val oversizedCandidate = exactLimitCandidate + byteArrayOf(' '.code.toByte())
         val store = LocalStateStore(directory)
         assertEquals(LocalStateStore.MAX_IMPORT_BYTES, exactLimitCandidate.size)
-        assertIs<LocalStateResult.Success>(store.importState(exactLimitCandidate))
+        val imported = assertIs<LocalStateResult.Success>(store.importState(exactLimitCandidate))
         val storedAtLimit = stateFile.readBytes()
+        val canonicalBytes = assertNotNull(
+            assertIs<LocalStateResult.Success>(store.exportState(imported.state)).encodedBytes,
+        )
+        assertEquals(canonicalBytes.size, storedAtLimit.size)
+        assertTrue(storedAtLimit.size < LocalStateStore.MAX_IMPORT_BYTES)
+        assertContentEquals(canonicalBytes, storedAtLimit)
 
         // When
         val refused = assertIs<LocalStateResult.Failure>(store.importState(oversizedCandidate))
