@@ -113,19 +113,39 @@ On API 31 and above the app now persists its night mode with the platform. A rea
 non-System appearance stored before this item shipped gets one reconciling call on the first launch of
 the new build.
 
+## Walkthrough — performed 2026-08-25 against merged `main`
+
+Driven by the orchestrator over `adb` on the `Pixel_10` API 37 emulator (`execution-model.md` §6),
+against the APK built from merged `main` (`92223cd`). `ffmpeg` was unavailable, so the launch
+transition was stretched by setting `window_animation_scale`, `transition_animation_scale` and
+`animator_duration_scale` to 10, making the pre-Compose frame capturable with plain `screencap`. All
+three were restored to 1 afterwards.
+
+| Check | Result |
+|---|---|
+| Scenario 1 — stored Dark, system **Light**, cold start | **Pass.** The window expands from the launcher icon already dark and stays dark while content fades in. No light frame at any point. |
+| Scenario 2 — stored Light, system **Dark**, cold start | **Pass.** The window emerges light over the dark launcher wallpaper. No dark frame. |
+| Scenario 3 — stored System | **Pass.** Follows the device in both directions. |
+| Scenario 4 — change takes effect next cold start | **Pass.** Each appearance change followed by force-stop and cold start painted the new colour. |
+| `spec.md` §5 step 5 — recreation loop | **Pass, and the D2 fallback is not needed.** Two consecutive cold starts with an unchanged appearance produced exactly two `Displayed` events and identical `TotalTime` of 383 ms, with no relaunch or configuration-change entries for the package in `logcat`. A set-to-same-value produces no configuration change, so the startup reconcile stays. |
+| `spec.md` §5 step 6 — system toggle while open | **Pass.** Toggling the system theme with the app open re-themes it live and preserves state; unchanged from 004. |
+
+**The mechanism was also confirmed directly rather than only by its effect.** With the system in Light
+and the stored appearance Dark, `dumpsys activity` reported the package's
+`RequestedOverrideConfiguration` as `?uimode night` while `dumpsys uimode` reported the system as
+`mNightMode=1 (no)`. The per-application override is live and is precisely what resolves
+`@color/launch_background` when the platform inflates the launch window on the next cold start.
+
+**Owner visual pass — signed off 2026-08-25.** The launch frame reads as seamless, not merely as the
+right colour. That was the one judgment `adb` could not make, and it closes the last checkpoint
+`waves/wave-a.md` §Owner checkpoints held open for this item.
+
 ## Outstanding
 
-- **Scenarios 1–4 are not yet verified.** They are emulator-only by construction — no JVM test observes a
-  pre-Compose frame — and `execution-model.md` §6 batches walkthroughs at the end of a wave against
-  merged `main`. So this item merges on its JVM half and the walkthrough is a **wave-close** gate rather
-  than a merge gate. `slices.md` says the item is not shippable until the walkthrough is recorded; that
-  is satisfied at wave sign-off, not at this merge, and the wave is not done until it is.
-- **The recreation-loop check** (`spec.md` §5 step 5) is part of that walkthrough. If a second cold start
-  with an unchanged appearance visibly restarts the app, `design.md` D2's pre-authorised fallback
-  applies — drop the startup reconcile, keep the writes — and it is recorded as a taken fallback rather
-  than a defect.
-- **The owner's visual pass** on whether the launch frame reads as seamless. `adb` cannot make that
-  judgment.
+- **Scenarios 1–4 were emulator-only by construction** — no JVM test observes a pre-Compose frame — so
+  this item merged on its JVM half and the walkthrough ran at wave close against merged `main`, per
+  `execution-model.md` §6. `slices.md` says the item is not shippable until the walkthrough is recorded;
+  that is now satisfied above.
 - **The API 26–30 gap stands**, as `spec.md` §6 states plainly: a reader whose stored appearance
   contradicts the system theme still gets one wrong launch frame there. Closing it needed the dependency
   the owner declined.

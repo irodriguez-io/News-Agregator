@@ -131,6 +131,19 @@ previously accepted. Neither can be produced by this pipeline, so no dataset the
 affected. A hand-edited or substituted `articles.json` that previously loaded may now be refused, which
 is the intended tightening.
 
+## Walkthrough — incidental, performed 2026-08-25 against merged `main`
+
+`spec.md` §5 states this item has no owner walkthrough: the validator scenarios are unreachable from the
+interface by construction, and the copy change is one word held by two exact-string assertions. Wave A's
+batched walkthrough covered what it could, on the `Pixel_10` API 37 emulator:
+
+- The **plural** side note rendered correctly on Discover: *"204 more choices wait quietly behind this
+  one."* — the branch this item deliberately did not touch.
+- The **singular** string could not be reached by hand: it needs exactly two eligible articles, and the
+  live dataset had 205. Verified in the shipped artifact instead — `strings` over the APK's DEX files
+  returns exactly `1 more choice waits quietly behind this one.` and ` more choices wait quietly behind
+  this one.`, so the corrected copy is in the build that ships and the plural is unchanged.
+
 ## Outstanding
 
 - **`specs/backlog.md` §011's third bullet still says five.** It must be corrected to six with the
