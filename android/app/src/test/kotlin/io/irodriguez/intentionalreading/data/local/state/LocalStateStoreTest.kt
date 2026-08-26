@@ -8,6 +8,7 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateValidator
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.bytes
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.with
+import io.irodriguez.intentionalreading.domain.validation.LocalStateValidatorTest.Companion.withRecord
 import java.io.File
 import java.nio.file.Files
 import java.time.Instant
@@ -206,9 +207,167 @@ class LocalStateStoreTest {
         assertEquals(LocalStateErrorCode.WRITE_FAILED, result.code)
     }
 
+    @Test
+    fun `export serializes the current state as the V1 root object`() {
+        // Given
+        val document = LocalStateValidatorTest.fullyPopulatedDocument()
+        val state = validState(document)
+        val store = LocalStateStore(directory)
+
+        // When
+        val exported = store.exportState(state)
+
+        // Then
+        assertEquals(
+            document,
+            Json.parseToJsonElement(exported.decodeToString()),
+        )
+        val validated = assertIs<LocalStateResult.Success>(LocalStateValidator().validate(exported))
+        assertEquals(state, validated.state)
+    }
+
+    @Test
+    fun `an exported document round-trips through import unchanged`() {
+        // Given
+        val original = validState(LocalStateValidatorTest.fullyPopulatedDocument())
+        val store = LocalStateStore(directory)
+
+        // When
+        val imported = assertIs<LocalStateResult.Success>(
+            store.importState(store.exportState(original)),
+        )
+        val loaded = assertIs<LocalStateResult.Success>(store.load())
+
+        // Then
+        assertEquals(original, imported.state)
+        assertEquals(original, loaded.state)
+    }
+
+    @Test
+    fun `an oversized file is refused without being read into state`() {
+        // Given
+        val validBytes = LocalStateValidatorTest.validDocument.bytes()
+        val exactLimitCandidate = validBytes.paddedTo(LocalStateStore.MAX_IMPORT_BYTES)
+        val oversizedCandidate = exactLimitCandidate + byteArrayOf(' '.code.toByte())
+        val store = LocalStateStore(directory)
+        assertEquals(LocalStateStore.MAX_IMPORT_BYTES, exactLimitCandidate.size)
+        assertIs<LocalStateResult.Success>(store.importState(exactLimitCandidate))
+        val storedAtLimit = stateFile.readBytes()
+
+        // When
+        val refused = assertIs<LocalStateResult.Failure>(store.importState(oversizedCandidate))
+
+        // Then
+        assertEquals(LocalStateErrorCode.IMPORT_TOO_LARGE, refused.code)
+        assertContentEquals(storedAtLimit, stateFile.readBytes())
+        assertEquals(
+            validState(),
+            assertIs<LocalStateResult.Success>(store.load()).state,
+        )
+    }
+
+    @Test
+    fun `malformed, wrong-schema, and structurally invalid candidates are all refused atomically`() {
+        // Given
+        val store = LocalStateStore(directory)
+        assertIs<LocalStateResult.Success>(store.save(validState()))
+        val originalBytes = stateFile.readBytes()
+        val invalidRecord = LocalStateValidatorTest.validDocument.withRecord { record ->
+            record.with("status", JsonPrimitive("archived"))
+        }
+        val candidates = listOf(
+            LocalStateErrorCode.MALFORMED_JSON to "{not-json".encodeToByteArray(),
+            LocalStateErrorCode.UNSUPPORTED_SCHEMA to LocalStateValidatorTest.validDocument
+                .with("schemaVersion", JsonPrimitive(2))
+                .bytes(),
+            LocalStateErrorCode.INVALID_STATE to invalidRecord.bytes(),
+        )
+
+        // When / Then
+        candidates.forEach { (expectedCode, candidate) ->
+            val refused = assertIs<LocalStateResult.Failure>(store.importState(candidate))
+            assertEquals(expectedCode, refused.code)
+            assertContentEquals(originalBytes, stateFile.readBytes())
+            assertEquals(validState(), assertIs<LocalStateResult.Success>(store.load()).state)
+        }
+    }
+
+    @Test
+    fun `a half-written import cannot be observed`() {
+        // Given
+        val originalBytes = LocalStateValidatorTest.validDocument.bytes()
+        val originalState = validState()
+        stateFile.writeBytes(originalBytes)
+        val candidate = LocalStateValidatorTest.validDocument.with(
+            "session",
+            kotlinx.serialization.json.JsonObject(
+                mapOf("lastCategory" to JsonPrimitive("technology")),
+            ),
+        )
+        val failingStore = LocalStateStore(
+            LocalStateFile(directory) { error("injected failure before rename") },
+        )
+
+        // When
+        val result = assertIs<LocalStateResult.Failure>(failingStore.importState(candidate.bytes()))
+
+        // Then
+        assertEquals(LocalStateErrorCode.WRITE_FAILED, result.code)
+        assertContentEquals(originalBytes, stateFile.readBytes())
+        assertEquals(
+            originalState,
+            assertIs<LocalStateResult.Success>(LocalStateStore(directory).load()).state,
+        )
+    }
+
+    @Test
+    fun `an import recovers a store that was locked for recovery`() {
+        // Given
+        val corruptBytes = "{not-json".encodeToByteArray()
+        stateFile.writeBytes(corruptBytes)
+        val store = LocalStateStore(directory)
+        assertEquals(
+            LocalStateErrorCode.MALFORMED_JSON,
+            assertIs<LocalStateResult.Failure>(store.load()).code,
+        )
+
+        // When / Then: rejection preserves both the bytes and the lock.
+        assertEquals(
+            LocalStateErrorCode.MALFORMED_JSON,
+            assertIs<LocalStateResult.Failure>(store.importState(corruptBytes)).code,
+        )
+        assertContentEquals(corruptBytes, stateFile.readBytes())
+        assertEquals(
+            LocalStateErrorCode.RECOVERY_REQUIRED,
+            assertIs<LocalStateResult.Failure>(store.save(validState())).code,
+        )
+
+        // When / Then: a successful import writes first, then clears the lock.
+        val imported = assertIs<LocalStateResult.Success>(
+            store.importState(LocalStateValidatorTest.validDocument.bytes()),
+        )
+        assertEquals(validState(), imported.state)
+        assertIs<LocalStateResult.Success>(
+            store.save(
+                validState(
+                    LocalStateValidatorTest.validDocument.with(
+                        "session",
+                        kotlinx.serialization.json.JsonObject(
+                            mapOf("lastCategory" to JsonPrimitive("technology")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+
     private fun validState(
         document: kotlinx.serialization.json.JsonObject = LocalStateValidatorTest.validDocument,
     ): LocalState = assertIs<LocalStateResult.Success>(
         LocalStateValidator().validate(document.bytes()),
     ).state
+
+    private fun ByteArray.paddedTo(size: Int): ByteArray = ByteArray(size) { index ->
+        if (index < this.size) this[index] else ' '.code.toByte()
+    }
 }
