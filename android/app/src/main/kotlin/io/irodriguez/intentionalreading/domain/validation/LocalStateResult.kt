@@ -17,11 +17,15 @@ enum class LocalStateSource {
     STORAGE,
 }
 
+sealed interface LocalStateExport {
+    data class Success(val bytes: ByteArray) : LocalStateExport
+    data class Failure(val code: LocalStateErrorCode, val message: String) : LocalStateExport
+}
+
 sealed interface LocalStateResult {
     data class Success(
         val state: LocalState,
         val source: LocalStateSource,
-        val encodedBytes: ByteArray? = null,
     ) : LocalStateResult
 
     data class Failure(
