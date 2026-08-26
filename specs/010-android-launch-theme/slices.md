@@ -70,4 +70,4 @@ nothing to resolve to. Splitting them would produce a first slice that cannot be
 - **Deferred to wave A's batched walkthrough:** scenarios 1–4 plus the recreation-loop check
   (`spec.md` §5 step 5) and the owner's visual pass. The slice is *done* when the JVM half is green;
   the **item** is not shippable until the walkthrough is recorded in `evidence.md`.
-- **Status:** pending
+- **Status:** done
