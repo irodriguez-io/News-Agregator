@@ -624,7 +624,12 @@ class AppViewModelTest {
         val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
 
         val caller = launchingScope.launch {
-            viewModel.launchArticleAction(target, ArticleAction.SAVE, completed::complete)
+            viewModel.launchArticleAction(
+                target,
+                ArticleAction.SAVE,
+                undoable = false,
+                onComplete = completed::complete,
+            )
             enteredSave.await()
         }
         enteredSave.await()
