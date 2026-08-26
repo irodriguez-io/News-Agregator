@@ -17,8 +17,10 @@ import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.LocalState
+import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.domain.state.ArticleTransitionErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
@@ -619,7 +621,12 @@ class AppViewModelTest {
         val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
 
         val caller = launchingScope.launch {
-            viewModel.launchArticleAction(target, ArticleAction.SAVE, completed::complete)
+            viewModel.launchArticleAction(
+                target,
+                ArticleAction.SAVE,
+                undoable = false,
+                onComplete = completed::complete,
+            )
             enteredSave.await()
         }
         enteredSave.await()
@@ -940,6 +947,196 @@ class AppViewModelTest {
         assertEquals(readArticle.id, viewModel.uiState.value.readLater.rows.single().article.id)
         assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
         assertEquals(0, viewModel.uiState.value.navigationCounts.history)
+    }
+
+    @Test
+    fun `the slot holds one action, and the newest wins`() = runBlocking {
+        // Given an undo-eligible dismiss followed by an undo-eligible save of a different article
+        val dismissedArticle = article(1)
+        val savedArticle = article(2)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(dismissedArticle, savedArticle))),
+            store = store,
+        )
+        viewModel.onArticleAction(
+            dismissedArticle,
+            ArticleAction.DISMISS,
+            undoable = true,
+        )
+        assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoMessage)
+        viewModel.onArticleAction(
+            savedArticle,
+            ArticleAction.SAVE,
+            undoable = true,
+        )
+
+        // When Undo is performed
+        val undone = viewModel.performUndo()
+
+        // Then only the save is reversed, the dismiss stays applied, and no older Undo remains
+        assertTrue(undone.persisted)
+        assertIs<ArticleTransition.Reverted>(undone.transition)
+        val stored = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(ArticleStatus.DISMISSED, stored.articles.getValue(dismissedArticle.id).status)
+        assertFalse(savedArticle.id in stored.articles)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoMessage)
+        val writesAfterUndo = store.saveRequests.size
+        val refused = viewModel.performUndo()
+        val invalid = assertIs<ArticleTransition.Invalid>(refused.transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+        assertEquals(writesAfterUndo, store.saveRequests.size)
+    }
+
+    @Test
+    fun `launchArticleAction threads undo eligibility to the slot`() = runBlocking {
+        // Given a launch entry point and an eligible Save action
+        val target = article(1)
+        val completed = CompletableDeferred<ArticleActionResult>()
+        val viewModel = viewModel()
+
+        // When the launched commit is explicitly marked undo-eligible
+        viewModel.launchArticleAction(
+            article = target,
+            action = ArticleAction.SAVE,
+            undoable = true,
+            onComplete = completed::complete,
+        )
+
+        // Then the successful commit publishes an Undo offer
+        assertTrue(completed.await().persisted)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
+    }
+
+    @Test
+    fun `Undo is refused when there is nothing to undo`() = runBlocking {
+        // Given an empty undo slot
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+
+        // When Undo is requested
+        val result = viewModel.performUndo()
+
+        // Then it fails as unavailable without a write or announcement
+        val invalid = assertIs<ArticleTransition.Invalid>(result.transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+        assertFalse(result.persisted)
+        assertFalse(result.allowNavigation)
+        assertTrue(store.saveRequests.isEmpty())
+        assertNull(viewModel.announcement.value)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
+    fun `a failed write leaves both the state and the offer intact`() = runBlocking {
+        // Given a populated undo slot
+        val target = article(1)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        val committed = assertIs<LocalStateResult.Success>(store.loadResult).state
+        store.saveBehavior = {
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "disk full",
+            )
+        }
+
+        // When Undo is performed and the local state write fails
+        val failed = viewModel.performUndo()
+
+        // Then stored state is unchanged, the same offer remains, and persistence failure is announced
+        assertFalse(failed.persisted)
+        assertEquals(committed, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
+        assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
+
+        store.saveBehavior = { success(it) }
+        val retried = viewModel.performUndo()
+        assertTrue(retried.persisted)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertFalse(target.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
+    }
+
+    @Test
+    fun `resetting local data withdraws the offer`() = runBlocking {
+        // Given a populated undo slot
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        viewModel.onArticleAction(article(1), ArticleAction.DISMISS, undoable = true)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+
+        // When local data is reset
+        assertIs<LocalStateResult.Success>(viewModel.resetLocalData())
+
+        // Then the slot is empty and Undo is unavailable
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoMessage)
+        val writesAfterReset = store.saveRequests.size
+        val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndo().transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+        assertEquals(writesAfterReset, store.saveRequests.size)
+    }
+
+    @Test
+    fun `an undo offer does not survive the process`() = runBlocking {
+        // Given a populated undo slot whose committed article state is on disk
+        val target = article(1)
+        val store = FakeLocalStateStore()
+        val firstProcess = viewModel(store = store)
+        firstProcess.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        assertTrue(firstProcess.uiState.value.undoAvailable)
+        assertEquals(ArticleStatus.SAVED, assertIs<LocalStateResult.Success>(store.loadResult).state.articles[target.id]?.status)
+
+        // When the application process is recreated
+        val freshProcess = viewModel(store = store)
+
+        // Then the offer is absent regardless of the state on disk
+        assertFalse(freshProcess.uiState.value.undoAvailable)
+        assertNull(freshProcess.uiState.value.pendingUndoMessage)
+        val writesBeforeRefusal = store.saveRequests.size
+        val invalid = assertIs<ArticleTransition.Invalid>(freshProcess.performUndo().transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+        assertEquals(writesBeforeRefusal, store.saveRequests.size)
+    }
+
+    @Test
+    fun `an undone article returns to the head of Discover on its own`() = runBlocking {
+        // Given the reader opened and then undo-eligibly dismissed the article Discover was showing
+        val target = article(1)
+        val next = article(2)
+        val preferences = LocalState.Preferences(
+            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 3)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 2)),
+        )
+        val store = FakeLocalStateStore(success(LocalState.default().copy(preferences = preferences)))
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(target, next))),
+            store = store,
+        )
+        viewModel.onArticleAction(target, ArticleAction.OPEN)
+        assertEquals(target.id, viewModel.heldArticleId.value)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        assertNull(viewModel.heldArticleId.value)
+        assertEquals(next.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        val preferencesBeforeUndo = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
+
+        // When Undo is performed
+        val result = viewModel.performUndo()
+
+        // Then dataset order restores the article to the head without re-establishing the held pin
+        assertTrue(result.persisted)
+        val card = assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover)
+        assertEquals(target.id, card.article.id)
+        assertTrue(card.isOpened)
+        assertNull(viewModel.heldArticleId.value)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(ArticleStatus.OPENED, persisted.articles.getValue(target.id).status)
+        assertEquals(preferencesBeforeUndo, persisted.preferences)
     }
 
     private suspend fun assertStatus(

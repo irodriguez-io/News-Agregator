@@ -16,6 +16,7 @@ import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.domain.state.UndoRecord
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.state.UiStateMapper
@@ -76,6 +77,7 @@ class AppViewModel(
     private var refreshPhase: DatasetRefreshPhase = DatasetRefreshPhase.Idle
     private var localState: LocalState = LocalState.default()
     private var lastAppliedAppearance: Appearance? = null
+    private var undoRecord: UndoRecord? = null
     private val stateMutex = Mutex()
 
     private val _destination = MutableStateFlow(Destination.DISCOVER)
@@ -151,10 +153,11 @@ class AppViewModel(
     fun launchArticleAction(
         article: Article,
         action: ArticleAction,
+        undoable: Boolean = false,
         onComplete: (ArticleActionResult) -> Unit = {},
     ) {
         viewModelScope.launch(loadDispatcher) {
-            onComplete(onArticleAction(article, action))
+            onComplete(onArticleAction(article, action, undoable))
         }
     }
 
@@ -215,6 +218,7 @@ class AppViewModel(
             when (val result = resetLocalState()) {
                 is LocalStateResult.Success -> {
                     adoptPersistedState(result.state)
+                    undoRecord = null
                     _heldArticleId.value = null
                     _localStateError.value = null
                     _recoveryNoticeVisible.value = false
@@ -239,13 +243,18 @@ class AppViewModel(
         }
     }
 
-    suspend fun onArticleAction(article: Article, action: ArticleAction): ArticleActionResult =
+    suspend fun onArticleAction(
+        article: Article,
+        action: ArticleAction,
+        undoable: Boolean = false,
+    ): ArticleActionResult =
         stateMutex.withLock {
             val transition = ArticleStateMachine.transition(
                 records = localState.articles,
                 article = article,
                 action = action,
                 now = nowProvider(),
+                undoable = undoable,
             )
             when (transition) {
                 is ArticleTransition.Invalid -> ArticleActionResult(
@@ -254,9 +263,32 @@ class AppViewModel(
                     allowNavigation = false,
                 )
                 is ArticleTransition.Unchanged -> persistUnchangedTransition(article, action, transition)
-                is ArticleTransition.Applied -> persistArticleTransition(article, action, transition)
+                is ArticleTransition.Applied -> persistArticleTransition(
+                    article = article,
+                    action = action,
+                    transition = transition,
+                    undoable = undoable,
+                )
+                is ArticleTransition.Reverted -> error("A forward article action cannot return Reverted")
             }
         }
+
+    suspend fun performUndo(): ArticleActionResult = stateMutex.withLock {
+        val pendingUndo = undoRecord
+        when (val transition = ArticleStateMachine.reverse(localState.articles, pendingUndo)) {
+            is ArticleTransition.Invalid -> ArticleActionResult(
+                transition = transition,
+                persisted = false,
+                allowNavigation = false,
+            )
+            is ArticleTransition.Reverted -> persistUndoTransition(
+                undoRecord = requireNotNull(pendingUndo),
+                transition = transition,
+            )
+            is ArticleTransition.Applied -> error("Undo cannot return an applied forward transition")
+            is ArticleTransition.Unchanged -> error("Undo cannot return an unchanged transition")
+        }
+    }
 
     private suspend fun persistUnchangedTransition(
         article: Article,
@@ -296,6 +328,7 @@ class AppViewModel(
         article: Article,
         action: ArticleAction,
         transition: ArticleTransition.Applied,
+        undoable: Boolean,
     ): ArticleActionResult {
         val candidate = localState.copy(articles = transition.records)
         return when (val result = saveLocalState(candidate)) {
@@ -316,7 +349,9 @@ class AppViewModel(
                 val persistedTransition = ArticleTransition.Applied(
                     records = localState.articles,
                     record = persistedRecord,
+                    undoRecord = transition.undoRecord,
                 )
+                if (undoable) transition.undoRecord?.let { undoRecord = it }
                 if (action == ArticleAction.OPEN && persistedRecord.status == ArticleStatus.OPENED) {
                     _heldArticleId.value = article.id
                 }
@@ -326,6 +361,40 @@ class AppViewModel(
                     transition = persistedTransition,
                     persisted = true,
                     allowNavigation = action == ArticleAction.OPEN,
+                )
+            }
+        }
+    }
+
+    private suspend fun persistUndoTransition(
+        undoRecord: UndoRecord,
+        transition: ArticleTransition.Reverted,
+    ): ArticleActionResult {
+        val candidate = localState.copy(articles = transition.records)
+        return when (val result = saveLocalState(candidate)) {
+            is LocalStateResult.Failure -> {
+                recordPersistenceFailure(result)
+                ArticleActionResult(
+                    transition = transition,
+                    persisted = false,
+                    allowNavigation = false,
+                    failure = result,
+                )
+            }
+            is LocalStateResult.Success -> {
+                adoptPersistedState(result.state)
+                _localStateError.value = null
+                val persistedTransition = ArticleTransition.Reverted(
+                    records = localState.articles,
+                    record = localState.articles[undoRecord.articleId],
+                )
+                this.undoRecord = null
+                clearHeldArticleIfNeeded()
+                publish()
+                ArticleActionResult(
+                    transition = persistedTransition,
+                    persisted = true,
+                    allowNavigation = false,
                 )
             }
         }
@@ -444,6 +513,7 @@ class AppViewModel(
         zone = zoneProvider(),
         locale = localeProvider(),
         refresh = refreshPhase,
+        undoAction = undoRecord?.action,
     )
 
     class Factory(

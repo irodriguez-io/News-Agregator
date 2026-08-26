@@ -14,8 +14,10 @@ import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.ui.AppUiState
 import io.irodriguez.intentionalreading.ui.DatasetPhase
 import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
+import io.irodriguez.intentionalreading.ui.PendingUndoMessage
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
@@ -440,6 +442,36 @@ class UiStateMapperTest {
             Labels.categoryOptions.map { it.id to it.label },
         )
     }
+
+    @Test
+    fun `undo availability and pending message reflect the in-memory slot`() {
+        // Given no pending undo action
+        val unavailable = mapWithUndoAction(null)
+
+        // When the mapper receives each eligible action from the slot
+        val saved = mapWithUndoAction(ArticleAction.SAVE)
+        val dismissed = mapWithUndoAction(ArticleAction.DISMISS)
+
+        // Then availability and the pending message are exposed for the rendering item
+        assertFalse(unavailable.undoAvailable)
+        assertNull(unavailable.pendingUndoMessage)
+        assertTrue(saved.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, saved.pendingUndoMessage)
+        assertTrue(dismissed.undoAvailable)
+        assertEquals(PendingUndoMessage.DISMISSED, dismissed.pendingUndoMessage)
+    }
+
+    private fun mapWithUndoAction(action: ArticleAction?): AppUiState = UiStateMapper.map(
+        phase = DatasetPhase.Ready(dataset(listOf(article(1)))),
+        records = emptyMap(),
+        selectedCategory = null,
+        heldArticleId = null,
+        now = now,
+        zone = zone,
+        locale = Locale.US,
+        refresh = DatasetRefreshPhase.Idle,
+        undoAction = action,
+    )
 
     private fun map(
         dataset: ArticleDataset,

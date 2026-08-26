@@ -28,7 +28,14 @@ data class AppUiState(
     val generatedAtLabel: String,
     val lastRefreshOutcome: String,
     val refresh: DatasetRefreshPhase,
+    val undoAvailable: Boolean,
+    val pendingUndoMessage: PendingUndoMessage?,
 )
+
+enum class PendingUndoMessage {
+    SAVED,
+    DISMISSED,
+}
 
 data class NavigationCounts(
     val readLater: Int,

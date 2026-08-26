@@ -7,12 +7,24 @@ import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import java.time.Instant
 
+enum class ArticleTransitionErrorCode {
+    ACTION_NOT_ALLOWED,
+    UNDO_UNAVAILABLE,
+    UNDO_STALE,
+}
+
 sealed interface ArticleTransition {
     val records: Map<String, ArticleRecord>
 
     data class Applied(
         override val records: Map<String, ArticleRecord>,
         val record: ArticleRecord,
+        val undoRecord: UndoRecord? = null,
+    ) : ArticleTransition
+
+    data class Reverted(
+        override val records: Map<String, ArticleRecord>,
+        val record: ArticleRecord?,
     ) : ArticleTransition
 
     data class Unchanged(
@@ -21,8 +33,9 @@ sealed interface ArticleTransition {
 
     data class Invalid(
         override val records: Map<String, ArticleRecord>,
-        val action: ArticleAction,
-        val fromStatus: ArticleStatus,
+        val action: ArticleAction?,
+        val fromStatus: ArticleStatus?,
+        val code: ArticleTransitionErrorCode = ArticleTransitionErrorCode.ACTION_NOT_ALLOWED,
     ) : ArticleTransition
 }
 
@@ -32,6 +45,7 @@ object ArticleStateMachine {
         article: Article,
         action: ArticleAction,
         now: Instant,
+        undoable: Boolean = false,
     ): ArticleTransition {
         val existing = records[article.id]
         val status = existing?.status ?: ArticleStatus.UNSEEN
@@ -101,7 +115,51 @@ object ArticleStateMachine {
             putAll(records)
             put(article.id, next)
         }
-        return ArticleTransition.Applied(nextRecords, next)
+        val undoRecord = if (undoable && action in reversibleActions) {
+            UndoRecord(
+                articleId = article.id,
+                action = action,
+                previousRecord = existing,
+            )
+        } else {
+            null
+        }
+        return ArticleTransition.Applied(nextRecords, next, undoRecord)
+    }
+
+    fun reverse(
+        records: Map<String, ArticleRecord>,
+        undoRecord: UndoRecord?,
+    ): ArticleTransition {
+        if (undoRecord == null || undoRecord.action !in reversibleActions) {
+            return ArticleTransition.Invalid(
+                records = records,
+                action = undoRecord?.action,
+                fromStatus = undoRecord?.let { records[it.articleId]?.status },
+                code = ArticleTransitionErrorCode.UNDO_UNAVAILABLE,
+            )
+        }
+
+        if (records[undoRecord.articleId] == null) {
+            return ArticleTransition.Invalid(
+                records = records,
+                action = undoRecord.action,
+                fromStatus = null,
+                code = ArticleTransitionErrorCode.UNDO_STALE,
+            )
+        }
+        val nextRecords = buildMap {
+            putAll(records)
+            if (undoRecord.previousRecord == null) {
+                remove(undoRecord.articleId)
+            } else {
+                put(undoRecord.articleId, undoRecord.previousRecord)
+            }
+        }
+        return ArticleTransition.Reverted(
+            records = nextRecords,
+            record = undoRecord.previousRecord,
+        )
     }
 
     private fun isIdempotentNoOp(
@@ -146,4 +204,6 @@ object ArticleStateMachine {
         ArticleAction.MARK_UNREAD to setOf(ArticleStatus.READ),
         ArticleAction.REMOVE to setOf(ArticleStatus.SAVED),
     )
+
+    private val reversibleActions = setOf(ArticleAction.SAVE, ArticleAction.DISMISS)
 }

@@ -1,5 +1,6 @@
 package io.irodriguez.intentionalreading.ui.state
 
+import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.Category
@@ -9,6 +10,7 @@ import io.irodriguez.intentionalreading.ui.AppUiState
 import io.irodriguez.intentionalreading.ui.DatasetPhase
 import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
 import io.irodriguez.intentionalreading.ui.NavigationCounts
+import io.irodriguez.intentionalreading.ui.PendingUndoMessage
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.format.RelativeTime
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
@@ -33,6 +35,7 @@ object UiStateMapper {
         zone: ZoneId,
         locale: Locale,
         refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
+        undoAction: ArticleAction? = null,
     ): AppUiState {
         val generatedAt = (phase as? DatasetPhase.Ready)?.dataset?.generatedAt?.let(Instant::parse)
         val contentFreshness = generatedAt?.let { value ->
@@ -60,6 +63,12 @@ object UiStateMapper {
             } ?: Labels.CONTENT_GENERATION_UNAVAILABLE,
             lastRefreshOutcome = refreshOutcome(refresh),
             refresh = refresh,
+            undoAvailable = undoAction == ArticleAction.SAVE || undoAction == ArticleAction.DISMISS,
+            pendingUndoMessage = when (undoAction) {
+                ArticleAction.SAVE -> PendingUndoMessage.SAVED
+                ArticleAction.DISMISS -> PendingUndoMessage.DISMISSED
+                else -> null
+            },
         )
     }
 
