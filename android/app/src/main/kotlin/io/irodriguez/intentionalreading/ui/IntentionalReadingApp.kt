@@ -373,9 +373,9 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                             }
                             when (readResult) {
                                 is ImportReadResult.Success -> {
-                                    viewModel.launchImportLocalData(readResult.bytes) { succeeded ->
+                                    viewModel.launchImportLocalData(readResult.bytes) {
                                         importInProgress = false
-                                        if (succeeded) selectedImport = null
+                                        selectedImport = null
                                     }
                                 }
                                 ImportReadResult.TooLarge -> {
@@ -385,6 +385,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                                 }
                                 ImportReadResult.Unreadable -> {
                                     importInProgress = false
+                                    selectedImport = null
                                     importNotice = ImportNotice.UNREADABLE
                                 }
                             }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,23 +88,29 @@ fun SettingsSheet(
         scrimColor = tokens.backdrop,
         dragHandle = null,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .focusable()
-                .verticalScroll(rememberScrollState())
-                .onPreviewKeyEvent { event ->
-                    if (event.key == Key.Escape && event.type == KeyEventType.KeyUp) {
-                        onDismiss()
-                        true
-                    } else {
-                        false
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .focusable()
+                    .verticalScroll(rememberScrollState())
+                    .onPreviewKeyEvent { event ->
+                        if (event.key == Key.Escape && event.type == KeyEventType.KeyUp) {
+                            onDismiss()
+                            true
+                        } else {
+                            false
+                        }
                     }
-                }
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
+                    .padding(
+                        start = 20.dp,
+                        top = 24.dp,
+                        end = 20.dp,
+                        bottom = if (statusMessage != null) 112.dp else 24.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+            ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -284,10 +291,15 @@ fun SettingsSheet(
                 }
             }
 
+            }
+
             if (statusMessage != null) {
                 LiveStatusMessage(
                     message = statusMessage,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 24.dp),
                 )
             }
         }
