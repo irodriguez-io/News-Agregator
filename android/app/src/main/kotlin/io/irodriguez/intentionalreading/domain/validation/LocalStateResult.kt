@@ -21,6 +21,7 @@ sealed interface LocalStateResult {
     data class Success(
         val state: LocalState,
         val source: LocalStateSource,
+        val encodedBytes: ByteArray? = null,
     ) : LocalStateResult
 
     data class Failure(

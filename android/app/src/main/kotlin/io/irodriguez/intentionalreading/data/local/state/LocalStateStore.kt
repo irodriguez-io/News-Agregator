@@ -65,12 +65,19 @@ class LocalStateStore internal constructor(
         LocalStateResult.Success(validated, LocalStateSource.STORAGE)
     }
 
-    fun exportState(state: LocalState): ByteArray {
+    fun exportState(state: LocalState): LocalStateResult = boundary(
+        fallbackCode = LocalStateErrorCode.WRITE_FAILED,
+        fallbackMessage = "Local state could not be exported",
+    ) {
         val validated = when (val result = LocalStateMapper.validate(state)) {
             is LocalStateResult.Success -> result.state
-            is LocalStateResult.Failure -> throw IllegalArgumentException(result.message)
+            is LocalStateResult.Failure -> return@boundary result
         }
-        return LocalStateMapper.encode(validated)
+        LocalStateResult.Success(
+            state = validated,
+            source = LocalStateSource.STORAGE,
+            encodedBytes = LocalStateMapper.encode(validated),
+        )
     }
 
     fun importState(candidateBytes: ByteArray): LocalStateResult = boundary(
@@ -87,7 +94,7 @@ class LocalStateStore internal constructor(
             is LocalStateResult.Success -> result.state
             is LocalStateResult.Failure -> return@boundary result
         }
-        if (!file.write(candidateBytes)) {
+        if (!file.write(LocalStateMapper.encode(validated))) {
             return@boundary failure(
                 code = LocalStateErrorCode.WRITE_FAILED,
                 message = "Local state could not be imported",
