@@ -18,8 +18,13 @@ sealed interface ArticleTransition {
 
     data class Applied(
         override val records: Map<String, ArticleRecord>,
-        val record: ArticleRecord?,
+        val record: ArticleRecord,
         val undoRecord: UndoRecord? = null,
+    ) : ArticleTransition
+
+    data class Reverted(
+        override val records: Map<String, ArticleRecord>,
+        val record: ArticleRecord?,
     ) : ArticleTransition
 
     data class Unchanged(
@@ -151,7 +156,7 @@ object ArticleStateMachine {
                 put(undoRecord.articleId, undoRecord.previousRecord)
             }
         }
-        return ArticleTransition.Applied(
+        return ArticleTransition.Reverted(
             records = nextRecords,
             record = undoRecord.previousRecord,
         )

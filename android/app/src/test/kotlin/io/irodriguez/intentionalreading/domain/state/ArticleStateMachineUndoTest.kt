@@ -144,7 +144,7 @@ class ArticleStateMachineUndoTest {
         )
 
         // When Undo is performed
-        val reversed = assertIs<ArticleTransition.Applied>(
+        val reversed = assertIs<ArticleTransition.Reverted>(
             ArticleStateMachine.reverse(save.records, save.undoRecord),
         )
 
@@ -179,7 +179,7 @@ class ArticleStateMachineUndoTest {
         )
 
         // When Undo removes the newly created record
-        val reversed = assertIs<ArticleTransition.Applied>(
+        val reversed = assertIs<ArticleTransition.Reverted>(
             ArticleStateMachine.reverse(save.records, save.undoRecord),
         )
 
@@ -224,7 +224,7 @@ class ArticleStateMachineUndoTest {
         )
 
         // When Undo is performed
-        val reversed = assertIs<ArticleTransition.Applied>(
+        val reversed = assertIs<ArticleTransition.Reverted>(
             ArticleStateMachine.reverse(dismiss.records, dismiss.undoRecord),
         )
 
@@ -313,7 +313,7 @@ class ArticleStateMachineUndoTest {
 
         // When the record is inspected and Undo is performed
         assertNull(dismiss.undoRecord?.preferenceReversal)
-        val reversed = assertIs<ArticleTransition.Applied>(
+        val reversed = assertIs<ArticleTransition.Reverted>(
             ArticleStateMachine.reverse(dismiss.records, dismiss.undoRecord),
         )
         val after = before.copy(articles = reversed.records)

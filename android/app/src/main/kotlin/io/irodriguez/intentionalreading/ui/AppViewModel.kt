@@ -255,6 +255,7 @@ class AppViewModel(
                 )
                 is ArticleTransition.Unchanged -> persistUnchangedTransition(article, action, transition)
                 is ArticleTransition.Applied -> persistArticleTransition(article, action, transition)
+                is ArticleTransition.Reverted -> error("A forward article action cannot return Reverted")
             }
         }
 
@@ -312,12 +313,12 @@ class AppViewModel(
             is LocalStateResult.Success -> {
                 adoptPersistedState(result.state)
                 _localStateError.value = null
-                val persistedRecord = localState.articles[article.id]
+                val persistedRecord = localState.articles.getValue(article.id)
                 val persistedTransition = ArticleTransition.Applied(
                     records = localState.articles,
                     record = persistedRecord,
                 )
-                if (action == ArticleAction.OPEN && persistedRecord?.status == ArticleStatus.OPENED) {
+                if (action == ArticleAction.OPEN && persistedRecord.status == ArticleStatus.OPENED) {
                     _heldArticleId.value = article.id
                 }
                 clearHeldArticleIfNeeded()
