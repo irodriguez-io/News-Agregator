@@ -298,24 +298,26 @@ class AppViewModel(
         }
     }
 
-    suspend fun exportLocalData(writeBytes: suspend (ByteArray) -> Boolean): Boolean =
-        stateMutex.withLock {
-            val exported = when (val result = exportLocalState(localState)) {
-                is LocalStateExport.Success -> try {
-                    writeBytes(result.bytes)
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Exception) {
-                    false
-                }
-                is LocalStateExport.Failure -> false
-            }
-            announce(
-                if (exported) AppAnnouncementKind.EXPORT_COMPLETE
-                else AppAnnouncementKind.EXPORT_FAILED,
-            )
-            exported
+    suspend fun exportLocalData(writeBytes: suspend (ByteArray) -> Boolean): Boolean {
+        val result = stateMutex.withLock {
+            exportLocalState(localState)
         }
+        val exported = when (result) {
+            is LocalStateExport.Success -> try {
+                writeBytes(result.bytes)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                false
+            }
+            is LocalStateExport.Failure -> false
+        }
+        announce(
+            if (exported) AppAnnouncementKind.EXPORT_COMPLETE
+            else AppAnnouncementKind.EXPORT_FAILED,
+        )
+        return exported
+    }
 
     suspend fun importLocalData(candidateBytes: ByteArray): Boolean = stateMutex.withLock {
         when (val result = importLocalState(candidateBytes)) {
