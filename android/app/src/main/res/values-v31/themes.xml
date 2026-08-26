@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.IntentionalReading" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:windowBackground">@color/launch_background</item>
-        <item name="android:windowNoTitle">true</item>
+    <style name="Theme.IntentionalReading" parent="Theme.IntentionalReading.Base">
         <item name="android:windowSplashScreenBackground">@color/launch_background</item>
     </style>
 </resources>
