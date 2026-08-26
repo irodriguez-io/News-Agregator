@@ -22,10 +22,12 @@ import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.domain.state.ArticleTransitionErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
+import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
+import java.io.IOException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -38,6 +40,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -1360,6 +1363,225 @@ class AppViewModelTest {
         assertEquals(preferencesBeforeUndo, persisted.preferences)
     }
 
+    @Test
+    fun `a valid backup replaces local state wholesale`() = runBlocking {
+        // Given current state and a valid backup with disjoint records and preferences
+        val currentSaved = article(21)
+        val currentRead = article(22)
+        val importedSaved = article(31)
+        val importedRead = article(32)
+        val current = localState(
+            record(currentSaved, ArticleStatus.SAVED),
+            record(currentRead, ArticleStatus.READ),
+        ).copy(
+            preferences = LocalState.Preferences(
+                sources = mapOf("current-only" to PreferenceEntry(1.0, 1)),
+                topics = emptyMap(),
+            ),
+        )
+        val imported = localState(
+            record(importedSaved, ArticleStatus.SAVED),
+            record(importedRead, ArticleStatus.READ),
+        ).copy(
+            preferences = LocalState.Preferences(
+                sources = mapOf("import-only" to PreferenceEntry(-1.0, 2)),
+                topics = emptyMap(),
+            ),
+        )
+        val candidateBytes = "valid backup".encodeToByteArray()
+        val store = FakeLocalStateStore(success(current)).apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When the backup is imported
+        assertTrue(viewModel.importLocalData(candidateBytes))
+
+        // Then it replaces the current state instead of merging either population
+        assertTrue(store.importRequests.single().contentEquals(candidateBytes))
+        assertEquals(imported, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(listOf(importedSaved.id), viewModel.uiState.value.readLater.rows.map { it.article.id })
+        assertEquals(
+            listOf(importedRead.id),
+            viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+        )
+        assertFalse(currentSaved.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
+        assertFalse(currentRead.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
+        assertEquals(AppAnnouncementKind.IMPORT_COMPLETE, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `an import rebuilds appearance, category, and counts`() = runBlocking {
+        // Given a backup with a different appearance, category, queue, and History
+        val saved = article(41, Category.TECHNOLOGY)
+        val read = article(42, Category.TECHNOLOGY)
+        val eligible = article(43, Category.TECHNOLOGY)
+        val imported = localState(
+            record(saved, ArticleStatus.SAVED),
+            record(read, ArticleStatus.READ),
+            appearance = Appearance.DARK,
+            category = Category.TECHNOLOGY,
+        )
+        val appliedAppearances = mutableListOf<Appearance>()
+        val store = FakeLocalStateStore().apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(saved, read, eligible))),
+            store = store,
+            applyNightMode = appliedAppearances::add,
+        )
+
+        // When the backup is imported
+        assertTrue(viewModel.importLocalData("backup".encodeToByteArray()))
+
+        // Then the existing adoption and publish paths rebuild every projection
+        assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(Appearance.DARK, appliedAppearances.last())
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.history)
+        assertEquals(eligible.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+    }
+
+    @Test
+    fun `an import clears the undo slot`() = runBlocking {
+        // Given a populated undo slot and a separately held opened article
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        val held = article(50)
+        viewModel.onArticleAction(held, ArticleAction.OPEN)
+        viewModel.onArticleAction(article(51), ArticleAction.SAVE, undoable = true)
+        assertEquals(held.id, viewModel.heldArticleId.value)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        store.importBehavior = { success(LocalState.default()) }
+
+        // When a valid backup is imported
+        assertTrue(viewModel.importLocalData("backup".encodeToByteArray()))
+
+        // Then Undo is unavailable and the old slot cannot be performed
+        assertNull(viewModel.heldArticleId.value)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndo().transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+    }
+
+    @Test
+    fun `an import recovers a store that was locked for recovery`() = runBlocking {
+        // Given a load failure whose recovery notice is visible
+        val loadFailure = LocalStateResult.Failure(
+            code = LocalStateErrorCode.INVALID_STATE,
+            message = "candidate detail",
+            state = LocalState.default(),
+            path = "articles.secret.status",
+        )
+        val store = FakeLocalStateStore(loadFailure).apply {
+            importBehavior = { success(LocalState.default()) }
+        }
+        val viewModel = viewModel(store = store)
+        assertTrue(viewModel.recoveryNoticeVisible.value)
+        assertEquals(loadFailure, viewModel.localStateError.value)
+
+        // When a valid backup is imported
+        assertTrue(viewModel.importLocalData("backup".encodeToByteArray()))
+
+        // Then the resolved cause and its notice are withdrawn
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertNull(viewModel.localStateError.value)
+    }
+
+    @Test
+    fun `a refusal does not disclose the candidate's contents`() = runBlocking {
+        // Given current local state and a refused candidate carrying sensitive validator detail
+        val current = localState(record(article(61), ArticleStatus.SAVED))
+        val failure = LocalStateResult.Failure(
+            code = LocalStateErrorCode.INVALID_STATE,
+            message = "secret candidate title",
+            path = "articles.secret-candidate.article.title",
+        )
+        val store = FakeLocalStateStore(success(current)).apply {
+            importBehavior = { failure }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When the import is refused
+        assertFalse(viewModel.importLocalData("untrusted candidate".encodeToByteArray()))
+
+        // Then state is unchanged and only the generic announcement kind reaches the UI
+        assertEquals(current, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
+        assertNull(viewModel.localStateError.value)
+        val announcement = requireNotNull(viewModel.announcement.value)
+        assertEquals(AppAnnouncementKind.IMPORT_FAILED, announcement.kind)
+        assertFalse(announcement.toString().contains(failure.message))
+        assertFalse(announcement.toString().contains(requireNotNull(failure.path)))
+    }
+
+    @Test
+    fun `export writes nothing when the destination cannot be written`() = runBlocking {
+        // Given valid current state and a destination that cannot be opened
+        val current = localState(record(article(71), ArticleStatus.READ))
+        val exportedBytes = "exported state".encodeToByteArray()
+        val store = FakeLocalStateStore(success(current)).apply {
+            exportBehavior = { LocalStateExport.Success(exportedBytes) }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When export encounters the unwritable destination
+        val exported = viewModel.exportLocalData {
+            throw IOException("destination cannot be opened")
+        }
+
+        // Then nothing is reported as written, local state is unchanged, and failure is announced
+        assertFalse(exported)
+        assertEquals(listOf(current), store.exportRequests)
+        assertTrue(store.saveRequests.isEmpty())
+        assertEquals(current, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(AppAnnouncementKind.EXPORT_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `export does not hold the state lock while the destination is written`() = runBlocking {
+        // Given valid export bytes and a destination write that performs an ordinary state mutation
+        val store = FakeLocalStateStore().apply {
+            exportBehavior = { LocalStateExport.Success("exported state".encodeToByteArray()) }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When the destination writes, then the mutation completes before the write returns
+        val exported = withTimeout(1_000) {
+            viewModel.exportLocalData {
+                viewModel.selectCategory(Category.TECHNOLOGY)
+                assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+                true
+            }
+        }
+
+        assertTrue(exported)
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertEquals(Category.TECHNOLOGY, store.saveRequests.single().session.lastCategory)
+    }
+
+    @Test
+    fun `the suggested filename carries a UTC timestamp`() {
+        // Given the same fixed instant through UTC and a non-UTC device zone
+        val fixedNow = Instant.parse("2026-08-27T00:12:34Z")
+        val utcViewModel = viewModel(
+            nowProvider = { fixedNow },
+            zoneProvider = { ZoneId.of("UTC") },
+        )
+        val managuaViewModel = viewModel(
+            nowProvider = { fixedNow },
+            zoneProvider = { ZoneId.of("America/Managua") },
+        )
+
+        // When the suggested names are generated, then both carry the UTC timestamp
+        val expected = "intentional-reading-backup-20260827-001234Z.json"
+        assertEquals(expected, utcViewModel.backupFilename())
+        assertEquals(expected, managuaViewModel.backupFilename())
+    }
+
     private suspend fun assertStatus(
         viewModel: AppViewModel,
         article: Article,
@@ -1382,16 +1604,21 @@ class AppViewModelTest {
         loadLocalState: suspend () -> LocalStateResult = store::load,
         resetLocalState: suspend () -> LocalStateResult = store::reset,
         nowProvider: () -> Instant = { now },
+        zoneProvider: () -> ZoneId = { zone },
+        applyNightMode: (Appearance) -> Unit = {},
     ): AppViewModel = AppViewModel(
         readCachedDataset = readCachedDataset,
         refreshDataset = refreshDataset,
         loadLocalState = loadLocalState,
         saveLocalState = store::save,
         resetLocalState = resetLocalState,
+        exportLocalState = store::exportState,
+        importLocalState = store::importState,
         nowProvider = nowProvider,
-        zoneProvider = { zone },
+        zoneProvider = zoneProvider,
         localeProvider = { Locale.US },
         loadDispatcher = Dispatchers.Unconfined,
+        applyNightMode = applyNightMode,
     )
 
     private fun localState(

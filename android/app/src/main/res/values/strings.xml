@@ -63,6 +63,13 @@
     <string name="reset_all_data">Reset all data</string>
     <string name="reset_confirmation">Reset clears preferences, Read Later, History, dismissals, and settings on this device. This cannot be undone.</string>
     <string name="cancel">Cancel</string>
+    <string name="local_data_import_copy">Choose a V1 JSON backup no larger than 5 MiB. A valid import replaces current local data rather than merging it.</string>
+    <string name="export_local_data">Export local data</string>
+    <string name="import_local_data">Import local data</string>
+    <string name="import_confirmation">Replace current preferences, Read Later, History, dismissals, and local settings with \"%1$s\" after validation?</string>
+    <string name="replace_local_data">Replace local data</string>
+    <string name="local_data_import_too_large">This file is larger than the 5 MiB V1 import limit and was not read.</string>
+    <string name="local_data_import_unreadable">The selected backup could not be read. Current local data was not changed.</string>
 
     <string name="local_state_load_failure_title">Stored data could not be read</string>
     <string name="local_state_load_failure_copy">A temporary empty state is in use. Reset local data in Settings to recover.</string>
@@ -76,4 +83,8 @@
     <string name="refresh_updated">Content updated.</string>
     <string name="refresh_current">Content is already current.</string>
     <string name="refresh_failed">Content could not be refreshed. Your saved reading and History are unchanged.</string>
+    <string name="local_data_export_prepared">Local data export prepared.</string>
+    <string name="local_data_export_failed">Local data could not be exported.</string>
+    <string name="local_data_imported">Local data imported.</string>
+    <string name="local_data_import_failed">Import was not completed. Current local data was not changed.</string>
 </resources>

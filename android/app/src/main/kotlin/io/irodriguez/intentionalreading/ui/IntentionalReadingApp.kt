@@ -5,7 +5,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +46,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import io.irodriguez.intentionalreading.IntentionalReadingApplication
 import io.irodriguez.intentionalreading.R
+import io.irodriguez.intentionalreading.data.readBounded
+import io.irodriguez.intentionalreading.data.local.state.LocalStateStore
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
@@ -53,7 +62,11 @@ import io.irodriguez.intentionalreading.ui.screens.settings.SettingsSheet
 import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingTheme
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +90,51 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
         ?.reducedMotion
         ?: { false }
     val pendingUndoOffer = uiState.pendingUndoOffer
+    val importScope = rememberCoroutineScope()
+    var selectedImport by remember { mutableStateOf<SelectedImport?>(null) }
+    var importNotice by remember { mutableStateOf<ImportNotice?>(null) }
+    var importInProgress by remember { mutableStateOf(false) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            viewModel.launchExportLocalData(
+                writeBytes = { bytes ->
+                    withContext(Dispatchers.IO) {
+                        applicationContext.contentResolver
+                            .openOutputStream(uri, "wt")
+                            ?.use { output ->
+                                output.write(bytes)
+                                output.flush()
+                                true
+                            }
+                            ?: false
+                    }
+                },
+            )
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            importScope.launch {
+                val document = withContext(Dispatchers.IO) {
+                    describeDocument(applicationContext, uri)
+                }
+                importNotice = null
+                if (
+                    document.reportedSize != null &&
+                    document.reportedSize > LocalStateStore.MAX_IMPORT_BYTES
+                ) {
+                    selectedImport = null
+                    importNotice = ImportNotice.TOO_LARGE
+                } else {
+                    selectedImport = SelectedImport(uri, document.fileName)
+                }
+            }
+        }
+    }
     val onOpenArticle: (Article) -> Unit = { article ->
         viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
             if (result.allowNavigation) {
@@ -117,6 +175,10 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     AppAnnouncementKind.REFRESH_FAILED -> R.string.refresh_failed
                     AppAnnouncementKind.UNDO_COMPLETED -> R.string.undo_completed
                     AppAnnouncementKind.UNDO_FAILED -> R.string.undo_failed
+                    AppAnnouncementKind.EXPORT_COMPLETE -> R.string.local_data_export_prepared
+                    AppAnnouncementKind.EXPORT_FAILED -> R.string.local_data_export_failed
+                    AppAnnouncementKind.IMPORT_COMPLETE -> R.string.local_data_imported
+                    AppAnnouncementKind.IMPORT_FAILED -> R.string.local_data_import_failed
                 },
             )
         }
@@ -276,8 +338,59 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 statusMessage = announcementText,
                 generatedAtLabel = uiState.generatedAtLabel,
                 lastRefreshOutcome = uiState.lastRefreshOutcome,
+                importFileName = selectedImport?.fileName,
+                importInProgress = importInProgress,
+                importTooLarge = importNotice == ImportNotice.TOO_LARGE,
+                importUnreadable = importNotice == ImportNotice.UNREADABLE,
                 onAppearanceSelected = { selectedAppearance ->
                     viewModel.launchAppearanceChange(selectedAppearance)
+                },
+                onExport = {
+                    exportLauncher.launch(viewModel.backupFilename())
+                },
+                onSelectImport = {
+                    importLauncher.launch(arrayOf("application/json"))
+                },
+                onCancelImport = {
+                    selectedImport = null
+                    importNotice = null
+                },
+                onConfirmImport = {
+                    val selected = selectedImport
+                    if (selected != null) {
+                        importInProgress = true
+                        importNotice = null
+                        importScope.launch {
+                            val readResult = try {
+                                withContext(Dispatchers.IO) {
+                                    readImportCandidate(applicationContext, selected.uri)
+                                }
+                            } catch (cancellation: CancellationException) {
+                                importInProgress = false
+                                throw cancellation
+                            } catch (_: Exception) {
+                                ImportReadResult.Unreadable
+                            }
+                            when (readResult) {
+                                is ImportReadResult.Success -> {
+                                    viewModel.launchImportLocalData(readResult.bytes) {
+                                        importInProgress = false
+                                        selectedImport = null
+                                    }
+                                }
+                                ImportReadResult.TooLarge -> {
+                                    importInProgress = false
+                                    selectedImport = null
+                                    importNotice = ImportNotice.TOO_LARGE
+                                }
+                                ImportReadResult.Unreadable -> {
+                                    importInProgress = false
+                                    selectedImport = null
+                                    importNotice = ImportNotice.UNREADABLE
+                                }
+                            }
+                        }
+                    }
                 },
                 onReset = { onComplete ->
                     viewModel.launchResetLocalData { result ->
@@ -287,6 +400,75 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 onDismiss = viewModel::closeSettings,
             )
         }
+    }
+}
+
+private data class SelectedImport(
+    val uri: Uri,
+    val fileName: String,
+)
+
+private data class SelectedDocument(
+    val fileName: String,
+    val reportedSize: Long?,
+)
+
+private enum class ImportNotice {
+    TOO_LARGE,
+    UNREADABLE,
+}
+
+private sealed interface ImportReadResult {
+    data class Success(val bytes: ByteArray) : ImportReadResult
+    data object TooLarge : ImportReadResult
+    data object Unreadable : ImportReadResult
+}
+
+private fun describeDocument(context: Context, uri: Uri): SelectedDocument {
+    var displayName: String? = null
+    var reportedSize: Long? = null
+    try {
+        context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val nameColumn = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameColumn >= 0 && !cursor.isNull(nameColumn)) {
+                    displayName = cursor.getString(nameColumn)
+                }
+                val sizeColumn = cursor.getColumnIndex(OpenableColumns.SIZE)
+                if (sizeColumn >= 0 && !cursor.isNull(sizeColumn)) {
+                    reportedSize = cursor.getLong(sizeColumn).takeIf { it >= 0L }
+                }
+            }
+        }
+    } catch (_: Exception) {
+        // Provider metadata is optional; the bounded stream read remains authoritative.
+    }
+    val fallbackName = uri.lastPathSegment
+        ?.substringAfterLast('/')
+        ?.takeIf { it.isNotBlank() }
+        ?: uri.toString()
+    return SelectedDocument(
+        fileName = displayName?.takeIf { it.isNotBlank() } ?: fallbackName,
+        reportedSize = reportedSize,
+    )
+}
+
+private fun readImportCandidate(context: Context, uri: Uri): ImportReadResult {
+    val input = context.contentResolver.openInputStream(uri)
+        ?: return ImportReadResult.Unreadable
+    val bytes = input.use {
+        readBounded(it, LocalStateStore.MAX_IMPORT_BYTES)
+    }
+    return if (bytes == null) {
+        ImportReadResult.TooLarge
+    } else {
+        ImportReadResult.Success(bytes)
     }
 }
 

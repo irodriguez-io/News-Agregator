@@ -2,6 +2,7 @@ package io.irodriguez.intentionalreading.data.local.state
 
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
+import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.domain.validation.LocalStateValidator
@@ -65,6 +66,48 @@ class LocalStateStore internal constructor(
         LocalStateResult.Success(validated, LocalStateSource.STORAGE)
     }
 
+    fun exportState(state: LocalState): LocalStateExport = boundary(
+        fallback = {
+            LocalStateExport.Failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "Local state could not be exported",
+            )
+        },
+    ) {
+        val validated = when (val result = LocalStateMapper.validate(state)) {
+            is LocalStateResult.Success -> result.state
+            is LocalStateResult.Failure -> return@boundary LocalStateExport.Failure(
+                code = result.code,
+                message = result.message,
+            )
+        }
+        LocalStateExport.Success(LocalStateMapper.encode(validated))
+    }
+
+    fun importState(candidateBytes: ByteArray): LocalStateResult = boundary(
+        fallbackCode = LocalStateErrorCode.WRITE_FAILED,
+        fallbackMessage = "Local state could not be imported",
+    ) {
+        if (candidateBytes.size > MAX_IMPORT_BYTES) {
+            return@boundary failure(
+                code = LocalStateErrorCode.IMPORT_TOO_LARGE,
+                message = "Imported local state exceeds 5 MiB",
+            )
+        }
+        val validated = when (val result = validator.validate(candidateBytes)) {
+            is LocalStateResult.Success -> result.state
+            is LocalStateResult.Failure -> return@boundary result
+        }
+        if (!file.write(LocalStateMapper.encode(validated))) {
+            return@boundary failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "Local state could not be imported",
+            )
+        }
+        recoveryLocked = false
+        LocalStateResult.Success(validated, LocalStateSource.STORAGE)
+    }
+
     fun reset(): LocalStateResult = boundary(
         fallbackCode = LocalStateErrorCode.WRITE_FAILED,
         fallbackMessage = "Local state could not be reset",
@@ -84,14 +127,24 @@ class LocalStateStore internal constructor(
         fallbackMessage: String,
         fallbackState: LocalState? = null,
         operation: () -> LocalStateResult,
-    ): LocalStateResult = try {
+    ): LocalStateResult = boundary(
+        fallback = {
+            failure(
+                code = fallbackCode,
+                message = fallbackMessage,
+                state = fallbackState,
+            )
+        },
+        operation = operation,
+    )
+
+    private inline fun <T> boundary(
+        fallback: () -> T,
+        operation: () -> T,
+    ): T = try {
         operation()
     } catch (failure: Exception) {
-        failure(
-            code = fallbackCode,
-            message = fallbackMessage,
-            state = fallbackState,
-        )
+        fallback()
     }
 
     private fun failure(
@@ -103,4 +156,8 @@ class LocalStateStore internal constructor(
         message = message,
         state = state,
     )
+
+    internal companion object {
+        const val MAX_IMPORT_BYTES = 5 * 1024 * 1024
+    }
 }

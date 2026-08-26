@@ -17,12 +17,17 @@ import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.domain.state.UndoRecord
+import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
+import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.state.UiStateMapper
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +61,10 @@ enum class AppAnnouncementKind {
     REFRESH_FAILED,
     UNDO_COMPLETED,
     UNDO_FAILED,
+    EXPORT_COMPLETE,
+    EXPORT_FAILED,
+    IMPORT_COMPLETE,
+    IMPORT_FAILED,
 }
 
 data class AppAnnouncement(
@@ -69,6 +78,18 @@ class AppViewModel(
     private val loadLocalState: suspend () -> LocalStateResult,
     private val saveLocalState: suspend (LocalState) -> LocalStateResult,
     private val resetLocalState: suspend () -> LocalStateResult,
+    private val exportLocalState: suspend (LocalState) -> LocalStateExport = {
+        LocalStateExport.Failure(
+            code = LocalStateErrorCode.WRITE_FAILED,
+            message = "Local state export is unavailable",
+        )
+    },
+    private val importLocalState: suspend (ByteArray) -> LocalStateResult = {
+        LocalStateResult.Failure(
+            code = LocalStateErrorCode.WRITE_FAILED,
+            message = "Local state import is unavailable",
+        )
+    },
     private val nowProvider: () -> Instant,
     private val zoneProvider: () -> ZoneId,
     private val localeProvider: () -> Locale,
@@ -177,6 +198,24 @@ class AppViewModel(
         }
     }
 
+    fun launchExportLocalData(
+        writeBytes: suspend (ByteArray) -> Boolean,
+        onComplete: (Boolean) -> Unit = {},
+    ) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(exportLocalData(writeBytes))
+        }
+    }
+
+    fun launchImportLocalData(
+        candidateBytes: ByteArray,
+        onComplete: (Boolean) -> Unit = {},
+    ) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(importLocalData(candidateBytes))
+        }
+    }
+
     fun dismissRecoveryNotice() {
         _recoveryNoticeVisible.value = false
     }
@@ -257,6 +296,54 @@ class AppViewModel(
         } finally {
             _resetInProgress.value = false
         }
+    }
+
+    suspend fun exportLocalData(writeBytes: suspend (ByteArray) -> Boolean): Boolean {
+        val result = stateMutex.withLock {
+            exportLocalState(localState)
+        }
+        val exported = when (result) {
+            is LocalStateExport.Success -> try {
+                writeBytes(result.bytes)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                false
+            }
+            is LocalStateExport.Failure -> false
+        }
+        announce(
+            if (exported) AppAnnouncementKind.EXPORT_COMPLETE
+            else AppAnnouncementKind.EXPORT_FAILED,
+        )
+        return exported
+    }
+
+    suspend fun importLocalData(candidateBytes: ByteArray): Boolean = stateMutex.withLock {
+        when (val result = importLocalState(candidateBytes)) {
+            is LocalStateResult.Success -> {
+                adoptPersistedState(result.state)
+                undoRecord = null
+                pendingUndoOffer = null
+                _heldArticleId.value = null
+                _localStateError.value = null
+                _recoveryNoticeVisible.value = false
+                publish()
+                announce(AppAnnouncementKind.IMPORT_COMPLETE)
+                true
+            }
+            is LocalStateResult.Failure -> {
+                announce(AppAnnouncementKind.IMPORT_FAILED)
+                false
+            }
+        }
+    }
+
+    fun backupFilename(): String {
+        val utc = nowProvider()
+            .atZone(zoneProvider())
+            .withZoneSameInstant(ZoneOffset.UTC)
+        return "intentional-reading-backup-${BACKUP_TIMESTAMP.format(utc)}.json"
     }
 
     fun reload() {
@@ -572,6 +659,8 @@ class AppViewModel(
         private val loadLocalState: suspend () -> LocalStateResult = localStateRepository::load
         private val saveLocalState: suspend (LocalState) -> LocalStateResult = localStateRepository::save
         private val resetLocalState: suspend () -> LocalStateResult = localStateRepository::reset
+        private val exportLocalState: suspend (LocalState) -> LocalStateExport = localStateRepository::exportState
+        private val importLocalState: suspend (ByteArray) -> LocalStateResult = localStateRepository::importState
 
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -582,11 +671,18 @@ class AppViewModel(
                 loadLocalState = loadLocalState,
                 saveLocalState = saveLocalState,
                 resetLocalState = resetLocalState,
+                exportLocalState = exportLocalState,
+                importLocalState = importLocalState,
                 nowProvider = nowProvider,
                 zoneProvider = zoneProvider,
                 localeProvider = localeProvider,
                 applyNightMode = applyNightMode,
             ) as T
         }
+    }
+
+    private companion object {
+        val BACKUP_TIMESTAMP: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss'Z'", Locale.ROOT)
     }
 }

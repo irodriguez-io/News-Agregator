@@ -9,11 +9,17 @@ enum class LocalStateErrorCode {
     READ_FAILED,
     WRITE_FAILED,
     RECOVERY_REQUIRED,
+    IMPORT_TOO_LARGE,
 }
 
 enum class LocalStateSource {
     DEFAULT,
     STORAGE,
+}
+
+sealed interface LocalStateExport {
+    data class Success(val bytes: ByteArray) : LocalStateExport
+    data class Failure(val code: LocalStateErrorCode, val message: String) : LocalStateExport
 }
 
 sealed interface LocalStateResult {
