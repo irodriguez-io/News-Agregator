@@ -1462,7 +1462,7 @@ class AppViewModelTest {
         // Then Undo is unavailable and the old slot cannot be performed
         assertNull(viewModel.heldArticleId.value)
         assertFalse(viewModel.uiState.value.undoAvailable)
-        assertNull(viewModel.uiState.value.pendingUndoMessage)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
         val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndo().transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
     }
