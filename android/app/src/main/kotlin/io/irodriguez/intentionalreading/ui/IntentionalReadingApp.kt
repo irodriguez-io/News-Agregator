@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -247,23 +248,24 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 }
             }
 
-            if (announcementText != null && !settingsOpen) {
-                LiveStatusMessage(
-                    message = announcementText,
+            if (!settingsOpen) {
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp, vertical = 96.dp),
-                )
-            }
-
-            if (undoToastMessage != null && !settingsOpen) {
-                UndoToast(
-                    message = undoToastMessage,
-                    onUndo = viewModel::launchUndo,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 16.dp, vertical = 96.dp),
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (undoToastMessage != null) {
+                        UndoToast(
+                            message = undoToastMessage,
+                            onUndo = viewModel::launchUndo,
+                        )
+                    }
+                    if (announcementText != null) {
+                        LiveStatusMessage(message = announcementText)
+                    }
+                }
             }
         }
 
