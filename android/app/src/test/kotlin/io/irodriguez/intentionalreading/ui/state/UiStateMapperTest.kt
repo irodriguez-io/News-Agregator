@@ -89,6 +89,21 @@ class UiStateMapperTest {
     }
 
     @Test
+    fun `Scenario - the Android client says exactly what the browser says`() {
+        // Given
+        val singularRemainingCount = 1
+        val pluralRemainingCount = 2
+
+        // When
+        val singularLabel = Labels.remainingChoices(singularRemainingCount)
+        val pluralLabel = Labels.remainingChoices(pluralRemainingCount)
+
+        // Then
+        assertEquals("1 more choice waits quietly behind this one.", singularLabel)
+        assertEquals("2 more choices wait quietly behind this one.", pluralLabel)
+    }
+
+    @Test
     fun `category filtering happens before head selection without sorting dataset order`() {
         val technology = article(2, Category.TECHNOLOGY)
         val laterIam = article(3, Category.IAM)

@@ -163,3 +163,39 @@ test("mark read persistence failure restores its control and announces the failu
   assert.match(dom.status.textContent, /could not be moved to History/);
   assert.ok(findByClass(dom.appView, "article-card"));
 });
+
+test("Scenario: the browser writes the singular sentence in correct English", (t) => {
+  // Given
+  const dom = installDomFixture();
+  t.after(() => {
+    destroyDiscover();
+    dom.restore();
+  });
+
+  // When
+  renderModel({ remainingCount: 2 });
+
+  // Then
+  assert.equal(
+    findByClass(dom.appView, "discover-side-note").textContent,
+    "1 more choice waits quietly behind this one.",
+  );
+});
+
+test("Scenario: the plural sentence is unchanged", (t) => {
+  // Given
+  const dom = installDomFixture();
+  t.after(() => {
+    destroyDiscover();
+    dom.restore();
+  });
+
+  // When
+  renderModel({ remainingCount: 4 });
+
+  // Then
+  assert.equal(
+    findByClass(dom.appView, "discover-side-note").textContent,
+    "3 more choices wait quietly behind this one.",
+  );
+});

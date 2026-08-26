@@ -43,7 +43,7 @@ object Labels {
 
     fun remainingChoices(remainingCount: Int): String? = when {
         remainingCount <= 0 -> null
-        remainingCount == 1 -> "1 more choice wait quietly behind this one."
+        remainingCount == 1 -> "1 more choice waits quietly behind this one."
         else -> "$remainingCount more choices wait quietly behind this one."
     }
 }
