@@ -122,7 +122,7 @@ already work.
     UTC for a fixed instant, including for an instant in a non-UTC zone.
   - `git grep 'android\.'` over `«pkg»/ui/AppViewModel.kt` returns nothing.
   - No assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 3: the surface — the pickers, the confirmation, and the local-data section
 
