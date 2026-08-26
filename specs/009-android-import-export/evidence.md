@@ -24,7 +24,10 @@ wrote no product or test code
 | `391c338` | `docs(spec)` | slice 3 marked done |
 | `a871a73` | s3 walkthrough fix | the sheet's status message pinned; refusal clears the panel |
 
-SHAs are pre-rebase and are restated after the rebase onto merged `main`.
+| `661d953` | RED (rebase) | `pendingUndoOffer` rename following item 008 |
+| `46f624c` | GREEN (rebase) | import clears the undo offer — `design.md` D11 |
+
+SHAs above are post-rebase onto merged `main` at `f3ced7e`.
 
 ## Gates
 
@@ -68,6 +71,36 @@ that would have sprung them.
 **Slice 3 passed first time with no findings.** The reason is worth recording: the IO-dispatch hazard
 that finding 4 exposed was written into slice 3's brief before it was dispatched, so it was closed
 before it could be written.
+
+## The rebase onto merged `main`, and what it caught
+
+Item 008 merged as `f3ced7e`; this branch was rebased onto it before its final review. Three conflicts,
+**all additive** — both items had appended members to `AppAnnouncementKind`, branches to the same
+announcement `when`, and declarations to the same block at the composition root. Every resolution kept
+both sides; nothing was dropped.
+
+**Then the rebased head failed to compile**, and that is the whole argument for `execution-model.md` §4's
+rule that both gates are re-run on the rebased head rather than carrying pre-rebase numbers forward.
+
+Two things came out of it:
+
+1. **A stale reference.** Item 008 renamed `AppUiState.pendingUndoMessage` to `pendingUndoOffer`; one
+   assertion in this item's `an import clears the undo slot` still used the old name. Git merged the file
+   without a conflict, because the two items' edits touched different lines. Mechanical rename,
+   `661d953`.
+
+2. **A real cross-item defect** — `design.md` D11. Import cleared the undo *slot* but not the *offer*,
+   because item 007 required the first and item 008 introduced the second as deliberately independent
+   state. On the merged tree that means an import leaves a live Undo toast whose action is guaranteed to
+   fail with `UNDO_UNAVAILABLE`. Neither branch could show it: 008 had no import, 009 had no offer. Fixed
+   in `46f624c` by clearing both, mirroring what reset already does.
+
+The implementer stopped and escalated rather than reshaping the failing test, which is the correct call —
+a test failing on *behaviour* at an integration seam is information, not an obstacle.
+
+**Gates on the rebased head, with prior results deleted first so the counts are unambiguously from that
+run: 198 tests, 0 failures, `:app:assembleDebug` green.** 163 baseline + item 008's 19 + this item's 16.
+The pre-rebase count of 179 is discarded — it described a tree that no longer exists.
 
 ## Owner walkthrough
 
