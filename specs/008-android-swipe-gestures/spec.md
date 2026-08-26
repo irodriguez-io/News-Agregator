@@ -51,6 +51,21 @@ therefore split by construction, and the split is designed rather than discovere
 - **The feel** — that the gesture does not fight the card's vertical scroll, that the cue reads, that
   the exit is quiet — is emulator-only and is proven in §5, not by a test.
 
+### 1.3 One defect folded in from outside this item's scope
+
+The owner reported, during wave B, that returning from the publisher leaves **Mark read** below the
+fold: the reader comes back to Discover and the one action they returned to perform is off screen.
+
+It is not a defect this item introduced. It has been there since item 002 and item 004 did not touch it.
+The mechanism is that the card *grows* when the article becomes `OPENED` — the opened acknowledgment
+panel is inserted above the action row (`ArticleCard.kt:222-224`) and Mark read is added below it
+(`ArticleCard.kt:427-440`) — while `DiscoverScreen`'s scroll reset is keyed on `selectedCategory`,
+`article.id` and `state::class` (`DiscoverScreen.kt:57-59`), none of which change on that transition. So
+the scroll position is preserved and the taller card pushes its own controls past the viewport.
+
+It is folded into this item on the owner's decision of 2026-08-26, because this item already owns both
+files and had a round in flight. `design.md` D11 records the fix.
+
 ## 2. Story
 
 As a reader, I want to triage the article on screen with a flick left or right, so that a queue of
@@ -220,6 +235,13 @@ Then the card returns to rest rather than exiting\
 And the existing persistence-failure message is announced\
 And no undo offer is raised
 
+### Scenario: returning from the publisher leaves the next decision on screen
+
+Given an article the reader opened at the publisher\
+When the reader returns to Discover\
+Then the card's triage controls and the Mark read control are both on screen without scrolling\
+And the scroll movement is immediate rather than animated when the reader has animations turned off
+
 ### Scenario: resetting local data withdraws the offer
 
 Given a raised undo offer\
@@ -272,7 +294,10 @@ walkthrough** — 007 has none by design.
    activated.
 9. **Reduced motion.** Turn animations off in developer options. Swipe: the card carries no rotation
    and no exit travel, the action still commits, and the toast still appears.
-10. **Airplane mode is irrelevant here** — no network path is touched. Confirm only that a swipe
+10. **Return from the publisher.** Press Read article, let the browser open, then come back. The
+    triage controls and **Mark read** must both be on screen with no scrolling. This is the defect the
+    owner reported during wave B (§1.3); it is the reason this step exists.
+11. **Airplane mode is irrelevant here** — no network path is touched. Confirm only that a swipe
     still commits with the device offline.
 
 **What the owner is asked for, and only this:** step 5 and step 2 as a judgment — does the gesture

@@ -170,6 +170,12 @@ test count, and the walkthrough in `spec.md` §5.2.
   - `git grep 'undoable = true'` returns exactly the swipe commit call site and nothing else.
   - A screenshot from the emulator of a mid-drag card showing a cue, and of a committed swipe's toast,
     attached to the slice report.
+- **Folded in after the plan gate — the Mark read defect (`design.md` D11).** Returning from the
+  publisher leaves Mark read below the fold. Scroll the Discover column to its end when the card on
+  screen becomes opened, keyed on the transition rather than run on every recomposition, and use
+  `scrollTo` rather than `animateScrollTo` under reduced motion (`DESIGN.md:149`). **Do not fix it by
+  resetting the scroll to zero** — that shows the card's metadata and pushes the controls further away.
+  Verified by `spec.md` §5.2 step 10, not by a JVM test.
 - **Deferred to wave B's batched walkthrough:** all of `spec.md` §5.2, run against merged `main`. The
   slice is *done* when the build is green and the two screenshots exist; the **item** is not shippable
   until the walkthrough is recorded in `evidence.md`.

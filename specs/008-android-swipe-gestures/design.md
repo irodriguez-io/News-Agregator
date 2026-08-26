@@ -217,3 +217,27 @@ on the JVM. It is declined:
 
 If the implementer believes a dependency is required, that is a report to the supervisor, not a
 decision to make (`AGENTS.md`).
+
+## D11 — Returning from the publisher scrolls the next decision into view
+
+Folded in on the owner's decision of 2026-08-26; `spec.md` §1.3 records why it is in this item at all.
+
+The bug is not that the scroll resets. It is that it *doesn't*. `DiscoverScreen`'s existing
+`LaunchedEffect` is keyed on `selectedCategory`, `cardState?.article?.id` and `state::class`
+(`DiscoverScreen.kt:57-59`) — none of which change when the same article moves `UNSEEN → OPENED`. The
+position is therefore preserved across the return from the publisher, while the card grows underneath
+it by the height of the opened acknowledgment (`ArticleCard.kt:222-224`) plus the Mark read button
+(`ArticleCard.kt:427-440`). The controls the reader came back for end up past the viewport.
+
+**Do not fix this by resetting to zero.** That is the reflex, and it is wrong: it would show the top of
+the card, which is the metadata, and push the controls *further* away on a long article.
+
+The fix is to scroll the Discover column to its end when the card on screen becomes opened. On this
+screen the card is the last substantial element — only the remaining-choices note follows it — so the
+end of the column is exactly the triage row, Mark read, and that note. It must fire on the transition,
+not on every recomposition, so it is keyed on the opened flag for the current article rather than run
+unconditionally.
+
+**The movement is immediate under reduced motion.** `DESIGN.md:149` says so in as many words — *"use
+immediate scrolling"* — alongside removing card transforms. The reduced-motion capability is already
+threaded to this screen for the swipe (D5), so the same flag chooses `scrollTo` over `animateScrollTo`.
