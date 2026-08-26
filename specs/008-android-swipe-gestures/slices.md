@@ -69,9 +69,11 @@ describes exercised from plain JUnit over synthetic pointer sequences.
   no runtime, one behaviour per test.
 - **Definition of done:**
   - Both gates green.
-  - A test proving the 1.15 bias: a drag of `x = 10, y = 9` locks **horizontal**, and `x = 10, y = 9.5`
-    locks **vertical**. The asymmetry is the point; a test that only checks `abs(x) > abs(y)` does not
-    cover this slice.
+  - A test proving the 1.15 bias at its boundary. Horizontal requires `abs(x) > abs(y) * 1.15`, so with
+    `x = 10` the crossover sits at `y = 10 / 1.15 ≈ 8.696`: a drag of `x = 10, y = 8.5` locks
+    **horizontal** (8.5 × 1.15 = 9.775 < 10) and `x = 10, y = 9` locks **vertical**
+    (9 × 1.15 = 10.35 > 10). Both clear the 8 dp slop, so both do lock. The asymmetry is the point; a
+    test that only checks `abs(x) > abs(y)` does not cover this slice.
   - A test proving the lock survives a later reversal of dominance within the same gesture.
   - A test proving rotation is clamped at both ±4.5°, and that it is `travel / 34` below the clamp.
   - A test proving the emitted action is `DISMISS` left of −90 dp-equivalent and `SAVE` right of +90.
