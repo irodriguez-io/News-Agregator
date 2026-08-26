@@ -83,4 +83,4 @@ entirely from JVM tests over plain data.
   null** (`design.md` D6); a test proving `preferences` is unchanged across an undo; a construction-time
   test proving a fresh `AppViewModel` reports Undo unavailable regardless of what is on disk; grep
   evidence in the PR that no caller in the tree passes `undoable = true`.
-- **Status:** pending
+- **Status:** done
