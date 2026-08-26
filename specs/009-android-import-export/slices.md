@@ -165,4 +165,4 @@ the unchanged test count, and the walkthrough in `spec.md` §5.2.
 - **Deferred to wave B's batched walkthrough:** all of `spec.md` §5.2, run against merged `main`, plus
   the owner's hardware SAF round trip. The slice is *done* when the build is green and the screenshots
   exist; the **item** is not shippable until the walkthrough is recorded in `evidence.md`.
-- **Status:** pending
+- **Status:** done
