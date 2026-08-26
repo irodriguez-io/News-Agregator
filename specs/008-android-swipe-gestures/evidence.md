@@ -88,6 +88,8 @@ reachable surface, by design.
 | Labeled Not interested button | Committed, deck advanced, **no toast** |
 | Reduced motion (`animator_duration_scale 0`) | Swipe still commits, deck advances, toast still offered |
 | Return from the publisher | Triage row **and** Mark read both on screen with no scrolling |
+| Swipe, then look | Incoming card fully on screen with no scrolling |
+| Category change | Still resets to the masthead, as intended |
 
 The undo case confirms `design.md` D6 on the device: the article returns to the head of Discover on
 dataset order alone, with no held-article pin re-established.
@@ -97,6 +99,34 @@ in `specs/backlog.md`.
 
 **Owner judgement still outstanding:** whether the exit feels *tactile, quiet, controlled* rather than
 bouncy or playful (`06-ui-ux.md` §44). `adb` can drive a synthetic swipe; it cannot judge one.
+
+## Two defects the owner found that the walkthrough had not
+
+Both were reported after testing the branch build on the emulator, and both are recorded as folded in
+after the plan gate rather than as part of the approved scope.
+
+1. **Mark read below the fold on returning from the publisher** (`design.md` D11, `ca335f7` / `02caf9c`).
+   Pre-existing since item 002; the reviewer had hit it during the walkthrough and worked around it by
+   scrolling rather than recognising it as a defect. That is the lesson worth carrying: the walkthrough
+   caught the symptom and the reviewer normalised it.
+2. **The deck advancing returned the screen to the top** (`design.md` D12, `83476aa` / `11e957f`), leaving
+   the incoming card half hidden. Swipe made it constant rather than occasional, which is what made it
+   visible to the owner immediately and invisible to the reviewer across a whole walkthrough.
+
+Verified on the device: after a committed swipe the incoming card is fully on screen. The scroll clamps
+at the content's maximum rather than placing the card flush at the top, because Discover's content is
+shorter than the scroll that would require. That is the best available outcome while the editorial
+header sits above the card, and it is precisely why item 012 exists.
+
+## Two owner requests that are **not** in this item
+
+- **Move the operational header below the card** — Refresh, content age, the source disclosure, the
+  available count and the category selector. Requires an amendment to `06-ui-ux.md` §21's *"Discover
+  begins with an editorial header area"*, so it is item 012. It will largely subsume D12.
+- **Rotate the card about the Y axis instead of the Z axis.** Raised, considered, and **declined by the
+  owner on 2026-08-26**. It would have contradicted `06-ui-ux.md` §§41–42 and `DESIGN.md`'s interaction
+  states, which both specify counterclockwise/clockwise rotation — language that only describes in-plane
+  motion. Recorded here so it is not rediscovered as an oversight.
 
 ## Scope
 
