@@ -85,7 +85,7 @@ describes exercised from plain JUnit over synthetic pointer sequences.
     emitted.
   - No `android.` or `androidx.` import in the new main-source file — assert it by inspection in the PR.
   - No assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 2: the offer — undo eligibility, its identity, and the two announcements
 
