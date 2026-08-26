@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.IntentionalReading" parent="Theme.IntentionalReading.Base">
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+    </style>
+</resources>
