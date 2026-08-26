@@ -76,4 +76,8 @@
     <string name="refresh_updated">Content updated.</string>
     <string name="refresh_current">Content is already current.</string>
     <string name="refresh_failed">Content could not be refreshed. Your saved reading and History are unchanged.</string>
+    <string name="local_data_export_prepared">Local data export prepared.</string>
+    <string name="local_data_export_failed">Local data could not be exported.</string>
+    <string name="local_data_imported">Local data imported.</string>
+    <string name="local_data_import_failed">Import was not completed. Current local data was not changed.</string>
 </resources>

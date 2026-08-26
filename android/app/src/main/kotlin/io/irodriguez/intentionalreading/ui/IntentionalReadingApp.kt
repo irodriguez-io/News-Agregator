@@ -117,6 +117,10 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     AppAnnouncementKind.REFRESH_FAILED -> R.string.refresh_failed
                     AppAnnouncementKind.UNDO_COMPLETED -> R.string.undo_completed
                     AppAnnouncementKind.UNDO_FAILED -> R.string.undo_failed
+                    AppAnnouncementKind.EXPORT_COMPLETE -> R.string.local_data_export_prepared
+                    AppAnnouncementKind.EXPORT_FAILED -> R.string.local_data_export_failed
+                    AppAnnouncementKind.IMPORT_COMPLETE -> R.string.local_data_imported
+                    AppAnnouncementKind.IMPORT_FAILED -> R.string.local_data_import_failed
                 },
             )
         }

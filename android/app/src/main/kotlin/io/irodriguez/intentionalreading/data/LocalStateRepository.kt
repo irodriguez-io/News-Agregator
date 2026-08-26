@@ -2,6 +2,7 @@ package io.irodriguez.intentionalreading.data
 
 import io.irodriguez.intentionalreading.data.local.state.LocalStateStore
 import io.irodriguez.intentionalreading.domain.model.LocalState
+import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,16 @@ class LocalStateRepository(
     suspend fun reset(): LocalStateResult = withContext(ioDispatcher) {
         writeMutex.withLock {
             store.reset()
+        }
+    }
+
+    suspend fun exportState(state: LocalState): LocalStateExport = withContext(ioDispatcher) {
+        store.exportState(state)
+    }
+
+    suspend fun importState(candidateBytes: ByteArray): LocalStateResult = withContext(ioDispatcher) {
+        writeMutex.withLock {
+            store.importState(candidateBytes)
         }
     }
 }
