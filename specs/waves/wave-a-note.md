@@ -4,7 +4,8 @@ Written 2026-08-25, immediately after 007 merged. Companion to `wave-a.md`, whic
 historical record of what was believed at dispatch. This is what happened, so wave B is planned against
 evidence rather than against that document's optimism.
 
-**Outcome: all three items merged to `main` in one session, in the planned order.**
+**Outcome: all three items merged to `main` in one session, in the planned order, and signed off by the
+owner the same day.**
 
 | Item | PR | Merge commit | Rounds |
 |---|---|---|---|

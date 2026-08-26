@@ -136,10 +136,12 @@ and the stored appearance Dark, `dumpsys activity` reported the package's
 `mNightMode=1 (no)`. The per-application override is live and is precisely what resolves
 `@color/launch_background` when the platform inflates the launch window on the next cold start.
 
+**Owner visual pass — signed off 2026-08-25.** The launch frame reads as seamless, not merely as the
+right colour. That was the one judgment `adb` could not make, and it closes the last checkpoint
+`waves/wave-a.md` §Owner checkpoints held open for this item.
+
 ## Outstanding
 
-- **The owner's visual pass** on whether the launch frame reads as *seamless* — as opposed to merely the
-  right colour — is still open. `adb` can prove the colour; it cannot make that judgment.
 - **Scenarios 1–4 were emulator-only by construction** — no JVM test observes a pre-Compose frame — so
   this item merged on its JVM half and the walkthrough ran at wave close against merged `main`, per
   `execution-model.md` §6. `slices.md` says the item is not shippable until the walkthrough is recorded;
