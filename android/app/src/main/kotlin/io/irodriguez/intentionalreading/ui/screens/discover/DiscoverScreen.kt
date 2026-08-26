@@ -16,6 +16,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -56,6 +61,22 @@ fun DiscoverScreen(
     val scrollState = rememberScrollState()
     LaunchedEffect(selectedCategory, cardState?.article?.id, state::class) {
         scrollState.scrollTo(0)
+    }
+    var wasOpened by remember(cardState?.article?.id) {
+        mutableStateOf(cardState?.isOpened == true)
+    }
+    LaunchedEffect(cardState?.article?.id, cardState?.isOpened) {
+        val isOpened = cardState?.isOpened == true
+        val becameOpened = !wasOpened && isOpened
+        wasOpened = isOpened
+        if (becameOpened) {
+            withFrameNanos { }
+            if (reducedMotion()) {
+                scrollState.scrollTo(scrollState.maxValue)
+            } else {
+                scrollState.animateScrollTo(scrollState.maxValue)
+            }
+        }
     }
     Column(
         modifier = modifier
