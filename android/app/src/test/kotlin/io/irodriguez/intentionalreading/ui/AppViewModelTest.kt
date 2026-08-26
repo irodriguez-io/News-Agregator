@@ -988,6 +988,46 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `the slot holds one action, and the newest wins`() = runBlocking {
+        // Given an undo-eligible dismiss followed by an undo-eligible save of a different article
+        val dismissedArticle = article(1)
+        val savedArticle = article(2)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(dismissedArticle, savedArticle))),
+            store = store,
+        )
+        viewModel.onArticleAction(
+            dismissedArticle,
+            ArticleAction.DISMISS,
+            undoable = true,
+        )
+        assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoOffer?.message)
+        viewModel.onArticleAction(
+            savedArticle,
+            ArticleAction.SAVE,
+            undoable = true,
+        )
+
+        // When Undo is performed
+        val undone = viewModel.performUndo()
+
+        // Then only the save is reversed, the dismiss stays applied, and no older Undo remains
+        assertTrue(undone.persisted)
+        assertIs<ArticleTransition.Reverted>(undone.transition)
+        val stored = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(ArticleStatus.DISMISSED, stored.articles.getValue(dismissedArticle.id).status)
+        assertFalse(savedArticle.id in stored.articles)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        val writesAfterUndo = store.saveRequests.size
+        val refused = viewModel.performUndo()
+        val invalid = assertIs<ArticleTransition.Invalid>(refused.transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
+        assertEquals(writesAfterUndo, store.saveRequests.size)
+    }
+
+    @Test
     fun `each committed swipe raises its own offer`() = runBlocking {
         // Given a swipe that has raised an Undo offer
         val dismissedArticle = article(1)
@@ -1018,19 +1058,6 @@ class AppViewModelTest {
         assertEquals(PendingUndoMessage.SAVED, secondOffer.message)
         viewModel.acknowledgeUndoOffer(firstOffer.id)
         assertEquals(secondOffer, viewModel.uiState.value.pendingUndoOffer)
-        val undone = viewModel.performUndo()
-        assertTrue(undone.persisted)
-        assertIs<ArticleTransition.Reverted>(undone.transition)
-        val stored = assertIs<LocalStateResult.Success>(store.loadResult).state
-        assertEquals(ArticleStatus.DISMISSED, stored.articles.getValue(dismissedArticle.id).status)
-        assertFalse(savedArticle.id in stored.articles)
-        assertFalse(viewModel.uiState.value.undoAvailable)
-        assertNull(viewModel.uiState.value.pendingUndoOffer)
-        val writesAfterUndo = store.saveRequests.size
-        val refused = viewModel.performUndo()
-        val invalid = assertIs<ArticleTransition.Invalid>(refused.transition)
-        assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
-        assertEquals(writesAfterUndo, store.saveRequests.size)
     }
 
     @Test
