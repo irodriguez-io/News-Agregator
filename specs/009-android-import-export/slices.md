@@ -87,7 +87,7 @@ already work.
   - A test proving import clears the recovery lock, and that a subsequent ordinary `save` succeeds; plus
     a test proving a **rejected** import leaves the lock in place.
   - No assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 2: the ViewModel — adoption, the undo slot, the filename, and the announcements
 
