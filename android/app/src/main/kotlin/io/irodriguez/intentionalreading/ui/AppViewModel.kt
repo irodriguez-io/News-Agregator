@@ -324,6 +324,7 @@ class AppViewModel(
             is LocalStateResult.Success -> {
                 adoptPersistedState(result.state)
                 undoRecord = null
+                pendingUndoOffer = null
                 _heldArticleId.value = null
                 _localStateError.value = null
                 _recoveryNoticeVisible.value = false
