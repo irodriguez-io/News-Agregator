@@ -124,7 +124,7 @@ anything renders them.
   - A test proving reset withdraws the offer.
   - A test proving `preferences` is byte-identical across a commit-and-undo round trip.
   - No assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 3: the surface — the drag, the cues, the exit, and the toast
 
