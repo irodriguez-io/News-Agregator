@@ -165,6 +165,12 @@ class AppViewModel(
         }
     }
 
+    fun launchUndo(onComplete: (ArticleActionResult) -> Unit = {}) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(performUndo())
+        }
+    }
+
     fun launchResetLocalData(onComplete: (LocalStateResult) -> Unit = {}) {
         viewModelScope.launch(loadDispatcher) {
             onComplete(resetLocalData())

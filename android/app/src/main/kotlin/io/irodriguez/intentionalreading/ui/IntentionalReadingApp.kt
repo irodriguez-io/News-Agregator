@@ -26,7 +26,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,7 +53,6 @@ import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingTheme
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +75,6 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
         ?.container
         ?.reducedMotion
         ?: { false }
-    val undoScope = rememberCoroutineScope()
     val pendingUndoOffer = uiState.pendingUndoOffer
     val onOpenArticle: (Article) -> Unit = { article ->
         viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
@@ -262,9 +259,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
             if (undoToastMessage != null && !settingsOpen) {
                 UndoToast(
                     message = undoToastMessage,
-                    onUndo = {
-                        undoScope.launch { viewModel.performUndo() }
-                    },
+                    onUndo = viewModel::launchUndo,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp, vertical = 96.dp),
