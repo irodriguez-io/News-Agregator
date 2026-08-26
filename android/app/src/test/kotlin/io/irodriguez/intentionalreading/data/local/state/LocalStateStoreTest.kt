@@ -1,6 +1,7 @@
 package io.irodriguez.intentionalreading.data.local.state
 
 import io.irodriguez.intentionalreading.domain.model.LocalState
+import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
@@ -22,7 +23,6 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class LocalStateStoreTest {
@@ -216,8 +216,8 @@ class LocalStateStoreTest {
         val store = LocalStateStore(directory)
 
         // When
-        val result: LocalStateResult = store.exportState(state)
-        val exported = assertNotNull(assertIs<LocalStateResult.Success>(result).encodedBytes)
+        val result: LocalStateExport = store.exportState(state)
+        val exported = assertIs<LocalStateExport.Success>(result).bytes
 
         // Then
         assertEquals(
@@ -235,9 +235,7 @@ class LocalStateStoreTest {
         val store = LocalStateStore(directory)
 
         // When
-        val exported = assertNotNull(
-            assertIs<LocalStateResult.Success>(store.exportState(original)).encodedBytes,
-        )
+        val exported = assertIs<LocalStateExport.Success>(store.exportState(original)).bytes
         val imported = assertIs<LocalStateResult.Success>(store.importState(exported))
         val loaded = assertIs<LocalStateResult.Success>(store.load())
 
@@ -251,11 +249,11 @@ class LocalStateStoreTest {
         val invalidState = validState().copy(schemaVersion = 2)
         val store = LocalStateStore(directory)
 
-        val result: LocalStateResult = store.exportState(invalidState)
+        val result: LocalStateExport = store.exportState(invalidState)
 
         assertEquals(
             LocalStateErrorCode.UNSUPPORTED_SCHEMA,
-            assertIs<LocalStateResult.Failure>(result).code,
+            assertIs<LocalStateExport.Failure>(result).code,
         )
     }
 
@@ -269,9 +267,9 @@ class LocalStateStoreTest {
         assertEquals(LocalStateStore.MAX_IMPORT_BYTES, exactLimitCandidate.size)
         val imported = assertIs<LocalStateResult.Success>(store.importState(exactLimitCandidate))
         val storedAtLimit = stateFile.readBytes()
-        val canonicalBytes = assertNotNull(
-            assertIs<LocalStateResult.Success>(store.exportState(imported.state)).encodedBytes,
-        )
+        val canonicalBytes = assertIs<LocalStateExport.Success>(
+            store.exportState(imported.state),
+        ).bytes
         assertEquals(canonicalBytes.size, storedAtLimit.size)
         assertTrue(storedAtLimit.size < LocalStateStore.MAX_IMPORT_BYTES)
         assertContentEquals(canonicalBytes, storedAtLimit)
