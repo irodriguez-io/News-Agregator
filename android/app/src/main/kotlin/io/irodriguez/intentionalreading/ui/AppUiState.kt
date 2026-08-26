@@ -29,7 +29,12 @@ data class AppUiState(
     val lastRefreshOutcome: String,
     val refresh: DatasetRefreshPhase,
     val undoAvailable: Boolean,
-    val pendingUndoMessage: PendingUndoMessage?,
+    val pendingUndoOffer: PendingUndoOffer?,
+)
+
+data class PendingUndoOffer(
+    val id: Long,
+    val message: PendingUndoMessage,
 )
 
 enum class PendingUndoMessage {

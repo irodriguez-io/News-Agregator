@@ -35,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
@@ -950,6 +951,44 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `a committed swipe is undo-eligible`() = runBlocking {
+        // Given an article on the Discover card
+        val target = article(1)
+        val viewModel = viewModel()
+
+        // When a swipe commits Save
+        val result = viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+
+        // Then the state changes, the slot holds the action, and Undo is available
+        assertTrue(result.persisted)
+        assertEquals(ArticleStatus.SAVED, applied(result).record.status)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoOffer?.message)
+    }
+
+    @Test
+    fun `a labeled button press is still not undo-eligible`() = runBlocking {
+        // Given the four labeled article actions
+        val actions = listOf(
+            ArticleAction.DISMISS,
+            ArticleAction.SAVE,
+            ArticleAction.OPEN,
+            ArticleAction.MARK_READ,
+        )
+
+        // When each action is committed through the non-undoable button path
+        actions.forEachIndexed { index, action ->
+            val viewModel = viewModel()
+            val result = viewModel.onArticleAction(article(index + 1), action, undoable = false)
+
+            // Then the slot is unchanged and no offer is raised
+            assertTrue(result.persisted)
+            assertFalse(viewModel.uiState.value.undoAvailable)
+            assertNull(viewModel.uiState.value.pendingUndoOffer)
+        }
+    }
+
+    @Test
     fun `the slot holds one action, and the newest wins`() = runBlocking {
         // Given an undo-eligible dismiss followed by an undo-eligible save of a different article
         val dismissedArticle = article(1)
@@ -964,7 +1003,7 @@ class AppViewModelTest {
             ArticleAction.DISMISS,
             undoable = true,
         )
-        assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoMessage)
+        assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoOffer?.message)
         viewModel.onArticleAction(
             savedArticle,
             ArticleAction.SAVE,
@@ -981,12 +1020,45 @@ class AppViewModelTest {
         assertEquals(ArticleStatus.DISMISSED, stored.articles.getValue(dismissedArticle.id).status)
         assertFalse(savedArticle.id in stored.articles)
         assertFalse(viewModel.uiState.value.undoAvailable)
-        assertNull(viewModel.uiState.value.pendingUndoMessage)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
         val writesAfterUndo = store.saveRequests.size
         val refused = viewModel.performUndo()
         val invalid = assertIs<ArticleTransition.Invalid>(refused.transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
         assertEquals(writesAfterUndo, store.saveRequests.size)
+    }
+
+    @Test
+    fun `each committed swipe raises its own offer`() = runBlocking {
+        // Given a swipe that has raised an Undo offer
+        val dismissedArticle = article(1)
+        val savedArticle = article(2)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(dismissedArticle, savedArticle))),
+            store = store,
+        )
+        viewModel.onArticleAction(
+            dismissedArticle,
+            ArticleAction.DISMISS,
+            undoable = true,
+        )
+        val firstOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+
+        // When a second swipe commits on the next article
+        viewModel.onArticleAction(
+            savedArticle,
+            ArticleAction.SAVE,
+            undoable = true,
+        )
+        val secondOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+
+        // Then a distinct offer is raised and the slot holds only the newer action
+        assertTrue(secondOffer.id > firstOffer.id)
+        assertEquals(PendingUndoMessage.DISMISSED, firstOffer.message)
+        assertEquals(PendingUndoMessage.SAVED, secondOffer.message)
+        viewModel.acknowledgeUndoOffer(firstOffer.id)
+        assertEquals(secondOffer, viewModel.uiState.value.pendingUndoOffer)
     }
 
     @Test
@@ -1007,7 +1079,156 @@ class AppViewModelTest {
         // Then the successful commit publishes an Undo offer
         assertTrue(completed.await().persisted)
         assertTrue(viewModel.uiState.value.undoAvailable)
-        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoOffer?.message)
+    }
+
+    @Test
+    fun `Undo through the launcher completes on the view model scope`() = runBlocking {
+        // Given an undo-eligible commit and an Undo write that is still in progress
+        val target = article(1)
+        val enteredUndoWrite = CompletableDeferred<Unit>()
+        val releaseUndoWrite = CompletableDeferred<Unit>()
+        val completed = CompletableDeferred<ArticleActionResult>()
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        assertTrue(viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true).persisted)
+        store.saveBehavior = { state ->
+            enteredUndoWrite.complete(Unit)
+            releaseUndoWrite.await()
+            success(state)
+        }
+        val launchingJob = Job()
+        val launchingScope = CoroutineScope(Dispatchers.Unconfined + launchingJob)
+
+        // When the calling scope leaves while Undo is persisting
+        val caller = launchingScope.launch {
+            viewModel.launchUndo(onComplete = completed::complete)
+            awaitCancellation()
+        }
+        enteredUndoWrite.await()
+        launchingJob.cancel()
+        caller.join()
+        releaseUndoWrite.complete(Unit)
+        val result = completed.await()
+
+        // Then the ViewModel-owned work adopts the persisted result and completes its callback
+        assertTrue(result.persisted)
+        assertFalse(target.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
+    fun `the offer's message names the action`() = runBlocking {
+        // Given articles that can be committed by swipe
+        val savedArticle = article(1)
+        val dismissedArticle = article(2)
+        val viewModel = viewModel()
+
+        // When Save and Dismiss are committed as undoable actions
+        viewModel.onArticleAction(savedArticle, ArticleAction.SAVE, undoable = true)
+        val savedOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        viewModel.onArticleAction(dismissedArticle, ArticleAction.DISMISS, undoable = true)
+        val dismissedOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+
+        // Then each offer names its committed action
+        assertEquals(PendingUndoMessage.SAVED, savedOffer.message)
+        assertEquals(PendingUndoMessage.DISMISSED, dismissedOffer.message)
+    }
+
+    @Test
+    fun `the offer expires without withdrawing Undo`() = runBlocking {
+        // Given a raised Undo offer
+        val target = article(1)
+        val viewModel = viewModel()
+        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        val offer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+
+        // When the offer is acknowledged by id
+        viewModel.acknowledgeUndoOffer(offer.id)
+
+        // Then the offer is withdrawn while the slot and Undo remain available
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertTrue(viewModel.performUndo().persisted)
+    }
+
+    @Test
+    fun `Undo from the offer restores the article and announces`() = runBlocking {
+        // Given a raised offer for a dismiss and pre-existing preferences
+        val target = article(1)
+        val previousRecord = record(target, ArticleStatus.OPENED)
+        val preferences = LocalState.Preferences(
+            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 3)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 2)),
+        )
+        val initial = LocalState.default().copy(
+            articles = mapOf(target.id to previousRecord),
+            preferences = preferences,
+        )
+        val store = FakeLocalStateStore(success(initial))
+        val viewModel = viewModel(store = store)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+
+        // When Undo is taken from the offer
+        val result = viewModel.performUndo()
+
+        // Then the exact record and preferences return, completion is announced, and offer and slot withdraw
+        assertTrue(result.persisted)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(previousRecord, persisted.articles[target.id])
+        assertEquals(preferences, persisted.preferences)
+        assertEquals(AppAnnouncementKind.UNDO_COMPLETED, viewModel.announcement.value?.kind)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
+    fun `a refused Undo announces its failure and keeps the offer`() = runBlocking {
+        // Given a raised offer whose article record is later absent from the adopted state
+        val target = article(1)
+        val other = article(2)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(store = store)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        val offer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        store.saveBehavior = { candidate -> success(candidate.copy(articles = candidate.articles - target.id)) }
+        viewModel.onArticleAction(other, ArticleAction.SAVE, undoable = false)
+        val writesBeforeUndo = store.saveRequests.size
+
+        // When Undo is refused as stale
+        val result = viewModel.performUndo()
+
+        // Then nothing is written, failure is announced, and the same offer remains
+        val invalid = assertIs<ArticleTransition.Invalid>(result.transition)
+        assertEquals(ArticleTransitionErrorCode.UNDO_STALE, invalid.code)
+        assertEquals(writesBeforeUndo, store.saveRequests.size)
+        assertEquals(AppAnnouncementKind.UNDO_FAILED, viewModel.announcement.value?.kind)
+        assertEquals(offer, viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
+    fun `a swipe whose write fails is not visually finalized`() = runBlocking {
+        // Given an article and a local-state store that refuses the swipe write
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = {
+                LocalStateResult.Failure(
+                    code = LocalStateErrorCode.WRITE_FAILED,
+                    message = "disk full",
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When a swipe commits an undoable Save
+        val result = viewModel.onArticleAction(article(1), ArticleAction.SAVE, undoable = true)
+
+        // Then persistence fails and neither an offer nor an Undo slot is published
+        assertFalse(result.persisted)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
     }
 
     @Test
@@ -1052,7 +1273,7 @@ class AppViewModelTest {
         assertEquals(committed, assertIs<LocalStateResult.Success>(store.loadResult).state)
         assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
         assertTrue(viewModel.uiState.value.undoAvailable)
-        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoOffer?.message)
         assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
 
         store.saveBehavior = { success(it) }
@@ -1075,7 +1296,7 @@ class AppViewModelTest {
 
         // Then the slot is empty and Undo is unavailable
         assertFalse(viewModel.uiState.value.undoAvailable)
-        assertNull(viewModel.uiState.value.pendingUndoMessage)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
         val writesAfterReset = store.saveRequests.size
         val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndo().transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
@@ -1097,7 +1318,7 @@ class AppViewModelTest {
 
         // Then the offer is absent regardless of the state on disk
         assertFalse(freshProcess.uiState.value.undoAvailable)
-        assertNull(freshProcess.uiState.value.pendingUndoMessage)
+        assertNull(freshProcess.uiState.value.pendingUndoOffer)
         val writesBeforeRefusal = store.saveRequests.size
         val invalid = assertIs<ArticleTransition.Invalid>(freshProcess.performUndo().transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)

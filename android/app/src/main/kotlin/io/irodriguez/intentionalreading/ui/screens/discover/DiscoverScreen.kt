@@ -16,16 +16,26 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
+import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
 import io.irodriguez.intentionalreading.ui.components.EditorialHeader
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
+import kotlin.math.roundToInt
 
 @Composable
 fun DiscoverScreen(
@@ -39,6 +49,8 @@ fun DiscoverScreen(
     onReadArticle: (Article) -> Unit,
     onSave: (Article) -> Unit,
     onMarkRead: (Article) -> Unit,
+    onSwipeCommit: (Article, ArticleAction, (Boolean) -> Unit) -> Unit,
+    reducedMotion: () -> Boolean = { false },
     modifier: Modifier = Modifier,
 ) {
     val cardState = state as? DiscoverUiState.Card
@@ -51,8 +63,43 @@ fun DiscoverScreen(
         state.refreshAffordance == DiscoverRefreshAffordance.AVAILABLE
     }
     val scrollState = rememberScrollState()
-    LaunchedEffect(selectedCategory, cardState?.article?.id, state::class) {
+    val articleId = cardState?.article?.id
+    var previousArticleId by remember(selectedCategory, state::class) {
+        mutableStateOf(articleId)
+    }
+    var cardTopOffset by remember { mutableIntStateOf(0) }
+    LaunchedEffect(selectedCategory, state::class) {
         scrollState.scrollTo(0)
+    }
+    LaunchedEffect(articleId) {
+        val articleChanged = previousArticleId != null &&
+            articleId != null &&
+            previousArticleId != articleId
+        previousArticleId = articleId
+        if (articleChanged) {
+            withFrameNanos { }
+            if (reducedMotion()) {
+                scrollState.scrollTo(cardTopOffset)
+            } else {
+                scrollState.animateScrollTo(cardTopOffset)
+            }
+        }
+    }
+    var wasOpened by remember(articleId) {
+        mutableStateOf(cardState?.isOpened == true)
+    }
+    LaunchedEffect(articleId, cardState?.isOpened) {
+        val isOpened = cardState?.isOpened == true
+        val becameOpened = !wasOpened && isOpened
+        wasOpened = isOpened
+        if (becameOpened) {
+            withFrameNanos { }
+            if (reducedMotion()) {
+                scrollState.scrollTo(scrollState.maxValue)
+            } else {
+                scrollState.animateScrollTo(scrollState.maxValue)
+            }
+        }
     }
     Column(
         modifier = modifier
@@ -94,6 +141,11 @@ fun DiscoverScreen(
                 onReadArticle = onReadArticle,
                 onSave = onSave,
                 onMarkRead = onMarkRead,
+                onSwipeCommit = onSwipeCommit,
+                reducedMotion = reducedMotion,
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    cardTopOffset = coordinates.positionInParent().y.roundToInt()
+                },
             )
         }
     }
@@ -160,15 +212,23 @@ private fun CardBody(
     onReadArticle: (Article) -> Unit,
     onSave: (Article) -> Unit,
     onMarkRead: (Article) -> Unit,
+    onSwipeCommit: (Article, ArticleAction, (Boolean) -> Unit) -> Unit,
+    reducedMotion: () -> Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
         ArticleCard(
             state = state,
             onDismiss = onDismiss,
             onReadArticle = onReadArticle,
             onSave = onSave,
             onMarkRead = onMarkRead,
+            onSwipeCommit = onSwipeCommit,
+            reducedMotion = reducedMotion,
         )
         Labels.remainingChoices(state.remainingCount)?.let { sideNote ->
             Text(

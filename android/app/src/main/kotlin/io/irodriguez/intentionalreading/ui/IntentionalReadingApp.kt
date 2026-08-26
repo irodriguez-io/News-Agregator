@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import io.irodriguez.intentionalreading.IntentionalReadingApplication
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
@@ -43,6 +45,7 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.ui.components.BottomNavigationBar
 import io.irodriguez.intentionalreading.ui.components.LiveStatusMessage
 import io.irodriguez.intentionalreading.ui.components.LocalStateRecoveryNotice
+import io.irodriguez.intentionalreading.ui.components.UndoToast
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverScreen
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryScreen
 import io.irodriguez.intentionalreading.ui.screens.readlater.ReadLaterScreen
@@ -69,6 +72,11 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
     val resetInProgress by viewModel.resetInProgress.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val applicationContext = LocalContext.current.applicationContext
+    val reducedMotion = (applicationContext as? IntentionalReadingApplication)
+        ?.container
+        ?.reducedMotion
+        ?: { false }
+    val pendingUndoOffer = uiState.pendingUndoOffer
     val onOpenArticle: (Article) -> Unit = { article ->
         viewModel.launchArticleAction(article, ArticleAction.OPEN) { result ->
             if (result.allowNavigation) {
@@ -86,6 +94,14 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
         }
     }
 
+    LaunchedEffect(pendingUndoOffer?.id, lifecycleOwner) {
+        val current = pendingUndoOffer ?: return@LaunchedEffect
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            delay(4_500)
+            viewModel.acknowledgeUndoOffer(current.id)
+        }
+    }
+
     IntentionalReadingTheme(appearance = appearance) {
         val tokens = LocalIntentionalReadingTokens.current
         val announcementText = announcement?.let { event ->
@@ -99,6 +115,16 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                     AppAnnouncementKind.REFRESH_UPDATED -> R.string.refresh_updated
                     AppAnnouncementKind.REFRESH_CURRENT -> R.string.refresh_current
                     AppAnnouncementKind.REFRESH_FAILED -> R.string.refresh_failed
+                    AppAnnouncementKind.UNDO_COMPLETED -> R.string.undo_completed
+                    AppAnnouncementKind.UNDO_FAILED -> R.string.undo_failed
+                },
+            )
+        }
+        val undoToastMessage = pendingUndoOffer?.let { offer ->
+            stringResource(
+                when (offer.message) {
+                    PendingUndoMessage.SAVED -> R.string.undo_toast_saved
+                    PendingUndoMessage.DISMISSED -> R.string.undo_toast_dismissed
                 },
             )
         }
@@ -195,6 +221,16 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                                 onMarkRead = { article ->
                                     viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
                                 },
+                                onSwipeCommit = { article, action, onComplete ->
+                                    viewModel.launchArticleAction(
+                                        article = article,
+                                        action = action,
+                                        undoable = true,
+                                    ) { result ->
+                                        onComplete(result.persisted)
+                                    }
+                                },
+                                reducedMotion = reducedMotion,
                                 modifier = Modifier.fillMaxSize(),
                             )
                             Destination.HISTORY -> HistoryScreen(
@@ -212,13 +248,24 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 }
             }
 
-            if (announcementText != null && !settingsOpen) {
-                LiveStatusMessage(
-                    message = announcementText,
+            if (!settingsOpen) {
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp, vertical = 96.dp),
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (undoToastMessage != null) {
+                        UndoToast(
+                            message = undoToastMessage,
+                            onUndo = viewModel::launchUndo,
+                        )
+                    }
+                    if (announcementText != null) {
+                        LiveStatusMessage(message = announcementText)
+                    }
+                }
             }
         }
 

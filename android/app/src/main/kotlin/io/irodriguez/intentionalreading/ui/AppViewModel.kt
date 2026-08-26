@@ -54,6 +54,8 @@ enum class AppAnnouncementKind {
     REFRESH_UPDATED,
     REFRESH_CURRENT,
     REFRESH_FAILED,
+    UNDO_COMPLETED,
+    UNDO_FAILED,
 }
 
 data class AppAnnouncement(
@@ -78,6 +80,8 @@ class AppViewModel(
     private var localState: LocalState = LocalState.default()
     private var lastAppliedAppearance: Appearance? = null
     private var undoRecord: UndoRecord? = null
+    private var pendingUndoOffer: PendingUndoOffer? = null
+    private var nextUndoOfferId = 0L
     private val stateMutex = Mutex()
 
     private val _destination = MutableStateFlow(Destination.DISCOVER)
@@ -161,6 +165,12 @@ class AppViewModel(
         }
     }
 
+    fun launchUndo(onComplete: (ArticleActionResult) -> Unit = {}) {
+        viewModelScope.launch(loadDispatcher) {
+            onComplete(performUndo())
+        }
+    }
+
     fun launchResetLocalData(onComplete: (LocalStateResult) -> Unit = {}) {
         viewModelScope.launch(loadDispatcher) {
             onComplete(resetLocalData())
@@ -173,6 +183,17 @@ class AppViewModel(
 
     fun acknowledgeAnnouncement(id: Long) {
         if (_announcement.value?.id == id) _announcement.value = null
+    }
+
+    fun acknowledgeUndoOffer(id: Long) {
+        viewModelScope.launch(loadDispatcher) {
+            stateMutex.withLock {
+                if (pendingUndoOffer?.id == id) {
+                    pendingUndoOffer = null
+                    publish()
+                }
+            }
+        }
     }
 
     fun reportOpenResult(result: ArticleActionResult, navigationOpened: Boolean) {
@@ -219,6 +240,7 @@ class AppViewModel(
                 is LocalStateResult.Success -> {
                     adoptPersistedState(result.state)
                     undoRecord = null
+                    pendingUndoOffer = null
                     _heldArticleId.value = null
                     _localStateError.value = null
                     _recoveryNoticeVisible.value = false
@@ -276,11 +298,14 @@ class AppViewModel(
     suspend fun performUndo(): ArticleActionResult = stateMutex.withLock {
         val pendingUndo = undoRecord
         when (val transition = ArticleStateMachine.reverse(localState.articles, pendingUndo)) {
-            is ArticleTransition.Invalid -> ArticleActionResult(
-                transition = transition,
-                persisted = false,
-                allowNavigation = false,
-            )
+            is ArticleTransition.Invalid -> {
+                if (pendingUndo != null) announce(AppAnnouncementKind.UNDO_FAILED)
+                ArticleActionResult(
+                    transition = transition,
+                    persisted = false,
+                    allowNavigation = false,
+                )
+            }
             is ArticleTransition.Reverted -> persistUndoTransition(
                 undoRecord = requireNotNull(pendingUndo),
                 transition = transition,
@@ -351,7 +376,12 @@ class AppViewModel(
                     record = persistedRecord,
                     undoRecord = transition.undoRecord,
                 )
-                if (undoable) transition.undoRecord?.let { undoRecord = it }
+                if (undoable) {
+                    transition.undoRecord?.let { record ->
+                        undoRecord = record
+                        raiseUndoOffer(record.action)
+                    }
+                }
                 if (action == ArticleAction.OPEN && persistedRecord.status == ArticleStatus.OPENED) {
                     _heldArticleId.value = article.id
                 }
@@ -389,8 +419,10 @@ class AppViewModel(
                     record = localState.articles[undoRecord.articleId],
                 )
                 this.undoRecord = null
+                pendingUndoOffer = null
                 clearHeldArticleIfNeeded()
                 publish()
+                announce(AppAnnouncementKind.UNDO_COMPLETED)
                 ArticleActionResult(
                     transition = persistedTransition,
                     persisted = true,
@@ -500,6 +532,16 @@ class AppViewModel(
         _announcement.value = AppAnnouncement(nextAnnouncementId, kind)
     }
 
+    private fun raiseUndoOffer(action: ArticleAction) {
+        val message = when (action) {
+            ArticleAction.SAVE -> PendingUndoMessage.SAVED
+            ArticleAction.DISMISS -> PendingUndoMessage.DISMISSED
+            else -> error("Only Save and Dismiss can raise an Undo offer")
+        }
+        nextUndoOfferId += 1
+        pendingUndoOffer = PendingUndoOffer(nextUndoOfferId, message)
+    }
+
     private fun publish() {
         _uiState.value = mapUiState()
     }
@@ -514,6 +556,7 @@ class AppViewModel(
         locale = localeProvider(),
         refresh = refreshPhase,
         undoAction = undoRecord?.action,
+        pendingUndoOffer = pendingUndoOffer,
     )
 
     class Factory(

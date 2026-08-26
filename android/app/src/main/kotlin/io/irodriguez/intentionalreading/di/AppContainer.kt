@@ -3,6 +3,7 @@ package io.irodriguez.intentionalreading.di
 import android.app.UiModeManager
 import android.content.Context
 import android.os.Build
+import android.provider.Settings
 import io.irodriguez.intentionalreading.data.DatasetRepository
 import io.irodriguez.intentionalreading.data.LocalStateRepository
 import io.irodriguez.intentionalreading.data.local.dataset.DatasetCache
@@ -11,6 +12,7 @@ import io.irodriguez.intentionalreading.data.remote.HttpDatasetFetcher
 import io.irodriguez.intentionalreading.domain.model.Appearance
 
 class AppContainer(context: Context) {
+    private val contentResolver = context.contentResolver
     val datasetRepository = DatasetRepository(
         fetcher = HttpDatasetFetcher(),
         cache = DatasetCache(context.filesDir),
@@ -25,6 +27,13 @@ class AppContainer(context: Context) {
         } else {
             { _ -> }
         }
+    val reducedMotion: () -> Boolean = {
+        Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) == 0f
+    }
 }
 
 internal fun modeFor(appearance: Appearance): Int = when (appearance) {
