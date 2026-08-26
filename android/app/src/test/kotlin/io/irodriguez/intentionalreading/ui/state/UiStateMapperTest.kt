@@ -17,6 +17,7 @@ import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.AppUiState
 import io.irodriguez.intentionalreading.ui.DatasetPhase
 import io.irodriguez.intentionalreading.ui.DatasetRefreshPhase
+import io.irodriguez.intentionalreading.ui.PendingUndoMessage
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
@@ -452,46 +453,25 @@ class UiStateMapperTest {
         val dismissed = mapWithUndoAction(ArticleAction.DISMISS)
 
         // Then availability and the pending message are exposed for the rendering item
-        assertFalse(unavailable.undoAvailableForTest)
-        assertNull(unavailable.pendingUndoMessageForTest)
-        assertTrue(saved.undoAvailableForTest)
-        assertEquals("SAVED", saved.pendingUndoMessageForTest)
-        assertTrue(dismissed.undoAvailableForTest)
-        assertEquals("DISMISSED", dismissed.pendingUndoMessageForTest)
+        assertFalse(unavailable.undoAvailable)
+        assertNull(unavailable.pendingUndoMessage)
+        assertTrue(saved.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, saved.pendingUndoMessage)
+        assertTrue(dismissed.undoAvailable)
+        assertEquals(PendingUndoMessage.DISMISSED, dismissed.pendingUndoMessage)
     }
 
-    private fun mapWithUndoAction(action: ArticleAction?): AppUiState {
-        val method = UiStateMapper::class.java.getMethod(
-            "map",
-            DatasetPhase::class.java,
-            Map::class.java,
-            Category::class.java,
-            String::class.java,
-            Instant::class.java,
-            ZoneId::class.java,
-            Locale::class.java,
-            DatasetRefreshPhase::class.java,
-            ArticleAction::class.java,
-        )
-        return method.invoke(
-            UiStateMapper,
-            DatasetPhase.Ready(dataset(listOf(article(1)))),
-            emptyMap<String, ArticleRecord>(),
-            null,
-            null,
-            now,
-            zone,
-            Locale.US,
-            DatasetRefreshPhase.Idle,
-            action,
-        ) as AppUiState
-    }
-
-    private val AppUiState.undoAvailableForTest: Boolean
-        get() = javaClass.getMethod("getUndoAvailable").invoke(this) as Boolean
-
-    private val AppUiState.pendingUndoMessageForTest: String?
-        get() = javaClass.getMethod("getPendingUndoMessage").invoke(this)?.toString()
+    private fun mapWithUndoAction(action: ArticleAction?): AppUiState = UiStateMapper.map(
+        phase = DatasetPhase.Ready(dataset(listOf(article(1)))),
+        records = emptyMap(),
+        selectedCategory = null,
+        heldArticleId = null,
+        now = now,
+        zone = zone,
+        locale = Locale.US,
+        refresh = DatasetRefreshPhase.Idle,
+        undoAction = action,
+    )
 
     private fun map(
         dataset: ArticleDataset,

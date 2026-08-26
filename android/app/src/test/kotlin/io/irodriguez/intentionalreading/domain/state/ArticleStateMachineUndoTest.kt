@@ -201,12 +201,14 @@ class ArticleStateMachineUndoTest {
         )
 
         // When the save is reversed
-        val reversed = ArticleStateMachine.reverse(save.records, save.undoRecord)
+        val reversed = assertIs<ArticleTransition.Reverted>(
+            ArticleStateMachine.reverse(save.records, save.undoRecord),
+        )
 
         // Then forward Applied is non-null by type and reverse has its own nullable-record success type
         assertEquals("non-null", forwardRecordType(save.record))
         assertEquals("Reverted", reversed.javaClass.simpleName)
-        assertNull(reversed.javaClass.getMethod("getRecord").invoke(reversed))
+        assertNull(reversed.record)
     }
 
     @Test

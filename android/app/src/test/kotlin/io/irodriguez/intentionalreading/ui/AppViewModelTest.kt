@@ -26,7 +26,6 @@ import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.domain.validation.LocalStateSource
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
-import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -39,8 +38,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -962,20 +959,20 @@ class AppViewModelTest {
             refreshResult = updated(dataset(listOf(dismissedArticle, savedArticle))),
             store = store,
         )
-        viewModel.onArticleActionWithUndoEligibility(
+        viewModel.onArticleAction(
             dismissedArticle,
             ArticleAction.DISMISS,
             undoable = true,
         )
-        assertEquals("DISMISSED", viewModel.uiState.value.pendingUndoMessageForTest)
-        viewModel.onArticleActionWithUndoEligibility(
+        assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoMessage)
+        viewModel.onArticleAction(
             savedArticle,
             ArticleAction.SAVE,
             undoable = true,
         )
 
         // When Undo is performed
-        val undone = viewModel.performUndoForTest()
+        val undone = viewModel.performUndo()
 
         // Then only the save is reversed, the dismiss stays applied, and no older Undo remains
         assertTrue(undone.persisted)
@@ -983,10 +980,10 @@ class AppViewModelTest {
         val stored = assertIs<LocalStateResult.Success>(store.loadResult).state
         assertEquals(ArticleStatus.DISMISSED, stored.articles.getValue(dismissedArticle.id).status)
         assertFalse(savedArticle.id in stored.articles)
-        assertFalse(viewModel.uiState.value.undoAvailableForTest)
-        assertNull(viewModel.uiState.value.pendingUndoMessageForTest)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoMessage)
         val writesAfterUndo = store.saveRequests.size
-        val refused = viewModel.performUndoForTest()
+        val refused = viewModel.performUndo()
         val invalid = assertIs<ArticleTransition.Invalid>(refused.transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
         assertEquals(writesAfterUndo, store.saveRequests.size)
@@ -1000,7 +997,7 @@ class AppViewModelTest {
         val viewModel = viewModel()
 
         // When the launched commit is explicitly marked undo-eligible
-        viewModel.launchArticleActionWithUndoEligibility(
+        viewModel.launchArticleAction(
             article = target,
             action = ArticleAction.SAVE,
             undoable = true,
@@ -1009,8 +1006,8 @@ class AppViewModelTest {
 
         // Then the successful commit publishes an Undo offer
         assertTrue(completed.await().persisted)
-        assertTrue(viewModel.uiState.value.undoAvailableForTest)
-        assertEquals("SAVED", viewModel.uiState.value.pendingUndoMessageForTest)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
     }
 
     @Test
@@ -1020,7 +1017,7 @@ class AppViewModelTest {
         val viewModel = viewModel(store = store)
 
         // When Undo is requested
-        val result = viewModel.performUndoForTest()
+        val result = viewModel.performUndo()
 
         // Then it fails as unavailable without a write or announcement
         val invalid = assertIs<ArticleTransition.Invalid>(result.transition)
@@ -1029,7 +1026,7 @@ class AppViewModelTest {
         assertFalse(result.allowNavigation)
         assertTrue(store.saveRequests.isEmpty())
         assertNull(viewModel.announcement.value)
-        assertFalse(viewModel.uiState.value.undoAvailableForTest)
+        assertFalse(viewModel.uiState.value.undoAvailable)
     }
 
     @Test
@@ -1038,7 +1035,7 @@ class AppViewModelTest {
         val target = article(1)
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        viewModel.onArticleActionWithUndoEligibility(target, ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true)
         val committed = assertIs<LocalStateResult.Success>(store.loadResult).state
         store.saveBehavior = {
             LocalStateResult.Failure(
@@ -1048,20 +1045,20 @@ class AppViewModelTest {
         }
 
         // When Undo is performed and the local state write fails
-        val failed = viewModel.performUndoForTest()
+        val failed = viewModel.performUndo()
 
         // Then stored state is unchanged, the same offer remains, and persistence failure is announced
         assertFalse(failed.persisted)
         assertEquals(committed, assertIs<LocalStateResult.Success>(store.loadResult).state)
         assertEquals(1, viewModel.uiState.value.navigationCounts.readLater)
-        assertTrue(viewModel.uiState.value.undoAvailableForTest)
-        assertEquals("SAVED", viewModel.uiState.value.pendingUndoMessageForTest)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoMessage)
         assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
 
         store.saveBehavior = { success(it) }
-        val retried = viewModel.performUndoForTest()
+        val retried = viewModel.performUndo()
         assertTrue(retried.persisted)
-        assertFalse(viewModel.uiState.value.undoAvailableForTest)
+        assertFalse(viewModel.uiState.value.undoAvailable)
         assertFalse(target.id in assertIs<LocalStateResult.Success>(store.loadResult).state.articles)
     }
 
@@ -1070,17 +1067,17 @@ class AppViewModelTest {
         // Given a populated undo slot
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        viewModel.onArticleActionWithUndoEligibility(article(1), ArticleAction.DISMISS, undoable = true)
-        assertTrue(viewModel.uiState.value.undoAvailableForTest)
+        viewModel.onArticleAction(article(1), ArticleAction.DISMISS, undoable = true)
+        assertTrue(viewModel.uiState.value.undoAvailable)
 
         // When local data is reset
         assertIs<LocalStateResult.Success>(viewModel.resetLocalData())
 
         // Then the slot is empty and Undo is unavailable
-        assertFalse(viewModel.uiState.value.undoAvailableForTest)
-        assertNull(viewModel.uiState.value.pendingUndoMessageForTest)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoMessage)
         val writesAfterReset = store.saveRequests.size
-        val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndoForTest().transition)
+        val invalid = assertIs<ArticleTransition.Invalid>(viewModel.performUndo().transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
         assertEquals(writesAfterReset, store.saveRequests.size)
     }
@@ -1091,18 +1088,18 @@ class AppViewModelTest {
         val target = article(1)
         val store = FakeLocalStateStore()
         val firstProcess = viewModel(store = store)
-        firstProcess.onArticleActionWithUndoEligibility(target, ArticleAction.SAVE, undoable = true)
-        assertTrue(firstProcess.uiState.value.undoAvailableForTest)
+        firstProcess.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        assertTrue(firstProcess.uiState.value.undoAvailable)
         assertEquals(ArticleStatus.SAVED, assertIs<LocalStateResult.Success>(store.loadResult).state.articles[target.id]?.status)
 
         // When the application process is recreated
         val freshProcess = viewModel(store = store)
 
         // Then the offer is absent regardless of the state on disk
-        assertFalse(freshProcess.uiState.value.undoAvailableForTest)
-        assertNull(freshProcess.uiState.value.pendingUndoMessageForTest)
+        assertFalse(freshProcess.uiState.value.undoAvailable)
+        assertNull(freshProcess.uiState.value.pendingUndoMessage)
         val writesBeforeRefusal = store.saveRequests.size
-        val invalid = assertIs<ArticleTransition.Invalid>(freshProcess.performUndoForTest().transition)
+        val invalid = assertIs<ArticleTransition.Invalid>(freshProcess.performUndo().transition)
         assertEquals(ArticleTransitionErrorCode.UNDO_UNAVAILABLE, invalid.code)
         assertEquals(writesBeforeRefusal, store.saveRequests.size)
     }
@@ -1123,13 +1120,13 @@ class AppViewModelTest {
         )
         viewModel.onArticleAction(target, ArticleAction.OPEN)
         assertEquals(target.id, viewModel.heldArticleId.value)
-        viewModel.onArticleActionWithUndoEligibility(target, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
         assertNull(viewModel.heldArticleId.value)
         assertEquals(next.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
         val preferencesBeforeUndo = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
 
         // When Undo is performed
-        val result = viewModel.performUndoForTest()
+        val result = viewModel.performUndo()
 
         // Then dataset order restores the article to the head without re-establishing the held pin
         assertTrue(result.persisted)
@@ -1155,62 +1152,6 @@ class AppViewModelTest {
 
     private fun applied(result: ArticleActionResult): ArticleTransition.Applied =
         assertIs<ArticleTransition.Applied>(result.transition)
-
-    private suspend fun AppViewModel.onArticleActionWithUndoEligibility(
-        article: Article,
-        action: ArticleAction,
-        undoable: Boolean,
-    ): ArticleActionResult = invokeSuspendForTest(
-        methodName = "onArticleAction",
-        parameterTypes = arrayOf(Article::class.java, ArticleAction::class.java, Boolean::class.javaPrimitiveType!!),
-        arguments = arrayOf(article, action, undoable),
-    )
-
-    private suspend fun AppViewModel.performUndoForTest(): ArticleActionResult = invokeSuspendForTest(
-        methodName = "performUndo",
-        parameterTypes = emptyArray(),
-        arguments = emptyArray(),
-    )
-
-    private fun AppViewModel.launchArticleActionWithUndoEligibility(
-        article: Article,
-        action: ArticleAction,
-        undoable: Boolean,
-        onComplete: (ArticleActionResult) -> Unit,
-    ) {
-        val method = javaClass.getMethod(
-            "launchArticleAction",
-            Article::class.java,
-            ArticleAction::class.java,
-            Boolean::class.javaPrimitiveType!!,
-            Function1::class.java,
-        )
-        method.invoke(this, article, action, undoable, onComplete)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private suspend fun <T> AppViewModel.invokeSuspendForTest(
-        methodName: String,
-        parameterTypes: Array<Class<*>>,
-        arguments: Array<out Any>,
-    ): T = suspendCoroutineUninterceptedOrReturn { continuation ->
-        val method = javaClass.getMethod(
-            methodName,
-            *parameterTypes,
-            Continuation::class.java,
-        )
-        try {
-            method.invoke(this, *arguments, continuation)
-        } catch (error: InvocationTargetException) {
-            throw error.targetException
-        }
-    }
-
-    private val AppUiState.undoAvailableForTest: Boolean
-        get() = javaClass.getMethod("getUndoAvailable").invoke(this) as Boolean
-
-    private val AppUiState.pendingUndoMessageForTest: String?
-        get() = javaClass.getMethod("getPendingUndoMessage").invoke(this)?.toString()
 
     private fun viewModel(
         refreshResult: DatasetRefreshResult = updated(dataset()),
