@@ -150,6 +150,19 @@ surface reaches it until item 008 lands swipe.
 rather than three. `AppViewModel` exposes `undoAvailable` and `pendingUndoMessage` on `AppUiState`, both
 inert until 008 renders them.
 
+## Walkthrough — the negative check, performed 2026-08-25 against merged `main`
+
+`spec.md` §5 states there is no owner walkthrough for this item and why. What wave A's batched
+walkthrough could confirm is a negative, and it did, on the `Pixel_10` API 37 emulator against the APK
+built from merged `main` (`92223cd`):
+
+- Save for later still commits — Read Later went 0 → 1, the deck advanced from 205 to 204 available, and
+  a new head article was presented.
+- **No toast, banner, button, or any other affordance appeared anywhere** as a side effect of this item.
+- Read Later, History, Settings and Reset behave exactly as they did at 004.
+
+That is the whole of what this item is allowed to change on a device today, and it changed nothing.
+
 ## Outstanding
 
 - **The trigger, the actionable toast, and the walkthrough are item 008's.** `spec.md` §5 states there is

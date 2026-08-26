@@ -90,7 +90,12 @@ Three defects found by Android ports reading the browser source, none of them An
 - `js/data/validation.js:145` accepts `readingTimeMinutes >= 1`; `pipeline/validation.py:81-83` requires
   ≥ 2. The pipeline is stricter than its own client validator. Verified still present 2026-08-25.
 - `js/data/validation.js:148-163` enforces no `tags` length limit, where `contracts.md` §7 limits
-  organically detected tags to five.
+  organically detected tags to five. **[Corrected at design time, 2026-08-25 — the client cap is
+  SIX, not five.** §7 limits *organically detected* tags to five and `pipeline/taxonomy.py:38-40`
+  implements exactly that, but `apply_forced_tags` (`:58-70`) appends forced tags on top, which is
+  why `pipeline/validation.py:95` caps the total at six. A five-tag cap would have rejected datasets
+  the pipeline legitimately publishes. See `specs/011-web-validator-parity/design.md` D1. This brief
+  is left as the record of what was believed at dispatch.]
 - `js/ui/discover.js:330` renders "1 more choice wait quietly behind this one." — singular noun, plural
   verb. Ported verbatim to `Labels.kt:46` for parity, which was correct.
 
