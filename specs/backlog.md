@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-25, at wave A merged (`007`, `010`, `011`).
+Last reviewed: 2026-08-26, at wave B merged (`008`, `009`).
 
 ---
 
@@ -27,6 +27,8 @@ Last reviewed: 2026-08-25, at wave A merged (`007`, `010`, `011`).
 | 007 | Undo | Android | PR #10, 2026-08-25 |
 | 010 | Launch theme | Android | PR #9, 2026-08-25 |
 | 011 | Web validator parity and shared copy | Browser + Android | PR #8, 2026-08-25 |
+| 008 | Swipe gestures | Android | PR #12, 2026-08-26 |
+| 009 | Import and export | Android | PR #13, 2026-08-26 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -34,18 +36,19 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-Four items, all Android, all closing the client's remaining distance from the browser's V1 behaviour.
-Every one is a deferral some shipped item recorded in writing — the citation is given so the next
-designer starts from the reasoning rather than from the summary.
+Three items. Two are Android deferrals closing the client's remaining distance from the browser's V1
+behaviour, each recorded in writing by a shipped item — the citation is given so the next designer starts
+from the reasoning rather than from the summary. The third came from the owner testing wave B's build.
 
-**Wave A is done.** 007, 010 and 011 merged on 2026-08-25; `waves/wave-a-note.md` records what the
-concurrency actually cost and what wave B should do differently.
+**Waves A and B are done.** `waves/wave-b-note.md` records what wave B cost. Its headline lesson is
+that the two most valuable defects of the wave were found by the owner using the app, and a third by
+re-gating a rebased head — none of them by reading diffs, and none of them by any gate.
 
 | Wave | Items | Runs after | Brief |
 |---|---|---|---|
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
-| B | 008 Swipe · 009 Import/export | now | `waves/wave-b.md` |
-| C | 005 Learning, then 006 Diversity | B | `waves/wave-c.md` |
+| ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
+| C | 005 Learning, then 006 Diversity | now | `waves/wave-c.md` |
 
 Waves are ordered by file collisions, not by value — see `execution-model.md` §2 for the hub-file matrix
 that produced them. 007 led the programme deliberately, because `contracts.md` §23 ties Undo to the
@@ -72,33 +75,29 @@ principle; naturally sequenced with it, since both change what Discover presents
 
 *Deferred by 002 §3, restated by 004 §3.*
 
-### 008 — Swipe gestures  ·  *wave B*
+### 012 — Discover header below the card  ·  *unscheduled*
 
-`js/ui/swipe.js` — the 90px threshold, the intent lock, the rotation. The labeled buttons are the only
-triage affordance on Android today, which is the compliant direction: `DESIGN.md:8` requires a labeled
-equivalent for every gesture, never the reverse. So this is enrichment, not a gap in obligation. Pairs
-with 007 — a mis-swipe with no Undo is worse than no swipe.
+Move Discover's **operational** header below the article card: Refresh, content age, the failed-refresh
+disclosure, the available count, and the category selector. The masthead — eyebrow, title, purpose copy —
+stays on top.
 
-**Inherits 007's deliberate incompleteness.** Item 007 shipped the undo engine with no producer, because
-in the browser Undo is reachable only from swipe and the arrow keys — both in `js/ui/swipe.js`, this
-item's module. So 008 supplies the trigger, the actionable toast Composable, and Undo's entire owner
-walkthrough. `specs/007-android-undo/design.md` D1 and D4 record what was left and why.
+Requested by the owner on 2026-08-26 after testing wave B's build, and framed precisely: the card should
+be the first thing in the viewport, not the thing you scroll to.
 
-*Deferred by 002 §3, restated by 004 §3.*
+**This needs a specification amendment and therefore its own design pass.** `06-ui-ux.md:570` says
+*"Discover begins with an editorial header area"*, which is an ordering rule. §21 then lists the category
+selector and the available-article context among things the header *may* include, so moving those is a
+narrow change rather than a rewrite — but it is still a change to `docs/v1/**`, which no feature
+workstream may make silently (`AGENTS.md`; `docs/v1/README.md` §14).
 
-### 009 — Import and export  ·  *wave B*
+**It largely subsumes item 008's D12.** That fix scrolls the incoming card into view after a swipe, and
+currently clamps at the content maximum rather than placing the card at the top, because Discover's
+content is shorter than the scroll that would require. With the operational block below the card there is
+little left for it to correct.
 
-`exportState`/`importState` (`js/state/storage.js:303-345`) plus the Storage Access Framework surface: a
-document picker and creator, the 5 MiB cap (`05-personalization-state.md:1023-1048`), atomic replacement
-(§49), replacement-not-merge (§50), and the import validator's own error surface.
+*Raised by the owner, 2026-08-26. Not a deferral of any shipped item.*
 
-Cheaper than it looks — `LocalStateValidator` is already ported, so this is the wrapper. `future-items.md`
-§"The item that ports import and export" records the Android → browser reversal hazard it inherits.
 
-**Must clear the undo slot on import**, as the browser does at `js/app.js:352`. Item 007 implemented the
-reset half; import did not exist yet. Recorded in `specs/007-android-undo/design.md` D3.
-
-*Deferred by 002 §3 and 003 §3, restated by 004 §3.*
 
 ---
 
@@ -121,6 +120,17 @@ Deliberate non-goals, recorded so they are not rediscovered as oversights.
 
 Not items. Things a future item should absorb when it touches the same ground.
 
+- **`DiscoverScreen` now carries three scroll effects** — the reset on category and state-class change,
+  D11's scroll-to-end when an article becomes opened, and D12's scroll-the-card-into-view when the deck
+  advances. Each is individually clear and they do not currently fight. If a fourth appears, or when item
+  012 moves the header, reconcile them. (*008 D11/D12*)
+- **The recovery notice still says *"Reset local data in Settings to recover."*** Import is now also a
+  recovery path and the copy does not say so. Left alone deliberately: changing it means authoring copy
+  the specification does not provide. (*009 §Outstanding*)
+- **`SettingsSheet`'s body sits one indent level shallower than its nesting** after the status message was
+  pinned outside the scrollable column. Cosmetic, and no formatter gate exists to catch it; fix it when
+  something next edits that file. (*009 s3 walkthrough fix*)
+
 - **`AppViewModel.adoptDataset()` reads back its own published UI state** to apply D8
   (`uiState.value.discover as? DiscoverUiState.Card`). Correct and covered — the D8 test fails if the
   cast stops matching — but it is inverted data flow coupling a domain decision to a screen-level type.
@@ -136,17 +146,36 @@ Not items. Things a future item should absorb when it touches the same ground.
 
 ## Verification debt
 
-Owner walkthroughs — `spec.md` §5 in each item — performed for **003**, **004**, and wave A's **010**
-(driven over `adb` by the orchestrator, recorded in `specs/010-android-launch-theme/evidence.md`);
-open for **001** and **002**. Items **007** and **011** have no walkthrough by design — 007's surface is
-unreachable until 008 lands the trigger, and 011's validator scenarios cannot occur in a dataset the
-pipeline emits. 004's walkthrough caught a disclosure defect the whole JVM suite missed, which is the argument
-for closing the other two rather than writing them off.
+Owner walkthroughs — `spec.md` §5 in each item — performed for **003**, **004**, wave A's **010**, and
+wave B's **008** and **009**, all driven over `adb` by the orchestrator and recorded in each item's
+`evidence.md`; open for **001** and **002**. Item **007** has no walkthrough of its own by design — its
+surface was unreachable until 008 landed the trigger, so **008's walkthrough is Undo's**, which closes
+that gap. **011** has none by design; its validator scenarios cannot occur in a dataset the pipeline
+emits.
 
-001's tooling blocker is **partly cleared**: a Python 3.14.5 venv built from `requirements-dev.txt`
-during wave A runs `python -m pytest` (144 passed) and `python -m pipeline.main --validate-config`
-cleanly, so the pinned-3.13 concern turns out not to block the suite. What remains missing for 001 is
-`data/articles.json` locally. 002's is superseded in part — 003 and 004 walked the same screens on a
-Pixel_10 API 37 emulator — but its four unobserved checks (Discover's Loading and Error states, History's
-Yesterday and Earlier groups, three-tag row truncation, a positive known-reading-time aggregate) were
-never device-observed.
+**002's debt is partly retired.** Its four unobserved checks were Discover's Loading and Error states,
+History's Yesterday and Earlier groups, three-tag row truncation, and a positive known-reading-time
+aggregate. During wave B's close the emulator lost network mid-session, which surfaced **Discover's
+Loading state** (*"Gathering a thoughtful queue…"*) and **its Error state** (*"Discover is unavailable
+right now"*, with the retry control correctly disabled while a refresh was in flight) on the device for
+the first time. The other three remain open.
+
+001's tooling blocker is **partly cleared**: a Python 3.14.5 venv built from `requirements-dev.txt` runs
+`python -m pytest` (144 passed) and `python -m pipeline.main --validate-config` cleanly, so the
+pinned-3.13 concern turns out not to block the suite. What remains missing for 001 is
+`data/articles.json` locally.
+
+**Open from wave B, recorded rather than written off:**
+
+- **A real Storage Access Framework round trip on hardware for 009** — export to Drive or Files, reboot,
+  import back. Emulator provider behaviour differs from a real one, and that difference is the whole
+  point of the check. It is an owner checkpoint in `waves/wave-b.md`.
+- **A TalkBack gesture pass on both items.** The accessibility *tree* was inspected and is correct on both
+  surfaces; TalkBack navigation itself was not driven.
+- **008's mid-drag cue frame** was never photographed. The cue is verified by code and by the
+  committed-swipe path, not mid-gesture.
+- **009's walkthrough was performed on the pre-rebase build.** The merged build was not re-walked — the
+  emulator had lost network. The rebase added one production line, covered by a unit test.
+- **The owner's judgement on whether the swipe motion feels right** (`06-ui-ux.md` §44: tactile, quiet,
+  controlled). Reported as "smooth and nice" during testing, but that was before the landing defects were
+  fixed, so it is worth one more pass.

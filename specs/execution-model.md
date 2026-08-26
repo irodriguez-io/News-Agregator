@@ -6,6 +6,12 @@ they are not.
 
 Written 2026-08-25, after 004 merged. Amend it when a wave finishes and it turns out to have been wrong.
 
+**Reviewed 2026-08-26, after wave B.** Two waves have now run under it and neither contradicted it. §2's
+hub-file matrix predicted wave B's only two contact points exactly, and §4's requirement to re-run both
+gates on the rebased head — with pre-rebase numbers discarded — caught a cross-item defect that both
+branches' green gates and both PRs' green hosted CI had missed
+(`waves/wave-b-note.md` §3). One thing wave B showed the model does **not** say, added below as §9.
+
 ---
 
 ## 1. The shape, in one paragraph
@@ -181,3 +187,32 @@ Read in this order: `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`, this f
 CI is path-filtered: `android.yml` fires on `android/**`, `test.yml` on the web and pipeline paths. Item
 011 touches both trees and will fire both. Hosted CI must be green on the exact final head before a final
 review merges — that requirement is not waived by any wave arrangement.
+
+---
+
+## 9. Verification is wider than review
+
+Added 2026-08-26, from wave B. §5 says the review gate is the ceiling. That is true and it is not enough,
+because it describes only the half of verification that reads diffs.
+
+Wave B's four most valuable findings did not come from reading a diff:
+
+| Finding | Found by |
+|---|---|
+| Mark read hidden after returning from the publisher | the owner, using the app |
+| The deck advancing returned the screen to the top | the owner, using the app |
+| Import left a live Undo offer whose action could not succeed | re-gating the rebased head |
+| A refused import told the reader nothing | driving the emulator, not reading its screenshots |
+
+The first two are the uncomfortable ones: the reviewer had **walked past both** during walkthroughs that
+otherwise passed. Every check being run was *did the state change correctly* — records written, counts
+updated, announcements raised. Neither defect is a state question; both are *is the right thing in front
+of the reader*, and no step asked it.
+
+**So each walkthrough step now carries a second question after its assertion:** *and is what the reader
+needs next actually on screen?* It costs nothing to ask and it is the only thing that would have caught
+either defect.
+
+**And a walkthrough is not a screenshot audit.** Screenshots were being read to confirm assertions rather
+than looked at the way a reader looks at a screen. Where a step's outcome is visual, describe what a
+reader would see before checking whether the assertion holds.
