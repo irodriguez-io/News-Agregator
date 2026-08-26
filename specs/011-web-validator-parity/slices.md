@@ -53,7 +53,7 @@ a single reason to exist — the browser being less careful than the pipeline an
     and an exact-string assertion on the Android singular and plural labels.
   - `git diff --stat` shows no file under `pipeline/`, `config/`, or `docs/v1/`.
   - No assertion from either existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Bookkeeping this item creates for wave close
 
