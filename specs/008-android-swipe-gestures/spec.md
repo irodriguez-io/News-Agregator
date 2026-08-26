@@ -126,9 +126,9 @@ Then no action is emitted\
 And the card returns to rest\
 And no state change and no preference signal occur
 
-### Scenario: releasing past the threshold emits the direction's action
+### Scenario: releasing at or past the threshold emits the direction's action
 
-Given a horizontal drag past the commit threshold\
+Given a horizontal drag that has reached the commit threshold\
 When the pointer is released to the left\
 Then `dismiss` is emitted\
 And when released to the right past the threshold\

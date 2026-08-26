@@ -74,8 +74,10 @@ describes exercised from plain JUnit over synthetic pointer sequences.
     cover this slice.
   - A test proving the lock survives a later reversal of dominance within the same gesture.
   - A test proving rotation is clamped at both ±4.5°, and that it is `travel / 34` below the clamp.
-  - A test proving the emitted action is `DISMISS` left of −90 dp-equivalent and `SAVE` right of +90,
-    and nothing at exactly the threshold boundary the browser excludes.
+  - A test proving the emitted action is `DISMISS` left of −90 dp-equivalent and `SAVE` right of +90.
+  - A test pinning the boundary: **travel of exactly the threshold commits.** `06-ui-ux.md` §40 is
+    `abs(horizontalTravel) >= 90px → commit`, and `js/ui/swipe.js:98` restores only on
+    `Math.abs(deltaX) < threshold`. One dp-equivalent below the threshold must emit nothing.
   - A test proving `cancel()` past the threshold emits nothing.
   - A test proving reduced motion zeroes rotation and exit distance **without** changing which action is
     emitted.
