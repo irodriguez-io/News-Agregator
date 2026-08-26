@@ -166,6 +166,28 @@ class ArticleStateMachineUndoTest {
     }
 
     @Test
+    fun `undoing a save does not claim a resulting record absent from its records`() {
+        // Given an undo-eligible save of an article with no prior record
+        val save = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                emptyMap(),
+                article(),
+                ArticleAction.SAVE,
+                actionTime,
+                undoable = true,
+            ),
+        )
+
+        // When Undo removes the newly created record
+        val reversed = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.reverse(save.records, save.undoRecord),
+        )
+
+        // Then the success result does not claim a record that its own map does not contain
+        assertEquals(reversed.records[article().id], reversed.record)
+    }
+
+    @Test
     fun `undoing a dismiss restores the exact record it replaced`() {
         // Given an undo-eligible dismiss of a fully populated opened record
         val beforeDismiss = openedRecord()
@@ -225,6 +247,25 @@ class ArticleStateMachineUndoTest {
         // Then it fails as stale without changing the records
         assertEquals(ArticleTransitionErrorCode.UNDO_STALE, result.code)
         assertSame(records, result.records)
+    }
+
+    @Test
+    fun `a stale undo refusal carries no fabricated source status`() {
+        // Given an undo record whose article has no current record
+        val undoRecord = UndoRecord(
+            articleId = article().id,
+            action = ArticleAction.DISMISS,
+            previousRecord = openedRecord(),
+        )
+
+        // When Undo is refused as stale
+        val result = assertIs<ArticleTransition.Invalid>(
+            ArticleStateMachine.reverse(emptyMap(), undoRecord),
+        )
+
+        // Then the unknown source status remains unknown
+        assertEquals(ArticleTransitionErrorCode.UNDO_STALE, result.code)
+        assertNull(result.fromStatus)
     }
 
     @Test
