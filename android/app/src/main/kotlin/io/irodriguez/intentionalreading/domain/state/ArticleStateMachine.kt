@@ -18,7 +18,7 @@ sealed interface ArticleTransition {
 
     data class Applied(
         override val records: Map<String, ArticleRecord>,
-        val record: ArticleRecord,
+        val record: ArticleRecord?,
         val undoRecord: UndoRecord? = null,
     ) : ArticleTransition
 
@@ -135,13 +135,14 @@ object ArticleStateMachine {
             )
         }
 
-        val current = records[undoRecord.articleId]
-            ?: return ArticleTransition.Invalid(
+        if (records[undoRecord.articleId] == null) {
+            return ArticleTransition.Invalid(
                 records = records,
                 action = undoRecord.action,
-                fromStatus = ArticleStatus.UNSEEN,
+                fromStatus = null,
                 code = ArticleTransitionErrorCode.UNDO_STALE,
             )
+        }
         val nextRecords = buildMap {
             putAll(records)
             if (undoRecord.previousRecord == null) {
@@ -152,7 +153,7 @@ object ArticleStateMachine {
         }
         return ArticleTransition.Applied(
             records = nextRecords,
-            record = undoRecord.previousRecord ?: current,
+            record = undoRecord.previousRecord,
         )
     }
 

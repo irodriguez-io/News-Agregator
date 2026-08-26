@@ -348,7 +348,7 @@ class ArticleStateMachineTest {
         action: ArticleAction,
     ): ArticleRecord = assertIs<ArticleTransition.Applied>(
         ArticleStateMachine.transition(records, article(), action, actionTime),
-    ).record
+    ).record.requireForwardRecord()
 
     private fun assertSignals(
         record: ArticleRecord,
