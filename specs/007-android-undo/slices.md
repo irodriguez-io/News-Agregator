@@ -55,7 +55,7 @@ entirely from JVM tests over plain data.
   `LocalStateValidator` accepts the result; a test proving `OPEN`, `MARK_READ`, `MARK_UNREAD`, and
   `REMOVE` produce no undo record even when marked undo-eligible; a test proving an idempotent no-op
   produces no undo record; no assertion from the existing suite deleted.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 2: the slot — `AppViewModel` availability, refusals, and strings
 
