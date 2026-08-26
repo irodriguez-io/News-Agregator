@@ -241,3 +241,30 @@ unconditionally.
 **The movement is immediate under reduced motion.** `DESIGN.md:149` says so in as many words — *"use
 immediate scrolling"* — alongside removing card transforms. The reduced-motion capability is already
 threaded to this screen for the swipe (D5), so the same flag chooses `scrollTo` over `animateScrollTo`.
+
+## D12 — The deck advancing is not a reason to return to the top
+
+Reported by the owner from the device, 2026-08-26; `spec.md` §1.4 records the context.
+
+`DiscoverScreen` currently resets the scroll to zero whenever `selectedCategory`, the current article id,
+or the state class changes (`DiscoverScreen.kt:61-63`). Two of those three are right. **The article id is
+not.**
+
+- A **category change** is a header interaction. The reader is already at the top and expects a fresh
+  start. Reset stays.
+- A **state class change** — Card to Empty, Loading to Card — replaces the whole surface. Reset stays.
+- An **article id change** means the deck advanced, which is the normal outcome of every triage decision.
+  Returning to the top there throws the reader back to the masthead and puts the thing they are supposed
+  to decide about below the fold.
+
+So the article id comes out of the reset effect and gets its own: bring the card into view. Not
+`scrollTo(maxValue)` — that is D11's move, correct for revealing controls on an article the reader has
+already opened, and wrong here because on a tall card it would put the headline above the viewport. The
+card's own top edge is the target.
+
+**Immediate under reduced motion**, as D11 is, and for the same reason: `DESIGN.md:149` asks for
+immediate scrolling alongside removing card transforms.
+
+**This is a stopgap and is recorded as one.** Item 012 moves the operational header below the card, and
+once the card sits at the top of Discover there is little left for this scroll to correct. It is still
+worth doing now — the reset is wrong on its own terms, and 012 is a wave C-or-later item.

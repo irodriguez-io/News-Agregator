@@ -66,6 +66,29 @@ the scroll position is preserved and the taller card pushes its own controls pas
 It is folded into this item on the owner's decision of 2026-08-26, because this item already owns both
 files and had a round in flight. `design.md` D11 records the fix.
 
+### 1.4 A second defect reported from the device
+
+The owner swiped on the emulator and reported that after a committed swipe the screen returns to the
+top, leaving the incoming card half hidden behind the editorial header.
+
+The cause is the reset this item inherited: `DiscoverScreen`'s `LaunchedEffect` is keyed on
+`cardState?.article?.id` among other things and scrolls to zero when it fires
+(`DiscoverScreen.kt:61-63`). A committed swipe advances the deck, so the article id changes, so the
+scroll resets — and at zero the editorial header (§21) occupies the viewport and the card begins below
+the fold.
+
+It predates this item; before swipe existed the deck advanced by pressing a labeled button, which reset
+the same way. Swipe makes it happen on every triage decision rather than occasionally, which is why it
+surfaced now. `design.md` D12 records the fix.
+
+**The owner has also asked for the operational part of the Discover header — Refresh, content age, the
+source disclosure, the available count, and the category selector — to move below the card.** That is a
+layout change requiring an amendment to `06-ui-ux.md` §21's *"Discover begins with an editorial header
+area"*, so it is **not** in this item. It is item 012, and it will largely subsume this scenario: with
+the card at the top of the screen, there is much less for a scroll to reveal. This fix is still correct
+in the meantime and is not wasted — the reset would otherwise remain wrong for category changes and
+cold starts too.
+
 ## 2. Story
 
 As a reader, I want to triage the article on screen with a flick left or right, so that a queue of
@@ -235,6 +258,13 @@ Then the card returns to rest rather than exiting\
 And the existing persistence-failure message is announced\
 And no undo offer is raised
 
+### Scenario: the card the swipe reveals is on screen
+
+Given a committed swipe that advances the deck\
+When the next article is presented\
+Then that card is on screen without scrolling\
+And the scroll movement is immediate rather than animated when the reader has animations turned off
+
 ### Scenario: returning from the publisher leaves the next decision on screen
 
 Given an article the reader opened at the publisher\
@@ -297,7 +327,9 @@ walkthrough** — 007 has none by design.
 10. **Return from the publisher.** Press Read article, let the browser open, then come back. The
     triage controls and **Mark read** must both be on screen with no scrolling. This is the defect the
     owner reported during wave B (§1.3); it is the reason this step exists.
-11. **Airplane mode is irrelevant here** — no network path is touched. Confirm only that a swipe
+11. **Swipe and look.** Commit a swipe. The card that replaces it must be on screen without
+    scrolling. This is the second defect the owner reported from the device (§1.4).
+12. **Airplane mode is irrelevant here** — no network path is touched. Confirm only that a swipe
     still commits with the device offline.
 
 **What the owner is asked for, and only this:** step 5 and step 2 as a judgment — does the gesture

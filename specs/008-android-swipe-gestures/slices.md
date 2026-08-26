@@ -176,6 +176,12 @@ test count, and the walkthrough in `spec.md` §5.2.
   `scrollTo` rather than `animateScrollTo` under reduced motion (`DESIGN.md:149`). **Do not fix it by
   resetting the scroll to zero** — that shows the card's metadata and pushes the controls further away.
   Verified by `spec.md` §5.2 step 10, not by a JVM test.
+- **Folded in after the plan gate — the deck-advance scroll reset (`design.md` D12).** A committed
+  swipe returns the screen to the top and leaves the incoming card half hidden. Take the article id out
+  of the reset-to-zero effect and give it its own effect that brings the card's top edge into view;
+  leave the category and state-class resets alone. **Not `scrollTo(maxValue)`** — that is D11's move and
+  would push a tall card's headline above the viewport. Immediate rather than animated under reduced
+  motion. Verified by `spec.md` §5.2 step 11, not by a JVM test.
 - **Deferred to wave B's batched walkthrough:** all of `spec.md` §5.2, run against merged `main`. The
   slice is *done* when the build is green and the two screenshots exist; the **item** is not shippable
   until the walkthrough is recorded in `evidence.md`.
