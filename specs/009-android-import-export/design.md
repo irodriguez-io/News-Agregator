@@ -182,3 +182,30 @@ conflicting weights. This is listed among the slice plan's fixed decisions rathe
 because "merge would be kinder" is the single most predictable unrequested improvement in this item —
 and `waves/wave-b.md` says so in as many words: *"An import that merges is a defect even if it looks
 kinder."*
+
+## D11 — Import clears the undo **offer** as well as the undo slot
+
+Found at the wave B rebase, after item 008 merged, by re-running the gates on the rebased head. Recorded
+because neither item could have found it alone.
+
+Item 007's D3 required import to clear the undo slot, and D6 above carries that through:
+`importLocalData` sets `undoRecord = null`. Item 008 then introduced `AppUiState.pendingUndoOffer` as
+state **deliberately independent of the slot** — its own D6 says *"the offer is not the slot, and
+withdrawing one must not withdraw the other"*, because the browser's toast disappears after 4500 ms while
+`undoManager.peek()` stays populated.
+
+Both decisions are right. Together they leave a gap: on the merged tree, an import empties the slot and
+leaves the offer standing, so the reader is shown an Undo toast whose action is guaranteed to fail with
+`UNDO_UNAVAILABLE` and announce *"Undo could not be completed."* A dead button, offered by the app itself.
+
+**Import clears both.** The rule that separates them is about *time* — an offer expiring must not withdraw
+Undo — not about *scope*. An import replaces the entire local state, so the record the offer refers to no
+longer exists in any meaningful sense; there is nothing left to undo and nothing to keep the offer for.
+Reset already clears both (item 008 slice 2), which is the same reasoning applied to the same kind of
+event.
+
+**Why it was invisible until the rebase.** On item 008's branch, import did not exist. On item 009's
+branch, the offer did not exist. The defect exists only where both do, which is the merged tree — and the
+only reason it surfaced before shipping is that `execution-model.md` §4 requires both gates re-run on the
+rebased head rather than carrying the pre-rebase numbers forward. `waves/wave-b.md`'s merge order put 008
+first precisely so this seam would be crossed once, deliberately, with a gate on the other side.
