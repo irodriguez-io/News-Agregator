@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
+import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
 import io.irodriguez.intentionalreading.ui.components.EditorialHeader
@@ -39,6 +40,8 @@ fun DiscoverScreen(
     onReadArticle: (Article) -> Unit,
     onSave: (Article) -> Unit,
     onMarkRead: (Article) -> Unit,
+    onSwipeCommit: (Article, ArticleAction, (Boolean) -> Unit) -> Unit,
+    reducedMotion: () -> Boolean = { false },
     modifier: Modifier = Modifier,
 ) {
     val cardState = state as? DiscoverUiState.Card
@@ -94,6 +97,8 @@ fun DiscoverScreen(
                 onReadArticle = onReadArticle,
                 onSave = onSave,
                 onMarkRead = onMarkRead,
+                onSwipeCommit = onSwipeCommit,
+                reducedMotion = reducedMotion,
             )
         }
     }
@@ -160,6 +165,8 @@ private fun CardBody(
     onReadArticle: (Article) -> Unit,
     onSave: (Article) -> Unit,
     onMarkRead: (Article) -> Unit,
+    onSwipeCommit: (Article, ArticleAction, (Boolean) -> Unit) -> Unit,
+    reducedMotion: () -> Boolean,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -169,6 +176,8 @@ private fun CardBody(
             onReadArticle = onReadArticle,
             onSave = onSave,
             onMarkRead = onMarkRead,
+            onSwipeCommit = onSwipeCommit,
+            reducedMotion = reducedMotion,
         )
         Labels.remainingChoices(state.remainingCount)?.let { sideNote ->
             Text(
