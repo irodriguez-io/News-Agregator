@@ -40,6 +40,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -1538,6 +1539,28 @@ class AppViewModelTest {
         assertTrue(store.saveRequests.isEmpty())
         assertEquals(current, assertIs<LocalStateResult.Success>(store.loadResult).state)
         assertEquals(AppAnnouncementKind.EXPORT_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `export does not hold the state lock while the destination is written`() = runBlocking {
+        // Given valid export bytes and a destination write that performs an ordinary state mutation
+        val store = FakeLocalStateStore().apply {
+            exportBehavior = { LocalStateExport.Success("exported state".encodeToByteArray()) }
+        }
+        val viewModel = viewModel(store = store)
+
+        // When the destination writes, then the mutation completes before the write returns
+        val exported = withTimeout(1_000) {
+            viewModel.exportLocalData {
+                viewModel.selectCategory(Category.TECHNOLOGY)
+                assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+                true
+            }
+        }
+
+        assertTrue(exported)
+        assertEquals(Category.TECHNOLOGY, viewModel.selectedCategory.value)
+        assertEquals(Category.TECHNOLOGY, store.saveRequests.single().session.lastCategory)
     }
 
     @Test
