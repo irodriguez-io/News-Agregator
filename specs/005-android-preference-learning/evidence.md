@@ -151,11 +151,50 @@ Kept because they are correct, and each is the kind of rule an implementer optim
 - **±5.0 clamps a stored weight; ±6 clamps an article's topic *sum* at scoring time.** Two rules, two
   slices, never merged.
 
+## Walkthrough
+
+`spec.md` §5.2, driven over `adb` on the `Pixel_10` API 37 emulator against merged `main` at `2613959`,
+2026-08-26. Every step carried the second question as well as the first.
+
+**On the history it ran against.** The emulator's install had an empty `files/` directory — no
+accumulated state at all — so step 1's *real* history was not available. Rather than skip the item's
+whole point, the history was built by driving the **pre-005 build already installed** through saves,
+dismissals, opens and reads, then pulling its document before the 005 build's first launch. The result
+is a genuine pre-005 document — `preferences` empty, four records claiming `opened`/`read` flags with no
+deltas behind them — which is exactly the shape the fold exists to repair. It is not the owner's real
+reading history, and that distinction is preserved under "Outstanding" below.
+
+| Step | Result |
+|---|---|
+| 1 Pre-fold baseline | `preferences` empty; 9 records, 4 claiming flags: `openid_specs` and `jstor_daily` and `quanta` at `[opened, read]`, `ieee_spectrum` at `[opened]` |
+| 2 First launch | Fold applied **exactly** the values predicted from the baseline before launching: `openid_specs`/`quanta`/`jstor_daily` **0.35 / 2**, `ieee_spectrum` **0.10 / 1**, `federation`/`oidc` **0.25 / 2**, `ai_ml` **0.05 / 1**. Every count equals the signals its records claim. `preferences.categories` absent |
+| 3 Second launch | Document **byte-identical** — same SHA-1 across force-stop and relaunch. Idempotent, no second write |
+| 4 The order moved | Head went from `w3c_webauthn` (dataset order, pre-005) to `ieee_spectrum`, a source the history favours. Confirmed as personalized order, not the pin: `restoreLocalState` clears the pin on load and the card still led |
+| 5 Train a source | Save applied exact deltas live: `ieee_spectrum` 0.10 → **0.55**, `ai_ml` 0.05 → **0.35**. The head then went to an **unexplored** source (`science_aaas`, exploration +3) outranking the newly-trained one (+0.35 topic but exploration fallen to +1.5) — §57 working as designed, and precisely the plan's "unless a stronger candidate outranks it" clause |
+| 6 Mark Unread on a pre-005 record | **`jstor_daily` 0.35 / 2 → 0.10 / 1.** Fell by exactly the Mark Read delta and exactly one interaction, landing precisely on the value of the `opened` signal still applied — not below it. No other entry moved. Record went to `saved` with **no Save signal** (`contracts.md` §23) |
+| 7 Undo a Save | Records **and** preferences restored bit-identically to pre-Save; the new entries were **deleted**, not left at zero |
+| 8 Redo it | `science_aaas` 0.90 / 2 → **1.35 / 3** — one delta and one interaction, not two |
+| 9 The held card | After open-and-return the same card was still on screen, `OPENED`, with **Mark read reachable without scrolling**. The pin held even though opening the article changed its own score — the wave B defect this item's rerank could have resurrected did not return |
+| 10 Import an old backup | The actual wave B export (`intentional-reading-backup-20260826-154532Z.json`, 4.21 kB — the 4211 bytes recorded in item 009's evidence) imported: **19 records → 4, replacement not merge** — the shared ID `9ed0ad44` came back as `read`/`[opened, read]` where it had been `dismissed`/no flags, and the imported `settings` replaced appearance too. **The fold was applied to it**: `science_aaas` **0.35 / 2**, `biology_evolution` **0.25 / 2** — `spec.md` §4.3's first scenario reproduced end to end from a real pre-005 file produced by the previous wave's build |
+| 11 Reset | State document deleted, `preferences` empty, Read Later 0, History 0, all 205 articles back — and the head card returned to the **same W3C WebAuthn article the pre-005 build led with**. Unpersonalized order restored |
+| 12 TalkBack | Verified structurally rather than by spot check: the item changed **zero** files under `res/` and **zero** files under `ui/screens` or `ui/components`, so no string, label or content description could have changed. Nothing new is announced, by construction |
+
+The two questions at every step: nothing surfaced where the assertion held but the screen was wrong.
+The one moment worth recording is step 5 — a single Save does **not** promote that source's other
+articles to the head, because training a source spends its exploration bonus. That is the designed
+trade-off between preference and exploration, it is correct per §57, and it is the kind of thing only a
+walkthrough shows.
+
 ## Outstanding
 
-- **`spec.md` §5.2's owner walkthrough has not been run.** It requires merged `main`, an emulator install
-  carrying **real accumulated history**, and an owner judgement at steps 4 and 5 on whether the order is
-  *better* rather than merely different. Ranking quality is a product question no test answers.
+- **The owner's judgement at steps 4 and 5 — whether the order is *better*, not merely different — has
+  not been given.** Ranking quality is a product question no test answers, and it is `waves/wave-c.md`'s
+  named owner checkpoint.
+- **The walkthrough ran on constructed pre-005 history, not the owner's real accumulated history.** The
+  mechanics are all proven; what a real reader's weights make Discover *lead with* is not.
+- **006** inherits `DiscoverDeck` holding the ordered list its penalties sequence, and `design.md` D12's
+  correction: the wave brief's claim that the Android head article differs from the browser's until 006
+  lands is wrong, and 005 closes that gap by itself.
 - **006** inherits `DiscoverDeck` holding the ordered list its penalties sequence, and `design.md` D12's
   correction: the wave brief's claim that the Android head article differs from the browser's until 006
   lands is wrong, and 005 closes that gap by itself.
