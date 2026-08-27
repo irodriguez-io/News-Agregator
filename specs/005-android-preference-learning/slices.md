@@ -149,7 +149,7 @@ The integration slice, and the one that changes shipped behaviour. Latching, the
   - `git grep -n 'derivedForAndroid'` returns nothing.
   - Exactly three existing assertions changed, all named in `design.md` D7, each with a comment naming
     the scenario it now encodes.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 3: the reconciliation fold
 
