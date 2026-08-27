@@ -12,6 +12,7 @@ import io.irodriguez.intentionalreading.domain.model.ArticleTag
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.AppUiState
@@ -531,6 +532,12 @@ class UiStateMapperTest {
         savedAt = savedAt,
         dismissedAt = dismissedAt,
         readAt = readAt,
+        signalsApplied = SignalsApplied(
+            opened = openedAt != null,
+            saved = false,
+            dismissed = false,
+            read = status == ArticleStatus.READ,
+        ),
     )
 
     private fun article(

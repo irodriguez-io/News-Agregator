@@ -360,6 +360,7 @@ class AppViewModel(
         stateMutex.withLock {
             val transition = ArticleStateMachine.transition(
                 records = localState.articles,
+                preferences = localState.preferences,
                 article = article,
                 action = action,
                 now = nowProvider(),
@@ -384,7 +385,13 @@ class AppViewModel(
 
     suspend fun performUndo(): ArticleActionResult = stateMutex.withLock {
         val pendingUndo = undoRecord
-        when (val transition = ArticleStateMachine.reverse(localState.articles, pendingUndo)) {
+        when (
+            val transition = ArticleStateMachine.reverse(
+                records = localState.articles,
+                preferences = localState.preferences,
+                undoRecord = pendingUndo,
+            )
+        ) {
             is ArticleTransition.Invalid -> {
                 if (pendingUndo != null) announce(AppAnnouncementKind.UNDO_FAILED)
                 ArticleActionResult(
@@ -420,7 +427,10 @@ class AppViewModel(
         is LocalStateResult.Success -> {
             adoptPersistedState(result.state)
             _localStateError.value = null
-            val persistedTransition = ArticleTransition.Unchanged(localState.articles)
+            val persistedTransition = ArticleTransition.Unchanged(
+                records = localState.articles,
+                preferences = localState.preferences,
+            )
             if (
                 action == ArticleAction.OPEN &&
                 localState.articles[article.id]?.status == ArticleStatus.OPENED
@@ -442,7 +452,10 @@ class AppViewModel(
         transition: ArticleTransition.Applied,
         undoable: Boolean,
     ): ArticleActionResult {
-        val candidate = localState.copy(articles = transition.records)
+        val candidate = localState.copy(
+            articles = transition.records,
+            preferences = transition.preferences,
+        )
         return when (val result = saveLocalState(candidate)) {
             is LocalStateResult.Failure -> {
                 _localStateError.value = result
@@ -462,6 +475,7 @@ class AppViewModel(
                     records = localState.articles,
                     record = persistedRecord,
                     undoRecord = transition.undoRecord,
+                    preferences = localState.preferences,
                 )
                 if (undoable) {
                     transition.undoRecord?.let { record ->
@@ -487,7 +501,10 @@ class AppViewModel(
         undoRecord: UndoRecord,
         transition: ArticleTransition.Reverted,
     ): ArticleActionResult {
-        val candidate = localState.copy(articles = transition.records)
+        val candidate = localState.copy(
+            articles = transition.records,
+            preferences = transition.preferences,
+        )
         return when (val result = saveLocalState(candidate)) {
             is LocalStateResult.Failure -> {
                 recordPersistenceFailure(result)
@@ -504,6 +521,7 @@ class AppViewModel(
                 val persistedTransition = ArticleTransition.Reverted(
                     records = localState.articles,
                     record = localState.articles[undoRecord.articleId],
+                    preferences = localState.preferences,
                 )
                 this.undoRecord = null
                 pendingUndoOffer = null

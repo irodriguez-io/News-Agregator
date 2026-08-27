@@ -44,11 +44,13 @@ class ArticleStateMachineUndoTest {
 
         // Then the saved result carries the absence of the prior record
         assertEquals(ArticleStatus.SAVED, result.record.status)
+        // Scenario: an undo-eligible first Save records its applied Save reversal.
         assertEquals(
             UndoRecord(
                 articleId = article().id,
                 action = ArticleAction.SAVE,
                 previousRecord = null,
+                preferenceReversal = PreferenceReversal.SAVE_FOR_LATER,
             ),
             result.undoRecord,
         )
@@ -416,6 +418,12 @@ class ArticleStateMachineUndoTest {
         savedAt = oldActionTime,
         dismissedAt = null,
         readAt = null,
+        signalsApplied = SignalsApplied(
+            opened = false,
+            saved = false,
+            dismissed = false,
+            read = false,
+        ),
     )
 
     private fun readRecord(): ArticleRecord = ArticleRecord(
@@ -426,6 +434,12 @@ class ArticleStateMachineUndoTest {
         savedAt = null,
         dismissedAt = null,
         readAt = oldActionTime,
+        signalsApplied = SignalsApplied(
+            opened = true,
+            saved = false,
+            dismissed = false,
+            read = true,
+        ),
     )
 
     private fun article(): Article = Article(

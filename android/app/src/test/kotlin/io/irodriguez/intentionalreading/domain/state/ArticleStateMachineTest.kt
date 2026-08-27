@@ -79,6 +79,12 @@ class ArticleStateMachineTest {
                 savedAt = null,
                 dismissedAt = null,
                 readAt = null,
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = false,
+                ),
             ),
             result.record,
         )
@@ -527,7 +533,7 @@ class ArticleStateMachineTest {
         )
         val saved = applied(mapOf(article().id to inconsistentDismissSignal), ArticleAction.SAVE)
         // Scenario: stored signals remain authoritative latches across allowed transitions.
-        assertSignals(saved, opened = true, saved = false, dismissed = true, read = false)
+        assertSignals(saved, opened = true, saved = true, dismissed = true, read = false)
     }
 
     private fun assertSignalAppliedExactlyOnce(
@@ -618,9 +624,11 @@ class ArticleStateMachineTest {
         savedAt: Instant? = null,
         dismissedAt: Instant? = null,
         readAt: Instant? = null,
-        signalsApplied: SignalsApplied = SignalsApplied.derivedForAndroid(
-            status = status,
-            openedAtPresent = openedAt != null,
+        signalsApplied: SignalsApplied = SignalsApplied(
+            opened = openedAt != null,
+            saved = false,
+            dismissed = false,
+            read = status == ArticleStatus.READ,
         ),
     ): ArticleRecord = ArticleRecord(
         article = article(),

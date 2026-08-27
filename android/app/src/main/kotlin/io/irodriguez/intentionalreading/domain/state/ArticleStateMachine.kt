@@ -4,6 +4,7 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
+import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import java.time.Instant
 
@@ -15,27 +16,34 @@ enum class ArticleTransitionErrorCode {
 
 sealed interface ArticleTransition {
     val records: Map<String, ArticleRecord>
+    val preferences: LocalState.Preferences
 
     data class Applied(
         override val records: Map<String, ArticleRecord>,
         val record: ArticleRecord,
         val undoRecord: UndoRecord? = null,
+        override val preferences: LocalState.Preferences,
     ) : ArticleTransition
 
     data class Reverted(
         override val records: Map<String, ArticleRecord>,
         val record: ArticleRecord?,
+        override val preferences: LocalState.Preferences,
     ) : ArticleTransition
 
     data class Unchanged(
         override val records: Map<String, ArticleRecord>,
-    ) : ArticleTransition
+        override val preferences: LocalState.Preferences,
+    ) : ArticleTransition {
+        constructor(records: Map<String, ArticleRecord>) : this(records, emptyPreferences())
+    }
 
     data class Invalid(
         override val records: Map<String, ArticleRecord>,
         val action: ArticleAction?,
         val fromStatus: ArticleStatus?,
         val code: ArticleTransitionErrorCode = ArticleTransitionErrorCode.ACTION_NOT_ALLOWED,
+        override val preferences: LocalState.Preferences,
     ) : ArticleTransition
 }
 
@@ -46,15 +54,31 @@ object ArticleStateMachine {
         action: ArticleAction,
         now: Instant,
         undoable: Boolean = false,
+    ): ArticleTransition = transition(
+        records = records,
+        preferences = emptyPreferences(),
+        article = article,
+        action = action,
+        now = now,
+        undoable = undoable,
+    )
+
+    fun transition(
+        records: Map<String, ArticleRecord>,
+        preferences: LocalState.Preferences,
+        article: Article,
+        action: ArticleAction,
+        now: Instant,
+        undoable: Boolean = false,
     ): ArticleTransition {
         val existing = records[article.id]
         val status = existing?.status ?: ArticleStatus.UNSEEN
         if (status !in allowedFrom.getValue(action)) {
-            return ArticleTransition.Invalid(records, action, status)
+            return ArticleTransition.Invalid(records, action, status, preferences = preferences)
         }
 
         if (isIdempotentNoOp(existing, status, action)) {
-            return ArticleTransition.Unchanged(records)
+            return ArticleTransition.Unchanged(records, preferences)
         }
 
         val current = existing ?: ArticleRecord(
@@ -65,6 +89,12 @@ object ArticleStateMachine {
             savedAt = null,
             dismissedAt = null,
             readAt = null,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = false,
+                dismissed = false,
+                read = false,
+            ),
         )
         val transitioned = when (action) {
             ArticleAction.OPEN -> current.copy(
@@ -102,15 +132,28 @@ object ArticleStateMachine {
                 readAt = null,
             )
         }
-        val next = transitioned.copy(
-            signalsApplied = SignalsApplied(
-                opened = transitioned.openedAt != null,
-                saved = existing?.signalsApplied?.saved ?: false,
-                dismissed = existing?.signalsApplied?.dismissed == true &&
-                    transitioned.status == ArticleStatus.DISMISSED,
-                read = transitioned.status == ArticleStatus.READ,
-            ),
-        )
+        var next = transitioned
+        var nextPreferences = preferences
+        var preferenceSignalApplied = false
+        if (action == ArticleAction.MARK_UNREAD && current.signalsApplied.read) {
+            nextPreferences = PreferenceLearning.reverse(
+                preferences = preferences,
+                article = current.article,
+                event = PreferenceEvent.MARK_READ,
+            )
+            next = transitioned.copy(signalsApplied = current.signalsApplied.copy(read = false))
+        } else {
+            val preferenceEvent = preferenceEvents[action]
+            if (preferenceEvent != null && !current.signalsApplied.isAppliedFor(action)) {
+                nextPreferences = PreferenceLearning.apply(
+                    preferences = preferences,
+                    article = current.article,
+                    event = preferenceEvent,
+                )
+                next = transitioned.copy(signalsApplied = current.signalsApplied.withApplied(action))
+                preferenceSignalApplied = true
+            }
+        }
         val nextRecords = buildMap {
             putAll(records)
             put(article.id, next)
@@ -120,15 +163,35 @@ object ArticleStateMachine {
                 articleId = article.id,
                 action = action,
                 previousRecord = existing,
+                preferenceReversal = if (preferenceSignalApplied) {
+                    preferenceReversals.getValue(action)
+                } else {
+                    null
+                },
             )
         } else {
             null
         }
-        return ArticleTransition.Applied(nextRecords, next, undoRecord)
+        return ArticleTransition.Applied(
+            records = nextRecords,
+            record = next,
+            undoRecord = undoRecord,
+            preferences = nextPreferences,
+        )
     }
 
     fun reverse(
         records: Map<String, ArticleRecord>,
+        undoRecord: UndoRecord?,
+    ): ArticleTransition = reverse(
+        records = records,
+        preferences = emptyPreferences(),
+        undoRecord = undoRecord,
+    )
+
+    fun reverse(
+        records: Map<String, ArticleRecord>,
+        preferences: LocalState.Preferences,
         undoRecord: UndoRecord?,
     ): ArticleTransition {
         if (undoRecord == null || undoRecord.action !in reversibleActions) {
@@ -137,17 +200,27 @@ object ArticleStateMachine {
                 action = undoRecord?.action,
                 fromStatus = undoRecord?.let { records[it.articleId]?.status },
                 code = ArticleTransitionErrorCode.UNDO_UNAVAILABLE,
+                preferences = preferences,
             )
         }
 
-        if (records[undoRecord.articleId] == null) {
+        val current = records[undoRecord.articleId]
+        if (current == null) {
             return ArticleTransition.Invalid(
                 records = records,
                 action = undoRecord.action,
                 fromStatus = null,
                 code = ArticleTransitionErrorCode.UNDO_STALE,
+                preferences = preferences,
             )
         }
+        val nextPreferences = undoRecord.preferenceReversal?.let { reversal ->
+            PreferenceLearning.reverse(
+                preferences = preferences,
+                article = current.article,
+                event = reversal.event,
+            )
+        } ?: preferences
         val nextRecords = buildMap {
             putAll(records)
             if (undoRecord.previousRecord == null) {
@@ -159,6 +232,7 @@ object ArticleStateMachine {
         return ArticleTransition.Reverted(
             records = nextRecords,
             record = undoRecord.previousRecord,
+            preferences = nextPreferences,
         )
     }
 
@@ -170,9 +244,7 @@ object ArticleStateMachine {
         ArticleAction.SAVE -> status == ArticleStatus.SAVED
         ArticleAction.DISMISS -> status == ArticleStatus.DISMISSED
         ArticleAction.MARK_READ -> status == ArticleStatus.READ
-        // The browser checks signalsApplied.opened. Preference signals are deferred here, and storage's
-        // invariant makes that flag exactly equivalent to openedAt != null.
-        ArticleAction.OPEN -> existing?.openedAt != null
+        ArticleAction.OPEN -> existing?.signalsApplied?.opened == true
         ArticleAction.MARK_UNREAD,
         ArticleAction.REMOVE,
         -> false
@@ -206,4 +278,39 @@ object ArticleStateMachine {
     )
 
     private val reversibleActions = setOf(ArticleAction.SAVE, ArticleAction.DISMISS)
+
+    private val preferenceEvents = mapOf(
+        ArticleAction.OPEN to PreferenceEvent.FIRST_OPEN,
+        ArticleAction.SAVE to PreferenceEvent.SAVE_FOR_LATER,
+        ArticleAction.DISMISS to PreferenceEvent.NOT_INTERESTED,
+        ArticleAction.MARK_READ to PreferenceEvent.MARK_READ,
+    )
+
+    private val preferenceReversals = mapOf(
+        ArticleAction.SAVE to PreferenceReversal.SAVE_FOR_LATER,
+        ArticleAction.DISMISS to PreferenceReversal.NOT_INTERESTED,
+    )
 }
+
+private fun SignalsApplied.isAppliedFor(action: ArticleAction): Boolean = when (action) {
+    ArticleAction.OPEN -> opened
+    ArticleAction.SAVE -> saved
+    ArticleAction.DISMISS -> dismissed
+    ArticleAction.MARK_READ -> read
+    ArticleAction.MARK_UNREAD,
+    ArticleAction.REMOVE,
+    -> false
+}
+
+private fun SignalsApplied.withApplied(action: ArticleAction): SignalsApplied = when (action) {
+    ArticleAction.OPEN -> copy(opened = true)
+    ArticleAction.SAVE -> copy(saved = true)
+    ArticleAction.DISMISS -> copy(dismissed = true)
+    ArticleAction.MARK_READ -> copy(read = true)
+    ArticleAction.MARK_UNREAD,
+    ArticleAction.REMOVE,
+    -> this
+}
+
+private fun emptyPreferences(): LocalState.Preferences =
+    LocalState.Preferences(sources = emptyMap(), topics = emptyMap())

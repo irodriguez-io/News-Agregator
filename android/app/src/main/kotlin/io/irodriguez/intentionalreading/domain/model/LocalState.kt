@@ -43,14 +43,4 @@ data class SignalsApplied(
     val saved: Boolean,
     val dismissed: Boolean,
     val read: Boolean,
-) {
-    companion object {
-        fun derivedForAndroid(status: ArticleStatus, openedAtPresent: Boolean): SignalsApplied =
-            SignalsApplied(
-                opened = openedAtPresent,
-                saved = false,
-                dismissed = false,
-                read = status == ArticleStatus.READ,
-            )
-    }
-}
+)

@@ -19,6 +19,7 @@ import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.domain.state.ArticleTransitionErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
@@ -1648,6 +1649,12 @@ class AppViewModelTest {
             savedAt = if (status == ArticleStatus.SAVED) actionAt else null,
             dismissedAt = if (status == ArticleStatus.DISMISSED) actionAt else null,
             readAt = if (status == ArticleStatus.READ) actionAt else null,
+            signalsApplied = SignalsApplied(
+                opened = status == ArticleStatus.OPENED,
+                saved = false,
+                dismissed = false,
+                read = status == ArticleStatus.READ,
+            ),
         )
     }
 
