@@ -12,9 +12,17 @@ parked on purpose. The two notes here are the long-form detail behind two of its
 
 ---
 
-## The item that ports preference learning
+## ~~The item that ports preference learning~~ — **resolved by 005**
 
 *Raised by 003 (Android local state persistence). See `specs/003-android-local-state-persistence/design.md` D9.*
+
+**Resolved 2026-08-26 by item 005.** The owner chose to reconcile rather than accept the drift, and the
+reconciliation is by **invariant rather than by one-time marker** — the shape this note proposed was
+changed deliberately. A first-init pass needs a persisted marker, `contracts.md` §14 forbids new keys in
+the state document, and a marker would still not cover a document imported *after* it was set. The
+invariant version recomputes rather than remembers, so it is idempotent by construction: the second pass
+finds `claimed == stored` and does nothing. See `specs/005-android-preference-learning/design.md` D1 and
+D8, and `evidence.md`. The reasoning below is kept as the record of why the question mattered.
 
 **Records written before learning existed carry `signalsApplied` flags with no deltas behind them.**
 
