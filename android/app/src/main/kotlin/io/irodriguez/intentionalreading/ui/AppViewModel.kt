@@ -689,6 +689,7 @@ class AppViewModel(
     private fun mapUiState(): AppUiState = UiStateMapper.map(
         phase = phase,
         records = localState.articles,
+        preferences = localState.preferences,
         selectedCategory = _selectedCategory.value,
         heldArticleId = _heldArticleId.value,
         now = nowProvider(),

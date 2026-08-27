@@ -345,7 +345,7 @@ class AppViewModelTest {
         assertEquals(3, held.availableCount)
         assertEquals(2, held.remainingCount)
 
-        val replacementLeader = article(4)
+        val replacementLeader = article(4).copy(publishedAt = now)
         datasets.refreshBehavior = { updated(dataset(listOf(replacementLeader, oldFollower))) }
         viewModel.reload()
         yield()
@@ -548,7 +548,9 @@ class AppViewModelTest {
 
     @Test
     fun `changing category releases an opened held card after persistence`() = runBlocking {
-        val technology = article(1, Category.TECHNOLOGY)
+        val technology = article(1, Category.TECHNOLOGY).copy(
+            score = ArticleScore(92, 50, 20, 15, 5, 2),
+        )
         val iam = article(2, Category.IAM)
         val viewModel = viewModel(refreshResult = updated(dataset(listOf(technology, iam))))
         viewModel.selectCategory(Category.IAM)
