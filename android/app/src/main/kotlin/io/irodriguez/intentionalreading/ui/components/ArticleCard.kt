@@ -156,6 +156,7 @@ fun ArticleCard(
                                 restoreScope.launch {
                                     animateToGestureState()
                                     currentOnSwipeCommit(article, articleAction) { persisted ->
+                                        gestureState.releaseCommitLock()
                                         if (!persisted) {
                                             restoreScope.launch { restoreCard() }
                                         }

@@ -119,6 +119,10 @@ object SwipeGesture {
             return null
         }
 
+        fun releaseCommitLock() {
+            commitInFlight = false
+        }
+
         fun restore() {
             reset()
             commitInFlight = false
