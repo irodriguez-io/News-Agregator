@@ -21,6 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
@@ -293,7 +294,7 @@ class ArticleStateMachineUndoTest {
     }
 
     @Test
-    fun `the undo record carries a reversal field that is not yet used`() {
+    fun `Undo Dismiss reverses the signal applied by the forward transition`() {
         // Given preferences and an undo-eligible dismissal
         val preferences = LocalState.Preferences(
             sources = mapOf("example" to PreferenceEntry(weight = 1.25, interactions = 3)),
@@ -305,24 +306,90 @@ class ArticleStateMachineUndoTest {
         )
         val dismiss = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
-                before.articles,
-                article(),
-                ArticleAction.DISMISS,
-                actionTime,
+                records = before.articles,
+                preferences = before.preferences,
+                article = article(),
+                action = ArticleAction.DISMISS,
+                now = actionTime,
                 undoable = true,
             ),
         )
 
         // When the record is inspected and Undo is performed
-        assertNull(dismiss.undoRecord?.preferenceReversal)
+        // Scenario: Undo Dismiss records and reverses the signal the forward transition applied.
+        assertEquals(PreferenceReversal.NOT_INTERESTED, dismiss.undoRecord?.preferenceReversal)
         val reversed = assertIs<ArticleTransition.Reverted>(
-            ArticleStateMachine.reverse(dismiss.records, dismiss.undoRecord),
+            ArticleStateMachine.reverse(dismiss.records, dismiss.preferences, dismiss.undoRecord),
         )
-        val after = before.copy(articles = reversed.records)
+        val after = before.copy(
+            articles = reversed.records,
+            preferences = reversed.preferences,
+        )
 
-        // Then no preference entry changed
-        assertSame(preferences, after.preferences)
+        // Then Dismiss moved the preferences and Undo restored them.
+        assertNotEquals(before.preferences, dismiss.preferences)
         assertEquals(before.preferences, after.preferences)
+    }
+
+    @Test
+    fun `Save then Undo then Save leaves one applied signal`() {
+        val preferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
+        val firstSave = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = emptyMap(),
+                preferences = preferences,
+                article = article(),
+                action = ArticleAction.SAVE,
+                now = actionTime,
+                undoable = true,
+            ),
+        )
+        val undone = assertIs<ArticleTransition.Reverted>(
+            ArticleStateMachine.reverse(firstSave.records, firstSave.preferences, firstSave.undoRecord),
+        )
+
+        val secondSave = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = undone.records,
+                preferences = undone.preferences,
+                article = article(),
+                action = ArticleAction.SAVE,
+                now = actionTime.plusSeconds(60),
+                undoable = true,
+            ),
+        )
+
+        assertEquals(firstSave.preferences, secondSave.preferences)
+        assertEquals(PreferenceEntry(weight = 0.45, interactions = 1), secondSave.preferences.sources["example"])
+        assertEquals(PreferenceEntry(weight = 0.30, interactions = 1), secondSave.preferences.topics["oauth"])
+    }
+
+    @Test
+    fun `Undo of a Save that applied no signal leaves preferences unchanged and restores the record`() {
+        val previousRecord = openedRecord()
+        val preferences = LocalState.Preferences(
+            sources = mapOf("example" to PreferenceEntry(weight = 0.45, interactions = 1)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = 0.30, interactions = 1)),
+        )
+        val save = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(article().id to previousRecord),
+                preferences = preferences,
+                article = article(),
+                action = ArticleAction.SAVE,
+                now = actionTime,
+                undoable = true,
+            ),
+        )
+
+        assertNull(save.undoRecord?.preferenceReversal)
+        assertSame(preferences, save.preferences)
+        val undone = assertIs<ArticleTransition.Reverted>(
+            ArticleStateMachine.reverse(save.records, save.preferences, save.undoRecord),
+        )
+
+        assertSame(save.preferences, undone.preferences)
+        assertSame(previousRecord, undone.records.getValue(article().id))
     }
 
     private fun openedRecord(): ArticleRecord = ArticleRecord(

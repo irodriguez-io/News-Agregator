@@ -46,6 +46,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -1172,6 +1173,7 @@ class AppViewModelTest {
         val viewModel = viewModel(store = store)
         viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
         assertTrue(viewModel.uiState.value.undoAvailable)
+        val preferencesAfterDismiss = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
 
         // When Undo is taken from the offer
         val result = viewModel.performUndo()
@@ -1180,6 +1182,8 @@ class AppViewModelTest {
         assertTrue(result.persisted)
         val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
         assertEquals(previousRecord, persisted.articles[target.id])
+        // Scenario: Undo Dismiss reverses the signal applied by the forward transition.
+        assertNotEquals(preferences, preferencesAfterDismiss)
         assertEquals(preferences, persisted.preferences)
         assertEquals(AppAnnouncementKind.UNDO_COMPLETED, viewModel.announcement.value?.kind)
         assertNull(viewModel.uiState.value.pendingUndoOffer)
@@ -1344,6 +1348,7 @@ class AppViewModelTest {
         )
         viewModel.onArticleAction(target, ArticleAction.OPEN)
         assertEquals(target.id, viewModel.heldArticleId.value)
+        val preferencesAfterOpen = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
         viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
         assertNull(viewModel.heldArticleId.value)
         assertEquals(next.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
@@ -1360,7 +1365,9 @@ class AppViewModelTest {
         assertNull(viewModel.heldArticleId.value)
         val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
         assertEquals(ArticleStatus.OPENED, persisted.articles.getValue(target.id).status)
-        assertEquals(preferencesBeforeUndo, persisted.preferences)
+        // Scenario: Undo Dismiss removes only Dismiss learning and preserves earlier Open learning.
+        assertNotEquals(preferencesBeforeUndo, persisted.preferences)
+        assertEquals(preferencesAfterOpen, persisted.preferences)
     }
 
     @Test
