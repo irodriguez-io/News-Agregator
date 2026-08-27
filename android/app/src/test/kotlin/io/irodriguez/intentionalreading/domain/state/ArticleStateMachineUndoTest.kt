@@ -169,6 +169,7 @@ class ArticleStateMachineUndoTest {
             DiscoverDeck.build(
                 articles = listOf(article()),
                 records = reversed.records,
+                preferences = noPreferences,
                 selectedCategory = null,
                 heldArticleId = null,
             ).article,
