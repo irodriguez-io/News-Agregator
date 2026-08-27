@@ -762,7 +762,8 @@ class AppViewModelTest {
     @Test
     fun `Open persistence warning is distinct from navigation failure`() {
         val viewModel = viewModel()
-        val transition = ArticleTransition.Unchanged(emptyMap())
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
+        val transition = ArticleTransition.Unchanged(emptyMap(), noPreferences)
         val failedPersistence = ArticleActionResult(
             transition = transition,
             persisted = false,

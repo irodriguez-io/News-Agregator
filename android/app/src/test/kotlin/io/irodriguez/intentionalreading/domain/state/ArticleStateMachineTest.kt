@@ -49,7 +49,7 @@ class ArticleStateMachineTest {
         ArticleAction.entries.forEach { action ->
             ArticleStatus.entries.forEach { status ->
                 val records = recordsFor(status)
-                val result = ArticleStateMachine.transition(records, article(), action, actionTime)
+                val result = ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime)
                 val message = "$action from $status"
 
                 if (status in allowedFrom.getValue(action)) {
@@ -67,7 +67,7 @@ class ArticleStateMachineTest {
     @Test
     fun `open from unseen creates an opened record with write-once metadata`() {
         val result = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(emptyMap(), article(), ArticleAction.OPEN, actionTime),
+            ArticleStateMachine.transition(emptyMap(), noPreferences, article(), ArticleAction.OPEN, actionTime),
         )
 
         assertEquals(
@@ -97,6 +97,7 @@ class ArticleStateMachineTest {
             val result = assertIs<ArticleTransition.Applied>(
                 ArticleStateMachine.transition(
                     mapOf(article().id to existing),
+                    noPreferences,
                     article(),
                     ArticleAction.OPEN,
                     actionTime,
@@ -116,7 +117,7 @@ class ArticleStateMachineTest {
             val records = mapOf(article().id to existing)
 
             val result = assertIs<ArticleTransition.Unchanged>(
-                ArticleStateMachine.transition(records, article(), ArticleAction.OPEN, actionTime),
+                ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.OPEN, actionTime),
             )
 
             assertSame(records, result.records)
@@ -136,6 +137,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
@@ -166,6 +168,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.DISMISS,
                 actionTime,
@@ -196,6 +199,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.MARK_READ,
                 actionTime,
@@ -221,6 +225,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.MARK_UNREAD,
                 actionTime,
@@ -241,6 +246,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.REMOVE,
                 actionTime,
@@ -260,7 +266,7 @@ class ArticleStateMachineTest {
         val records = mapOf(article().id to existing)
 
         val result = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(records, article(), ArticleAction.SAVE, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.SAVE, actionTime),
         )
 
         assertNotSame(records, result.records)
@@ -511,7 +517,7 @@ class ArticleStateMachineTest {
         )
         val records = mapOf(article().id to dismissedSignal)
         val unchanged = assertIs<ArticleTransition.Unchanged>(
-            ArticleStateMachine.transition(records, article(), ArticleAction.DISMISS, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.DISMISS, actionTime),
         )
         assertSignals(
             unchanged.records.getValue(article().id),
@@ -583,7 +589,7 @@ class ArticleStateMachineTest {
         val records = mapOf(article().id to existing)
 
         val result = assertIs<ArticleTransition.Unchanged>(
-            ArticleStateMachine.transition(records, article(), action, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime),
         )
 
         assertSame(records, result.records)
@@ -594,7 +600,7 @@ class ArticleStateMachineTest {
         records: Map<String, ArticleRecord>,
         action: ArticleAction,
     ): ArticleRecord = assertIs<ArticleTransition.Applied>(
-        ArticleStateMachine.transition(records, article(), action, actionTime),
+        ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime),
     ).record
 
     private fun assertSignals(
@@ -657,6 +663,7 @@ class ArticleStateMachineTest {
     )
 
     private companion object {
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
         val firstSeenAt: Instant = Instant.parse("2026-08-20T10:00:00Z")
         val openedAt: Instant = Instant.parse("2026-08-20T11:00:00Z")
         val oldActionTime: Instant = Instant.parse("2026-08-20T12:00:00Z")

@@ -34,9 +34,7 @@ sealed interface ArticleTransition {
     data class Unchanged(
         override val records: Map<String, ArticleRecord>,
         override val preferences: LocalState.Preferences,
-    ) : ArticleTransition {
-        constructor(records: Map<String, ArticleRecord>) : this(records, emptyPreferences())
-    }
+    ) : ArticleTransition
 
     data class Invalid(
         override val records: Map<String, ArticleRecord>,
@@ -48,21 +46,6 @@ sealed interface ArticleTransition {
 }
 
 object ArticleStateMachine {
-    fun transition(
-        records: Map<String, ArticleRecord>,
-        article: Article,
-        action: ArticleAction,
-        now: Instant,
-        undoable: Boolean = false,
-    ): ArticleTransition = transition(
-        records = records,
-        preferences = emptyPreferences(),
-        article = article,
-        action = action,
-        now = now,
-        undoable = undoable,
-    )
-
     fun transition(
         records: Map<String, ArticleRecord>,
         preferences: LocalState.Preferences,
@@ -179,15 +162,6 @@ object ArticleStateMachine {
             preferences = nextPreferences,
         )
     }
-
-    fun reverse(
-        records: Map<String, ArticleRecord>,
-        undoRecord: UndoRecord?,
-    ): ArticleTransition = reverse(
-        records = records,
-        preferences = emptyPreferences(),
-        undoRecord = undoRecord,
-    )
 
     fun reverse(
         records: Map<String, ArticleRecord>,
@@ -311,6 +285,3 @@ private fun SignalsApplied.withApplied(action: ArticleAction): SignalsApplied = 
     ArticleAction.REMOVE,
     -> this
 }
-
-private fun emptyPreferences(): LocalState.Preferences =
-    LocalState.Preferences(sources = emptyMap(), topics = emptyMap())

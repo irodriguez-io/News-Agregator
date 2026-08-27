@@ -35,6 +35,7 @@ class ArticleStateMachineUndoTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 records = records,
+                preferences = noPreferences,
                 article = article(),
                 action = ArticleAction.SAVE,
                 now = actionTime,
@@ -65,6 +66,7 @@ class ArticleStateMachineUndoTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 records = mapOf(article().id to opened),
+                preferences = noPreferences,
                 article = article(),
                 action = ArticleAction.DISMISS,
                 now = actionTime,
@@ -85,7 +87,7 @@ class ArticleStateMachineUndoTest {
         listOf(ArticleAction.SAVE, ArticleAction.DISMISS).forEach { action ->
             // When it is committed without undo eligibility
             val result = assertIs<ArticleTransition.Applied>(
-                ArticleStateMachine.transition(emptyMap(), article(), action, actionTime),
+                ArticleStateMachine.transition(emptyMap(), noPreferences, article(), action, actionTime),
             )
 
             // Then no undo record is offered
@@ -106,7 +108,14 @@ class ArticleStateMachineUndoTest {
         cases.forEach { (action, records) ->
             // When the commit is marked undo-eligible
             val result = assertIs<ArticleTransition.Applied>(
-                ArticleStateMachine.transition(records, article(), action, actionTime, undoable = true),
+                ArticleStateMachine.transition(
+                    records,
+                    noPreferences,
+                    article(),
+                    action,
+                    actionTime,
+                    undoable = true,
+                ),
             )
 
             // Then the transition carries no undo record
@@ -122,6 +131,7 @@ class ArticleStateMachineUndoTest {
         // When Save is marked undo-eligible but changes nothing
         val result = ArticleStateMachine.transition(
             records,
+            noPreferences,
             article(),
             ArticleAction.SAVE,
             actionTime,
@@ -139,6 +149,7 @@ class ArticleStateMachineUndoTest {
         val save = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 emptyMap(),
+                noPreferences,
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
@@ -148,7 +159,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo is performed
         val reversed = assertIs<ArticleTransition.Reverted>(
-            ArticleStateMachine.reverse(save.records, save.undoRecord),
+            ArticleStateMachine.reverse(save.records, save.preferences, save.undoRecord),
         )
 
         // Then the key is deleted, Discover offers it, and the resulting LocalState validates
@@ -174,6 +185,7 @@ class ArticleStateMachineUndoTest {
         val save = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 emptyMap(),
+                noPreferences,
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
@@ -183,7 +195,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo removes the newly created record
         val reversed = assertIs<ArticleTransition.Reverted>(
-            ArticleStateMachine.reverse(save.records, save.undoRecord),
+            ArticleStateMachine.reverse(save.records, save.preferences, save.undoRecord),
         )
 
         // Then the success result does not claim a record that its own map does not contain
@@ -196,6 +208,7 @@ class ArticleStateMachineUndoTest {
         val save = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 emptyMap(),
+                noPreferences,
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
@@ -205,7 +218,7 @@ class ArticleStateMachineUndoTest {
 
         // When the save is reversed
         val reversed = assertIs<ArticleTransition.Reverted>(
-            ArticleStateMachine.reverse(save.records, save.undoRecord),
+            ArticleStateMachine.reverse(save.records, save.preferences, save.undoRecord),
         )
 
         // Then forward Applied is non-null by type and reverse has its own nullable-record success type
@@ -221,6 +234,7 @@ class ArticleStateMachineUndoTest {
         val dismiss = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to beforeDismiss),
+                noPreferences,
                 article(),
                 ArticleAction.DISMISS,
                 actionTime,
@@ -230,7 +244,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo is performed
         val reversed = assertIs<ArticleTransition.Reverted>(
-            ArticleStateMachine.reverse(dismiss.records, dismiss.undoRecord),
+            ArticleStateMachine.reverse(dismiss.records, dismiss.preferences, dismiss.undoRecord),
         )
 
         // Then the complete record is restored without rewriting any field
@@ -248,7 +262,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo is requested
         val result = assertIs<ArticleTransition.Invalid>(
-            ArticleStateMachine.reverse(records, undoRecord = null),
+            ArticleStateMachine.reverse(records, preferences = noPreferences, undoRecord = null),
         )
 
         // Then it fails as unavailable without changing the records
@@ -268,7 +282,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo is requested
         val result = assertIs<ArticleTransition.Invalid>(
-            ArticleStateMachine.reverse(records, undoRecord),
+            ArticleStateMachine.reverse(records, noPreferences, undoRecord),
         )
 
         // Then it fails as stale without changing the records
@@ -287,7 +301,7 @@ class ArticleStateMachineUndoTest {
 
         // When Undo is refused as stale
         val result = assertIs<ArticleTransition.Invalid>(
-            ArticleStateMachine.reverse(emptyMap(), undoRecord),
+            ArticleStateMachine.reverse(emptyMap(), noPreferences, undoRecord),
         )
 
         // Then the unknown source status remains unknown
@@ -464,6 +478,7 @@ class ArticleStateMachineUndoTest {
     private fun forwardRecordType(record: Any?): String = "nullable"
 
     private companion object {
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
         val firstSeenAt: Instant = Instant.parse("2026-08-20T10:00:00Z")
         val openedAt: Instant = Instant.parse("2026-08-20T11:00:00Z")
         val oldActionTime: Instant = Instant.parse("2026-08-20T12:00:00Z")
