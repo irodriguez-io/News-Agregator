@@ -284,6 +284,29 @@ a single delta at most 0.45). This case is reachable exactly once per document, 
 browser record's `read` flag without decrementing anything. After this item ships it is unreachable,
 because every flag clearing reverses.
 
+**Amendment, 2026-08-26, raised by the slice 3 implementer with RED committed.** Three existing
+`AppViewModelTest` fixtures describe pre-005 documents — records carrying `signalsApplied` flags with a
+`preferences` map that does not account for them — and therefore now trigger the fold on cold load. The
+most instructive is `export writes nothing when the destination cannot be written` (`:1677`), whose
+fixture is simply `localState(record(article(71), ArticleStatus.READ))`: a read record and no
+preferences. That is not a contrived state, it is *the* state this decision exists to repair, and its
+assertions `store.saveRequests.isEmpty()` and `assertEquals(current, …loadResult.state)` encode
+"loading never writes" — true before this item and false after it for exactly this class of document.
+
+**Resolution: the fixtures are corrected, not the assertions.** For each affected test, `preferences`
+is adjusted so the stored interaction counts equal the counts its own records claim, making the fold a
+no-op for that test and leaving every assertion standing unchanged. Nothing else moves — no record, no
+status, no flag, no assertion, and no scenario. A post-005 document is self-consistent by construction,
+so this makes the fixtures more realistic rather than less.
+
+This is deliberately narrower than "update the tests". Changing an assertion would let a genuine fold
+defect hide behind an adjusted expectation; changing only the fixture's counts cannot, because the
+assertions that follow are the originals. The three fixtures are `Undo from the offer restores the
+article and announces` (`:1162`, stored `3`/`2` against one `opened` record), `a valid backup replaces
+local state wholesale` (`:1371`, preferences naming sources no record carries), and the export test
+above. Coverage of the folding path itself is not lost: `spec.md` §4.3's own scenarios, including the
+mandated exactly-one-write test, cover it directly.
+
 ## D9 — Scoring goes in a new `domain/ranking/` package
 
 New pure file `«pkg»/domain/ranking/PersonalizedScore.kt`, mirroring `js/ranking/personalize.js`, with a
