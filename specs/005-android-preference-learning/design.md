@@ -134,9 +134,10 @@ recompute has two consequences D4 did not spell out, both settled here:
    inconsistent record — `status = OPENED` with `dismissed = true` — applies `SAVE`, and asserts the
    flag is cleared to `false`. That assertion *is* the "enforcing structural signals" half of its own
    name, which is precisely what this decision deletes. Under the browser, nothing ever clears
-   `dismissed`; the flag carries forward and the assertion becomes `dismissed = true`. The test is
-   renamed accordingly and thereby becomes a test of the latch invariant rather than of the derivation
-   that replaced it.
+   `dismissed`; the flag carries forward. **Two of that assertion's four flags flip, not one:** the
+   same `SAVE` also latches its own signal, so the line becomes
+   `opened = true, saved = true, dismissed = true, read = false`. The test is renamed accordingly and
+   thereby becomes a test of the latch invariant rather than of the derivation that replaced it.
 
    **This is safe because the input is unreachable.** Through the state machine, `dismissed = true`
    implies `status == DISMISSED` (`DISMISS` sets both), and `SAVE`, `OPEN` and `MARK_READ` are all
@@ -230,6 +231,20 @@ would have left `:324-325` vacuous rather than directional. Counting lines was t
 the test. The intent is unchanged and nothing is weakened — a null-check becomes a value-check and a
 vacuous equality becomes a directional one. `waves/wave-b-note.md` §4 again: the implementer stopping
 to question the plan's arithmetic was cheaper than the review round that would have caught it.
+
+**Second correction, 2026-08-26, raised by the slice 2 implementer with RED already committed.** One
+further existing assertion changes: `ArticleStateMachineUndoTest.kt:48`, in the test `an undo-eligible
+save records what it replaced`. It compares the whole `UndoRecord` against a constructed expected value
+whose `preferenceReversal` takes the field's `= null` default; a first Save now correctly records
+`SAVE_FOR_LATER`. The expected record gains an explicit
+`preferenceReversal = PreferenceReversal.SAVE_FOR_LATER`, which leaves the assertion full-record and
+strictly more specific than before.
+
+Both earlier sweeps missed it because it asserts nothing *about* preferences by name — it inherits the
+null through a constructor default. **Grepping for assertions is not sufficient to find the surface a
+defaulted field covers; the compiler and a full test run are.** The sibling `UndoRecord(` constructions
+at `:260` and `:280` are refusal-path *inputs* whose transitions return `Invalid` before any reversal,
+and they correctly need no change.
 
 No other existing assertion may be edited. 007's other scenarios remain 007's.
 
