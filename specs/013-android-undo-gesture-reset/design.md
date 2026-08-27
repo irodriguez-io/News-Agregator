@@ -1,53 +1,61 @@
-# 013 — Design note
+# 013 — Design note (rewritten 2026-08-27)
 
-One decision, one file pair. Short on purpose: the diagnosis in `spec.md` §1.2 is the substance, and the
-fix follows from it.
+The first version of this note is superseded in full. It argued a `commitInFlight` fix that `spec.md`
+§1.3 now records as wrong. What follows replaces it.
 
-## D1 — Release the lock when the commit resolves; do not weaken the lock
+## D1 — Keep the pointer handler attached across head-article changes
 
-`SwipeGestureTest.kt:164`, *"a second gesture is refused while a commit is in flight"*, is authoritative
-and **stays byte-identical**. The lock is correct while a commit is genuinely in flight — that is what
-stops a second swipe from racing a pending write. What is missing is a release for when that commit
-**resolves and the card survives**.
+`Modifier.pointerInput(key)` restarts its handler whenever the key changes, and `ArticleCard.kt` keys it
+on `gestureState` — an object `remember(article.id, …)` rebuilds for every new head article. So the card's
+touch handling is destroyed and relaunched on every deck change, and the relaunch measured **381–777 ms**
+behind the card becoming visible.
 
-Two candidate shapes were considered and one is rejected:
+**Decision:** key the pointer handler on something stable and read the current gesture state through
+`rememberUpdatedState`, which this file already uses for `onSwipeCommit` (`ArticleCard.kt:102`). The
+handler stops being torn down; the state it drives stays per-article.
 
-- **Rejected: make `onComplete` call the existing `restoreCard()` unconditionally.** It is a one-word
-  change and it does clear the lock, but `restoreCard()` also animates the travel home. On a successful
-  commit the card is leaving, so that would pull a departing card back toward the centre for up to
-  `EXIT_DURATION_MS` before it is removed — a visible snap, traded for a smaller diff.
-- **Chosen: split the reset.** A lock-only release on `SwipeGesture.State` that touches no travel, called
-  when the commit resolves on **both** outcomes; `restoreCard()` — lock release *plus* the animation
-  home — stays on the failure and lost-pointer paths where the card is staying and the travel genuinely
-  must return.
+Two alternatives were considered and rejected:
 
-This keeps 008 D2's shape: the gesture is a pure object and the Composable is a shell. The new method is
-pure, has no Android dependency, and is JVM-testable; the shell decides when to call it. It also keeps
-the fix inside `commitInFlight`'s existing meaning rather than introducing a second flag to track
-whether the first one is still trustworthy.
+- **Shorten the window by changing the scroll effects.** The D12 article-change scroll is what starves the
+  handler's launch. Removing or deferring it would narrow the window without closing it, and scroll
+  behaviour is item 012's ground — `backlog.md` already records three effects on this screen that will
+  eventually need reconciling. Making the card touchable is the smaller and more honest change.
+- **Await handler attachment before showing the card.** That trades a lost touch for a visible stall, and
+  the reader cannot tell a stalled card from a slow one.
 
-## D2 — The invariant that broke, stated so it cannot break silently again
+## D2 — `bf79c42` stays, and its rationale is corrected rather than deleted
 
-`commitInFlight` was safe to latch forever because **the next card was always a different article**, and
-`remember(article.id, …)` therefore built a fresh state. That assumption was never written down, and Undo
-is the first path that returns the *same* article to the *same* slot.
+`releaseCommitLock()` was committed against the wrong diagnosis. It stays because D1 makes it load-bearing
+for a new reason: with one persistent handler, a gesture state still latched from a previous commit can be
+swapped in behind it, and nothing would release it. The lock release is the precondition that makes a
+persistent handler safe.
 
-The fix removes the dependency rather than patching the one path that violated it: once the lock is
-released whenever a commit resolves, no caller has to reason about whether the card is leaving, coming
-back, or staying. Any future path that returns a card to Discover — a queue-pane undo, a dataset refresh
-that restores a dismissed article, item 012's header move re-keying the card — inherits correct
-behaviour without knowing this file exists.
+Correcting the reasoning in `spec.md` §1.4 rather than reverting and re-committing keeps the record honest
+about what happened. A future reader deserves to see that the code was right and the reason was wrong,
+which is a different failure from the code being wrong.
 
-The assumption is recorded in `backlog.md` under `Debt` so the next person to touch the gesture does not
-have to rediscover it.
+## D3 — The test is instrumented, and that is a considered exception
 
-## D3 — Why the walkthrough is definition-of-done rather than a nice-to-have
+Every previous Android item in this project has been provable on the JVM, and `execution-model.md` treats
+that as the norm. This fix is Compose wiring: there is no pure object whose contract changes, which is
+exactly why 258 green unit tests coexisted with a live defect.
 
-The state object's contract is fully unit-testable and the tests in `spec.md` §4 prove it. They cannot
-prove the thing the owner actually hit, which is a Compose recomposition returning a latched state object
-to a live card. Instrumented tests are a deliberate non-goal for CI (`backlog.md` Parked, from 002 slice
-4), so the device check is the only evidence that covers the real path.
+The project parks instrumented tests **for CI** (002 slice 4) — not for local use, and it already keeps
+`MainActivityLaunchSmokeTest` as an on-demand guard in `android/app/src/androidTest/`. This item adds a
+second one on the same terms. `androidx.compose.ui.test.junit4` is already declared, so no dependency rule
+is touched and CI stays emulator-free.
 
-`waves/wave-b-note.md`'s headline lesson applies directly: wave B's two most valuable defects were found
-by the owner using the app, and none by any gate. This defect was found the same way. Its fix gets
-verified the same way.
+**The stop condition matters more than the test.** If the instrumented test cannot reproduce the dropped
+touch, the implementer stops and reports rather than weakening it or leaning on the walkthrough. The first
+version of this item passed a unit gate and a diff review with the defect fully intact; the guard against
+repeating that is refusing to accept a test that does not fail first.
+
+## D4 — Why the specification now carries a falsifiable prediction
+
+`spec.md` §5.1 requires reproducing the defect **without Undo**, before any fix, on the grounds that D1
+predicts it must be reproducible that way.
+
+This is the check the first version skipped. That version reasoned from a plausible mechanism straight to
+a fix, and the mechanism was wrong; nothing in the process forced the diagnosis to be tested on its own
+terms before code was written. A prediction that would be false if the diagnosis were wrong, tested first,
+is the cheapest available guard against doing it a third time.

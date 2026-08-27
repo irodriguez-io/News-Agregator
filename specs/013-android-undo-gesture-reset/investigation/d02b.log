@@ -1,0 +1,17 @@
+--------- beginning of main
+08-27 10:54:38.993  3401  3401 D IR013Probe: pointerInput start article=b64bbf80dbf6b719217b state=239350129
+08-27 10:54:38.993  3401  3401 D IR013Probe: awaitEachGesture entry article=b64bbf80dbf6b719217b
+08-27 10:54:38.993  3401  3401 D IR013Probe: awaitFirstDown returned article=b64bbf80dbf6b719217b x=493.0 y=669.0
+08-27 10:54:38.993  3401  3401 D IR013Probe: gestureState.down article=b64bbf80dbf6b719217b accepted=true commitInFlight=false
+08-27 10:54:39.252  3401  3401 D IR013Probe: awaitEachGesture entry article=b64bbf80dbf6b719217b
+08-27 10:54:39.574  3401  3401 D IR013Probe: compose app pendingUndo=5 announcement=null
+08-27 10:54:39.594  3401  3401 D IR013Probe: compose ArticleCard article=e76ac145f6dd5185f8e9
+08-27 10:54:39.683  3401  3401 D IR013Probe: scroll article effect article=e76ac145f6dd5185f8e9 changed=true cardTopOffset=1084
+08-27 10:54:39.683  3401  3401 D IR013Probe: scroll opened effect article=e76ac145f6dd5185f8e9 isOpened=false becameOpened=false max=693
+08-27 10:54:40.220  3401  3401 D IR013Probe: Undo tapped offer=5
+08-27 10:54:40.275  3401  3401 D IR013Probe: compose app pendingUndo=null announcement=UNDO_COMPLETED
+08-27 10:54:40.288  3401  3401 D IR013Probe: compose ArticleCard article=b64bbf80dbf6b719217b
+08-27 10:54:40.441  3401  3401 D IR013Probe: scroll article effect article=b64bbf80dbf6b719217b changed=true cardTopOffset=1084
+08-27 10:54:40.441  3401  3401 D IR013Probe: scroll opened effect article=b64bbf80dbf6b719217b isOpened=false becameOpened=false max=809
+08-27 10:54:40.493  3401  3401 D IR013Probe: pointerInput start article=b64bbf80dbf6b719217b state=155154949
+08-27 10:54:40.493  3401  3401 D IR013Probe: awaitEachGesture entry article=b64bbf80dbf6b719217b

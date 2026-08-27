@@ -1,129 +1,151 @@
-# 013 — Undo must release the card's swipe lock
+# 013 — A Discover card must accept touch as soon as it is on screen
 
 **Workstream:** `android-client`, under Amendment 6. Owned paths: `android/**` plus this item's own
 `specs/013-android-undo-gesture-reset/`. Forbidden: `pipeline/**`, `config/**`, `js/**`, `css/**`,
 `index.html`, `scripts/**`, `tests/**`, **and `docs/v1/**`** — this item proposes no specification
 amendment and needs none.
 
-**Cut from:** `main` at `2613959` (item 005 merged; `Android`, `Test` and `Pages` green on that commit).
+**Cut from:** `main` at `2613959`.
+
+> **This specification was rewritten on 2026-08-27.** Its first version named the wrong root cause and a
+> fix was implemented and reviewed against it before the walkthrough disproved it. §1.3 records what was
+> wrong and why, because that is the more useful half of this item.
 
 ---
 
 ## 1. Why this item exists
 
-The owner reported two things after using the 005 build. Only one of them is a defect, and separating
-them is most of this specification's work.
+### 1.1 What the reader sees
 
-### 1.1 Undo on the labeled buttons is not a defect
+Acting on a Discover card shortly after tapping **Undo** does nothing at all. Not a missing undo offer —
+the swipe or tap is simply discarded, and the card stays on screen.
 
-Undo is offered for swipes and not for the card's labeled buttons. That is the specified behaviour, with
-reasoning recorded in three places and agreement from the reference implementation:
+### 1.2 What is actually happening
 
-- `contracts.md` §31 — Undo retains "only the most recent eligible **swipe** action".
-- `06-ui-ux.md` §70 — "Undo is offered only for the most recent eligible Discover **swipe** and remains
-  available for approximately the approved toast duration."
-- The browser's button listeners at `js/ui/discover.js:246-249` call `perform(...)` with no
-  `undoEligible` argument, so it takes its `false` default and the slot is never populated. Only
-  `attachSwipe`'s `onCommit` (`:263`) and `installDiscoverShortcuts` (`:268-269`) pass `true`.
-- `specs/007-android-undo/spec.md` §1.1 gives the intent: Undo exists to recover a *mis-trigger*. "A
-  swipe or an arrow key can be fired by accident; a press on a button labeled 'Save for later' cannot."
-- `specs/008-android-swipe-gestures/design.md` **D8** — *"No hardware-keyboard shortcuts, and the
-  labeled buttons stay non-undoable."*
+`ArticleCard.kt:83-98` builds a new `SwipeGesture.State` through `remember(article.id, …)`, and the card's
+touch handling is `Modifier.pointerInput(gestureState)`. **`pointerInput` restarts its handler whenever
+its key changes**, so every change of the Discover head article tears the gesture handler down and
+relaunches it. The relaunch is not immediate, because `DiscoverScreen.kt:74-87`'s article-change scroll
+(008 D12) is animating on the same frame clock.
 
-Android already matches all of it. **Nothing in this item changes which inputs offer Undo.**
+Instrumented on the `Pixel_10` emulator, 2026-08-27 (logs and screenshots preserved with this item's
+evidence):
 
-### 1.2 The swipe lost after Undo is a defect
+```
+10:58:10.825  compose ArticleCard article=eb011ad…    ← restored card enters composition
+10:58:10.931  scroll article effect changed=true       ← the D12 scroll runs
+10:58:10.978  cardBounds … centerY=1317.0             ← settled at its final position
+10:58:11.206  pointerInput start article=eb011ad…     ← handler finally attaches, +381 ms
+              (no "awaitFirstDown returned" — the DOWN was discarded)
+```
 
-A swipe issued shortly after tapping Undo is **silently discarded**: no state change, no interaction
-count change, no undo offer, and the card stays on screen. It is not a missing undo option — the swipe
-itself is lost.
+A passing trial logs `pointerInput start` and `awaitFirstDown returned` in the same millisecond. Measured
+attach latency ranged **381–777 ms**, varying with what else was animating.
 
-Reproduced over `adb` on the `Pixel_10` emulator against merged `main`, 2026-08-27. Timing-dependent:
-with a 0.4 s delay between the Undo tap and the next swipe it failed **4 of 4** trials; at 0.1 s and
-0.8 s it succeeded. In the failing trials the stored document was unchanged — record count and total
-interaction counts identical before and after — confirming the gesture never reached the state machine.
+**The card is therefore visible, settled and correctly positioned for up to roughly 0.8 s before it can
+receive touch, and anything the reader does in that window is silently discarded.**
 
-**Root cause.** `SwipeGesture.State.commitInFlight` (`ui/gesture/SwipeGesture.kt:52`) is the only gate
-that can swallow a gesture without a trace: `down()` returns `false` while it is set (`:63`), as do
-`move()` (`:73`) and `release()` (`:96`). It is set in `release()` when a swipe commits (`:106`) and
-cleared in exactly one place, `restore()` (`:122-126`). `restore()` is reached only from
-`ArticleCard.restoreCard()`, whose two callers are a pointer lost mid-drag (`:142`) and a commit that
-**failed** to persist (`:158-161`).
+Undo is not the cause. It is the easiest way to reach the window, because it changes the head article
+twice in quick succession — the deck advances, then reverts — while a scroll animates.
 
-So after a *successful* commit the lock stays latched for the life of that state object. That is safe
-only because the next card builds a fresh state — `remember(article.id, …)` at `ArticleCard.kt:83-98`.
-**Undo violates the assumption**: it returns the same article to the same slot, so the restored card can
-come back holding a latched, permanently deaf gesture state. The lock is never released precisely
-because the commit succeeded.
+### 1.3 What the first version of this specification got wrong
+
+It blamed `SwipeGesture.State.commitInFlight` remaining latched after a successful commit, and a fix
+(`bf79c42`, `releaseCommitLock()`) was written, reviewed and merged to this branch against that theory.
+The theory was wrong, and three pieces of evidence disprove it:
+
+- In the failing trial `gestureState.down(...)` was **never called**; whenever it was called it returned
+  `true` with `commitInFlight` already `false`.
+- The card's **Save for later button** fails in the same window, and it never consults the gesture state.
+- The **category chip** on the same screen works in that window, so the screen is live and only the card
+  is affected.
+
+Two process notes worth keeping. The unit tests written for that fix were correct and still pass — they
+tested the new method's contract, which was never the symptom; a green unit gate was never going to catch
+this. And the emulator walkthrough was made definition-of-done rather than optional precisely because the
+recomputation path is unreachable from JVM tests. That decision is the only reason this did not ship
+labelled as fixed.
+
+### 1.4 What happens to `bf79c42`
+
+**It stays, re-justified.** It was committed for a reason now known to be false, and this section says so
+rather than quietly letting it stand. It earns its place under the new fix: once a single pointer handler
+persists across head-article changes, a gesture state still latched from a previous commit can be swapped
+in behind it. Releasing the lock when a commit resolves is the precondition that makes a persistent
+handler safe. Its four unit tests remain valid exactly as written.
 
 ---
 
 ## 2. Story
 
-As a **reader**, I want a card that Undo returns to Discover to accept a swipe immediately, so that
-undoing a mis-swipe does not cost me the card.
+As a **reader**, I want a Discover card to accept my swipe or tap as soon as it is on screen, so that an
+action I take immediately after the deck changes is not silently lost.
 
 ---
 
 ## 3. Out of scope
 
-- **Which inputs offer Undo.** §1.1 — the labeled buttons stay non-undoable, and no keyboard shortcut is
-  added (008 D8).
-- **Undo in Read Later and History.** Neither client offers it and `contracts.md` §23 lists exactly two
-  reversible corrective actions, Undo Not Interested and Undo Save for Later. Widening
-  `ArticleStateMachine.reversibleActions` is new scope with its own specification amendment; the owner
-  decided on 2026-08-27 that it becomes its own future item, recorded in `backlog.md`.
-- **Any change to `docs/v1/**`.** None is required.
-- **The undo offer's duration, copy, or affordance.** 008 D6 and D7 own those.
-- **The held-article pin on undo.** 007 D6 settled it and it is unchanged.
-- **Weakening the commit lock.** The lock is correct while a commit is in flight; see §4 scenario 3.
+- **Which inputs offer Undo.** The labeled buttons stay non-undoable and no keyboard shortcut is added.
+  Specified asymmetry: `contracts.md` §31, `06-ui-ux.md` §70, 007 `spec.md` §1.1, 008 D8.
+- **Undo in Read Later and History.** Its own future item, per the owner's decision of 2026-08-27.
+- **The three `DiscoverScreen` scroll effects.** One of them makes this window longer, but changing scroll
+  behaviour is item 012's ground. This item makes the card touchable during the window; it does not
+  remove the window.
+- **Any change to `docs/v1/**`**, to `SwipeGesture.kt`, or to the undo offer's duration, copy or affordance.
+- **Instrumented tests in CI.** They stay parked (002 slice 4). The new test is a local, on-demand guard.
 
 ---
 
 ## 4. Scenarios
 
-`SwipeGesture.State` is a pure object with no Android dependency (008 D2), so these are JVM-testable.
+### Scenario: a card accepts a swipe immediately after the deck advances
 
-### Scenario: a resolved commit releases the lock
+Given a Discover card has just been committed by a swipe\
+And the next card has become the head article\
+When the reader swipes that new card as soon as it is on screen\
+Then the swipe is received and commits its action
 
-Given a gesture state that has committed a Save for Later\
-When the commit resolves as persisted\
-Then a new gesture is accepted\
-And that gesture can lock horizontal intent, travel past the threshold, and emit its own action
+### Scenario: a card accepts a swipe immediately after Undo returns it
 
-### Scenario: a resolved failed commit still restores the travel
+Given a swipe has been committed and the reader has tapped Undo\
+When the reader swipes the returned card as soon as it is on screen\
+Then the swipe is received and commits its action\
+And it raises its own undo offer
 
-Given a gesture state that has committed a Save for Later\
-When the commit resolves as **not** persisted\
-Then the lock is released\
-And the travel returns home, exactly as it does today
+### Scenario: a card accepts a button press immediately after the deck changes
 
-### Scenario: the lock still holds before the commit resolves
+Given the Discover head article has just changed\
+When the reader presses Save for later on the new card as soon as it is on screen\
+Then the press is received and the article is saved
 
-Given a gesture state that has just committed\
-When a second gesture is attempted before the commit resolves\
-Then the gesture is refused, nothing is consumed, and no second action is emitted\
+### Scenario: the gesture state is still per-card
+
+Given the head article changes\
+When the new card is swiped\
+Then its travel and its commit lock are its own\
+And no travel or latched commit carries over from the card that left
+
+### Scenario: a committing card still refuses a second gesture
+
+Given a card whose swipe has committed and whose commit has not yet resolved\
+When a second gesture is attempted on it\
+Then the gesture is refused\
 And this is the existing assertion at `SwipeGestureTest.kt:164`, which does not change
-
-### Scenario: releasing the lock does not fabricate an action
-
-Given a gesture state whose commit has resolved as persisted\
-When the committed action is inspected\
-Then it still reports the action that was committed\
-And a subsequent release that has travelled nowhere emits nothing
-
-### Scenario: releasing the lock leaves the travel alone
-
-Given a gesture state that has committed and been given its exit travel\
-When the commit resolves as persisted\
-Then the horizontal travel and the exit travel are unchanged\
-And nothing animates the departing card back toward the centre
 
 ---
 
 ## 5. Verification
 
-### 5.1 Gates
+### 5.1 The prediction that must be tested first
+
+If §1.2 is right, the defect **must also reproduce with no Undo involved** — two fast consecutive swipes,
+where the second lands during the new card's handler restart.
+
+**Reproduce that before any fix is written.** If consecutive fast swipes do not drop the second touch,
+§1.2 is wrong too and this item stops for re-design rather than proceeding. The first version of this
+specification skipped exactly this check.
+
+### 5.2 Gates
 
 ```sh
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
@@ -134,24 +156,35 @@ rm -rf app/build/test-results/testDebugUnitTest
 ./gradlew :app:assembleDebug
 ```
 
-Baseline on `main` at `2613959`: **254 tests, 0 failures, `BUILD SUCCESSFUL`**. Delete `test-results`
-before every run and read the `BUILD SUCCESSFUL` line, not the counts (`waves/wave-b-note.md` §7).
+Head of this branch: **258 tests, 0 failures, `BUILD SUCCESSFUL`**.
 
-### 5.2 Walkthrough — required evidence, not optional
+### 5.3 The instrumented regression test
 
-The unit tests cover the state object's contract. They cannot reach the recomposition path where the
-defect actually appears, so a device check is part of this item's definition of done.
+This fix is Compose wiring and has no JVM-testable surface. The project parks instrumented tests **for
+CI** (002 slice 4) but already keeps one as a local, on-demand guard — `MainActivityLaunchSmokeTest` in
+`android/app/src/androidTest/`. `androidx.compose.ui.test.junit4` is already an `androidTestImplementation`
+dependency, so **no new dependency is required**.
 
-Driven over `adb` on the `Pixel_10` API 37 emulator against merged `main`:
+```sh
+./gradlew :app:connectedDebugAndroidTest
+```
 
-1. Swipe a Discover card to save it. The undo offer appears.
-2. Tap **Undo**. The card returns to Discover.
-3. Swipe it again **immediately**. The swipe must commit and must raise its own undo offer.
-4. Repeat steps 1–3 at roughly **0.2 s**, **0.4 s** and **0.8 s** between the Undo tap and the second
-   swipe. 0.4 s was the reliable failure point before the fix; all three must pass after it.
-5. Confirm against the pulled state document that each second swipe actually moved a weight and a count
-   — a card leaving the deck is not on its own proof the action landed.
+The test changes the head article and injects a touch during the window, asserting the action is
+received; `ComposeTestRule.mainClock` makes the timing deterministic.
 
-**If the failing-first test cannot reproduce the defect at the state level, stop and report rather than
-substituting the walkthrough for a test.** That would mean the cause lies elsewhere in the composable
-and §1.2's diagnosis is wrong, which is worth knowing before any fix is written.
+**If the instrumented test cannot reproduce the dropped touch, stop and report.** Do not substitute the
+walkthrough for it, and do not weaken it until it passes.
+
+### 5.4 Walkthrough — required evidence
+
+Driven over `adb` on the `Pixel_10` emulator. **Aim every swipe and tap at the card's true bounds, read
+from `adb shell uiautomator dump`.** Fixed coordinates confounded the first attempt at this item, because
+the deck scroll-resets and moves the card between trials.
+
+1. Two fast consecutive swipes, no Undo. Both must commit.
+2. Swipe → Undo → immediate swipe, at roughly 0.2 s, 0.4 s and 0.8 s. All must commit and raise an offer.
+3. Save for later pressed in the same window. Must save.
+
+For each, confirm from the pulled state document that a weight and a count actually moved. **A card
+leaving the deck is not proof that the action landed** — that mistake produced a false pass during the
+005 walkthrough and again here.

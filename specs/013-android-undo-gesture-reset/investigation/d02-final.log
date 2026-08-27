@@ -1,0 +1,18 @@
+--------- beginning of main
+08-27 10:57:26.327  4462  4462 D IR013Probe: compose app pendingUndo=null announcement=null
+08-27 10:57:27.536  4462  4462 D IR013Probe: scroll reset effect category=all state=Loading article=null target=0
+08-27 10:57:27.539  4462  4462 D IR013Probe: scroll article effect article=null changed=false cardTopOffset=0
+08-27 10:57:27.550  4462  4462 D IR013Probe: scroll opened effect article=null isOpened=false becameOpened=false max=0
+08-27 10:57:27.776  4462  4462 D IR013Probe: compose app pendingUndo=null announcement=null
+08-27 10:57:27.801  4462  4462 D IR013Probe: compose ArticleCard article=f9efe11ca9eba3856407
+08-27 10:57:28.006  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:28.022  4462  4462 D IR013Probe: scroll reset effect category=all state=Card article=f9efe11ca9eba3856407 target=0
+08-27 10:57:28.023  4462  4462 D IR013Probe: scroll article effect article=f9efe11ca9eba3856407 changed=false cardTopOffset=1084
+08-27 10:57:28.027  4462  4462 D IR013Probe: scroll opened effect article=f9efe11ca9eba3856407 isOpened=false becameOpened=false max=610
+08-27 10:57:28.549  4462  4462 D IR013Probe: pointerInput start article=f9efe11ca9eba3856407 state=267454486
+08-27 10:57:28.549  4462  4462 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:28.550  4462  4462 D IR013Probe: awaitFirstDown returned article=f9efe11ca9eba3856407 x=701.0 y=637.0
+08-27 10:57:28.550  4462  4462 D IR013Probe: gestureState.down article=f9efe11ca9eba3856407 accepted=true commitInFlight=false
+08-27 10:57:28.551  4462  4462 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:29.140  4462  4462 D IR013Probe: compose app pendingUndo=null announcement=null
+08-27 10:57:29.150  4462  4462 D IR013Probe: compose ArticleCard article=f9efe11ca9eba3856407
