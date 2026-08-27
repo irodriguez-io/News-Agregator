@@ -239,7 +239,7 @@ The slice that changes what the reader sees. Still fully JVM-testable — no Com
   - A mapper test proving the deck shown reflects preferences, and queue tests proving Read Later and
     History order by `savedAt`/`readAt` descending regardless of weights.
   - No existing assertion edited in this slice.
-- **Status:** pending
+- **Status:** done
 
 ---
 
