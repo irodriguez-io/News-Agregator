@@ -1164,8 +1164,8 @@ class AppViewModelTest {
         val target = article(1)
         val previousRecord = record(target, ArticleStatus.OPENED)
         val preferences = LocalState.Preferences(
-            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 3)),
-            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 2)),
+            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 1)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 1)),
         )
         val initial = LocalState.default().copy(
             articles = mapOf(target.id to previousRecord),
@@ -1384,8 +1384,8 @@ class AppViewModelTest {
             record(currentRead, ArticleStatus.READ),
         ).copy(
             preferences = LocalState.Preferences(
-                sources = mapOf("current-only" to PreferenceEntry(1.0, 1)),
-                topics = emptyMap(),
+                sources = mapOf(currentRead.source.id to PreferenceEntry(1.0, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
             ),
         )
         val imported = localState(
@@ -1393,8 +1393,8 @@ class AppViewModelTest {
             record(importedRead, ArticleStatus.READ),
         ).copy(
             preferences = LocalState.Preferences(
-                sources = mapOf("import-only" to PreferenceEntry(-1.0, 2)),
-                topics = emptyMap(),
+                sources = mapOf(importedRead.source.id to PreferenceEntry(-1.0, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
             ),
         )
         val candidateBytes = "valid backup".encodeToByteArray()
@@ -1676,7 +1676,12 @@ class AppViewModelTest {
     @Test
     fun `export writes nothing when the destination cannot be written`() = runBlocking {
         // Given valid current state and a destination that cannot be opened
-        val current = localState(record(article(71), ArticleStatus.READ))
+        val current = localState(record(article(71), ArticleStatus.READ)).copy(
+            preferences = LocalState.Preferences(
+                sources = mapOf("source_71" to PreferenceEntry(0.25, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
+            ),
+        )
         val exportedBytes = "exported state".encodeToByteArray()
         val store = FakeLocalStateStore(success(current)).apply {
             exportBehavior = { LocalStateExport.Success(exportedBytes) }

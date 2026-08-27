@@ -16,6 +16,7 @@ import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.domain.state.PreferenceReconciliation
 import io.irodriguez.intentionalreading.domain.state.UndoRecord
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
@@ -322,15 +323,24 @@ class AppViewModel(
     suspend fun importLocalData(candidateBytes: ByteArray): Boolean = stateMutex.withLock {
         when (val result = importLocalState(candidateBytes)) {
             is LocalStateResult.Success -> {
-                adoptPersistedState(result.state)
-                undoRecord = null
-                pendingUndoOffer = null
-                _heldArticleId.value = null
-                _localStateError.value = null
-                _recoveryNoticeVisible.value = false
-                publish()
-                announce(AppAnnouncementKind.IMPORT_COMPLETE)
-                true
+                val reconciled = PreferenceReconciliation.reconcile(result.state)
+                when (val persisted = persistReconciliationIfChanged(result, reconciled)) {
+                    is LocalStateResult.Success -> {
+                        adoptPersistedState(persisted.state)
+                        undoRecord = null
+                        pendingUndoOffer = null
+                        _heldArticleId.value = null
+                        _localStateError.value = null
+                        _recoveryNoticeVisible.value = false
+                        publish()
+                        announce(AppAnnouncementKind.IMPORT_COMPLETE)
+                        true
+                    }
+                    is LocalStateResult.Failure -> {
+                        announce(AppAnnouncementKind.IMPORT_FAILED)
+                        false
+                    }
+                }
             }
             is LocalStateResult.Failure -> {
                 announce(AppAnnouncementKind.IMPORT_FAILED)
@@ -540,7 +550,16 @@ class AppViewModel(
     private suspend fun restoreLocalState() {
         stateMutex.withLock {
             when (val result = loadLocalState()) {
-                is LocalStateResult.Success -> adoptPersistedState(result.state)
+                is LocalStateResult.Success -> {
+                    val reconciled = PreferenceReconciliation.reconcile(result.state)
+                    when (val persisted = persistReconciliationIfChanged(result, reconciled)) {
+                        is LocalStateResult.Success -> adoptPersistedState(persisted.state)
+                        is LocalStateResult.Failure -> {
+                            adoptPersistedState(result.state)
+                            _localStateError.value = persisted
+                        }
+                    }
+                }
                 is LocalStateResult.Failure -> {
                     adoptPersistedState(result.state ?: LocalState.default())
                     _localStateError.value = result
@@ -551,6 +570,15 @@ class AppViewModel(
             publish()
             _localStateReady.value = true
         }
+    }
+
+    private suspend fun persistReconciliationIfChanged(
+        original: LocalStateResult.Success,
+        reconciled: LocalState,
+    ): LocalStateResult = if (reconciled == original.state) {
+        original
+    } else {
+        saveLocalState(reconciled)
     }
 
     private suspend fun loadCachedDatasetNow() {
