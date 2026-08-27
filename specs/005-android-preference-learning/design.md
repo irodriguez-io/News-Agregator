@@ -126,6 +126,40 @@ because every transition that sets a flag sets the matching field in the same st
 browser does. `saved` carries no such equality and is a free latch, which is what `contracts.md` §20's
 `status = saved, signalsApplied.saved = false` example depends on.
 
+**Amendment, 2026-08-26, raised by the slice 2 implementer before writing code.** Deleting the
+recompute has two consequences D4 did not spell out, both settled here:
+
+1. **`ArticleStateMachineTest.kt:325` must flip.** Its enclosing test, `Android actions preserve
+   foreign learning signals while enforcing structural signals` (`:278`), builds a deliberately
+   inconsistent record — `status = OPENED` with `dismissed = true` — applies `SAVE`, and asserts the
+   flag is cleared to `false`. That assertion *is* the "enforcing structural signals" half of its own
+   name, which is precisely what this decision deletes. Under the browser, nothing ever clears
+   `dismissed`; the flag carries forward and the assertion becomes `dismissed = true`. The test is
+   renamed accordingly and thereby becomes a test of the latch invariant rather than of the derivation
+   that replaced it.
+
+   **This is safe because the input is unreachable.** Through the state machine, `dismissed = true`
+   implies `status == DISMISSED` (`DISMISS` sets both), and `SAVE`, `OPEN` and `MARK_READ` are all
+   disallowed from `DISMISSED`; off disk or by import, `LocalStateValidator` rejects it outright. The
+   carried-forward flag would fail validation at the next save, which is the correct place for an
+   inconsistent record to be caught — the recompute silently laundering it is the hazard, not the fix.
+
+   The sibling test at `:265`, `Android transitions derive only the signals structurally forced by the
+   record`, still passes unchanged under latching and must not be touched.
+
+2. **The test helper keeps deriving; only the production helper dies.** `derivedForAndroid` has exactly
+   three usages: the `ArticleRecord` default, the helper itself, and a default on the private `record()`
+   fixture at `ArticleStateMachineTest.kt:380`. The hazard D4 names is a *production* helper that
+   recomputes flags from status. The fixture's default is inlined into the test file with its semantics
+   **unchanged** — making it all-false instead would silently alter the meaning of every existing test
+   that relies on it, which is a test weakening wearing mechanical clothes.
+
+   The seven `ArticleRecord(` construction sites in `AppViewModelTest.kt`, `UiStateMapperTest.kt`,
+   `ArticleStateMachineTest.kt` and `ArticleStateMachineUndoTest.kt` take explicit flags as mechanical
+   compilation repair. That is the compiler being the checklist, exactly as intended; no assertion in
+   those files changes as a result. `LocalStateValidator.kt:184` already passes `signalsApplied`
+   explicitly and needs no change.
+
 `OPEN`'s idempotency check moves from `existing?.openedAt != null` to
 `existing?.signalsApplied?.opened == true`, matching `js/state/article-state.js:81`. Equivalent under the
 validator's invariant, but the flag is now the reason rather than a proxy for it, and the comment 003
