@@ -1631,6 +1631,65 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `a committed import adopts imported state when reconciliation persistence fails`() = runBlocking {
+        val heldArticle = article(77)
+        val undoableArticle = article(78)
+        val importedArticle = article(79).copy(
+            source = ArticleSource("committed-import-source", "Committed Import Source"),
+        )
+        val imported = localState(
+            record(importedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+            appearance = Appearance.DARK,
+        )
+        val reconciliationFailure = LocalStateResult.Failure(
+            code = LocalStateErrorCode.WRITE_FAILED,
+            message = "reconciliation write failed",
+        )
+        val store = FakeLocalStateStore().apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(heldArticle, undoableArticle, importedArticle))),
+            store = store,
+        )
+        viewModel.onArticleAction(heldArticle, ArticleAction.OPEN)
+        viewModel.onArticleAction(undoableArticle, ArticleAction.SAVE, undoable = true)
+        assertEquals(heldArticle.id, viewModel.heldArticleId.value)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertTrue(viewModel.uiState.value.pendingUndoOffer != null)
+        val writesBeforeImport = store.saveRequests.size
+        store.saveBehavior = { reconciliationFailure }
+
+        val completed = viewModel.importLocalData("backup".encodeToByteArray())
+
+        assertTrue(completed)
+        assertEquals(writesBeforeImport + 1, store.saveRequests.size)
+        assertEquals(imported, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(
+            listOf(importedArticle.id),
+            viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+        )
+        assertEquals(reconciliationFailure, viewModel.localStateError.value)
+        assertNull(viewModel.heldArticleId.value)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(AppAnnouncementKind.IMPORT_COMPLETE, viewModel.announcement.value?.kind)
+
+        assertTrue(viewModel.exportLocalData { true })
+        assertEquals(listOf(imported), store.exportRequests)
+    }
+
+    @Test
     fun `failed cold load raises recovery notice and attempts no reconciliation write`() {
         val store = FakeLocalStateStore(
             LocalStateResult.Failure(
