@@ -1528,6 +1528,152 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `cold load writes one changed reconciliation and writes no unchanged reconciliation`() {
+        val storedArticle = article(71).copy(
+            source = ArticleSource("shared-source", "Shared Source"),
+        )
+        val preLearning = localState(
+            record(storedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val changingStore = FakeLocalStateStore(success(preLearning))
+
+        viewModel(store = changingStore)
+
+        assertEquals(1, changingStore.saveRequests.size)
+        val reconciled = assertIs<LocalStateResult.Success>(changingStore.loadResult).state
+        assertEquals(
+            PreferenceEntry(weight = 0.35, interactions = 2),
+            reconciled.preferences.sources["shared-source"],
+        )
+
+        val unchangedStore = FakeLocalStateStore(success(reconciled))
+
+        viewModel(store = unchangedStore)
+
+        assertEquals(0, unchangedStore.saveRequests.size)
+    }
+
+    @Test
+    fun `pre-learning unread after post-learning open and save preserves exactly the remaining signals`() = runBlocking {
+        val preLearningArticle = article(72).copy(
+            source = ArticleSource("shared-source", "Shared Source"),
+        )
+        val postLearningArticle = article(73).copy(
+            source = preLearningArticle.source,
+            tags = preLearningArticle.tags,
+        )
+        val preLearning = localState(
+            record(preLearningArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val store = FakeLocalStateStore(success(preLearning))
+        val viewModel = viewModel(store = store)
+
+        assertStatus(viewModel, postLearningArticle, ArticleAction.OPEN, ArticleStatus.OPENED)
+        assertStatus(viewModel, postLearningArticle, ArticleAction.SAVE, ArticleStatus.SAVED)
+        assertStatus(viewModel, preLearningArticle, ArticleAction.MARK_UNREAD, ArticleStatus.SAVED)
+
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            PreferenceEntry(weight = 0.65, interactions = 3),
+            persisted.preferences.sources["shared-source"],
+        )
+    }
+
+    @Test
+    fun `import reconciles its replacement and retains no pre-import record`() = runBlocking {
+        val currentOnly = article(74)
+        val importedArticle = article(75).copy(
+            source = ArticleSource("imported-source", "Imported Source"),
+        )
+        val current = localState(record(currentOnly, ArticleStatus.SAVED))
+        val imported = localState(
+            record(importedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val store = FakeLocalStateStore(success(current)).apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.importLocalData("backup".encodeToByteArray()))
+
+        assertEquals(1, store.saveRequests.size)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(setOf(importedArticle.id), persisted.articles.keys)
+        assertFalse(currentOnly.id in persisted.articles)
+        assertEquals(
+            PreferenceEntry(weight = 0.35, interactions = 2),
+            persisted.preferences.sources["imported-source"],
+        )
+    }
+
+    @Test
+    fun `failed cold load raises recovery notice and attempts no reconciliation write`() {
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.INVALID_STATE,
+                message = "stored state is invalid",
+                state = LocalState.default(),
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.recoveryNoticeVisible.value)
+        assertEquals(LocalStateErrorCode.INVALID_STATE, viewModel.localStateError.value?.code)
+        assertEquals(0, store.saveRequests.size)
+    }
+
+    @Test
+    fun `an ordinary article save result is adopted without reconciliation`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { candidate ->
+                success(
+                    candidate.copy(
+                        preferences = LocalState.Preferences(
+                            sources = emptyMap(),
+                            topics = emptyMap(),
+                        ),
+                    ),
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.onArticleAction(article(76), ArticleAction.SAVE)
+
+        assertTrue(result.persisted)
+        assertEquals(1, store.saveRequests.size)
+        assertEquals(emptyMap(), applied(result).preferences.sources)
+        assertEquals(emptyMap(), applied(result).preferences.topics)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(emptyMap(), persisted.preferences.sources)
+        assertEquals(emptyMap(), persisted.preferences.topics)
+    }
+
+    @Test
     fun `export writes nothing when the destination cannot be written`() = runBlocking {
         // Given valid current state and a destination that cannot be opened
         val current = localState(record(article(71), ArticleStatus.READ))
