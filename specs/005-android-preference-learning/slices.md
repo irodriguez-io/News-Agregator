@@ -43,8 +43,9 @@ Fixed for every slice — do not re-decide these mid-implementation:
   established, and it binds the two new files and the new `domain/ranking/` package.
 - **One lock.** The existing `stateMutex` guards everything in `AppViewModel`; do not add a second, and
   do not hold it across a file write beyond what the existing paths already do.
-- **Only three existing assertions may be edited, and only in slice 2** (`design.md` D7):
-  `ArticleStateMachineUndoTest.kt:324-325`, `AppViewModelTest.kt:1183`, `AppViewModelTest.kt:1363`.
+- **Only one existing test and two existing assertions may be edited, and only in slice 2**
+  (`design.md` D7, as corrected 2026-08-26): the whole of `ArticleStateMachineUndoTest.kt:296-326`
+  including its title, plus `AppViewModelTest.kt:1183` and `AppViewModelTest.kt:1363`.
   Editing, deleting, weakening, or absorbing any other existing test is a finding, not a judgement call.
 - **No new dependency.** `android/gradle/libs.versions.toml` is untouched.
 - **No Compose file is touched by this item**, and no slice may substitute a screenshot for a test

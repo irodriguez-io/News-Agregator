@@ -180,11 +180,24 @@ no weight.
 weakening.** `waves/wave-b-note.md` §1 flags a shipped item's scenario being quietly absorbed as a
 review finding, so these are named in advance:
 
-- `ArticleStateMachineUndoTest.kt:324-325` — `assertSame(preferences, after.preferences)` becomes
-  directional assertions: unchanged where no signal was applied, reversed where one was.
+- `ArticleStateMachineUndoTest.kt`, the test `the undo record carries a reversal field that is not yet
+  used` (`:296-326`) **in full, including its title** — it is 007's placeholder for precisely this
+  deferral, and every line of it encodes the deferred state. `:317`'s
+  `assertNull(dismiss.undoRecord?.preferenceReversal)` becomes an assertion of
+  `PreferenceReversal.NOT_INTERESTED`; `:322` must thread `reversed.preferences` into `after` rather
+  than copying only `articles`; `:324-325`'s `assertSame(preferences, after.preferences)` becomes
+  directional — the Dismiss moved the weights, the Undo restored them.
 - `AppViewModelTest.kt:1183` and `:1363` — `assertEquals(preferences, persisted.preferences)` likewise.
 
-No other existing assertion may be edited. 007's scenarios remain 007's.
+**Correction, 2026-08-26, raised by the slice 2 implementer before writing code.** This decision
+originally named `:324-325` and counted three assertions. It missed `:317`, which is in the same test
+body and asserts the same deferral, and it did not account for `:322` copying only `articles`, which
+would have left `:324-325` vacuous rather than directional. Counting lines was the error; the unit is
+the test. The intent is unchanged and nothing is weakened — a null-check becomes a value-check and a
+vacuous equality becomes a directional one. `waves/wave-b-note.md` §4 again: the implementer stopping
+to question the plan's arithmetic was cheaper than the review round that would have caught it.
+
+No other existing assertion may be edited. 007's other scenarios remain 007's.
 
 ## D8 — The fold runs at exactly two call sites, and never on a save
 
