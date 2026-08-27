@@ -337,8 +337,15 @@ class AppViewModel(
                         true
                     }
                     is LocalStateResult.Failure -> {
-                        announce(AppAnnouncementKind.IMPORT_FAILED)
-                        false
+                        adoptPersistedState(result.state)
+                        undoRecord = null
+                        pendingUndoOffer = null
+                        _heldArticleId.value = null
+                        _localStateError.value = persisted
+                        _recoveryNoticeVisible.value = false
+                        publish()
+                        announce(AppAnnouncementKind.IMPORT_COMPLETE)
+                        true
                     }
                 }
             }
