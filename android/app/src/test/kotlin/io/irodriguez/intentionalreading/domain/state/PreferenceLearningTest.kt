@@ -43,6 +43,32 @@ class PreferenceLearningDeltaTest(
 
 class PreferenceLearningTest {
     @Test
+    fun `given an article with two distinct topics when first open then save for later then each exact V1 delta is applied`() {
+        val trainedArticle = article(
+            tags = listOf(
+                ArticleTag(id = "oauth", label = "OAuth"),
+                ArticleTag(id = "zero-trust", label = "Zero Trust"),
+            ),
+        )
+
+        val afterFirstOpen = PreferenceLearning.apply(
+            emptyPreferences(),
+            trainedArticle,
+            PreferenceEvent.FIRST_OPEN,
+        )
+        val result = PreferenceLearning.apply(
+            afterFirstOpen,
+            trainedArticle,
+            PreferenceEvent.SAVE_FOR_LATER,
+        )
+
+        assertEquals(PreferenceEntry(weight = 0.10 + 0.45, interactions = 2), result.sources["example"])
+        assertEquals(PreferenceEntry(weight = 0.05 + 0.30, interactions = 2), result.topics["oauth"])
+        assertEquals(PreferenceEntry(weight = 0.05 + 0.30, interactions = 2), result.topics["zero-trust"])
+        assertEquals(2, result.topics.size)
+    }
+
+    @Test
     fun `given prior entries when each event is applied then reversed then exact prior values return`() {
         val prior = LocalState.Preferences(
             sources = mapOf(
