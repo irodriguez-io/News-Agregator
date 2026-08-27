@@ -81,6 +81,12 @@ Handled at close, not inside the slice:
 
 - `evidence.md` recording **both** diagnoses — the wrong one, the fix built on it, and the evidence that
   overturned it. The process lesson is the more valuable half of this item and must not be tidied away.
+- **A correction to `specs/005-android-preference-learning/evidence.md`.** Its walkthrough section says
+  *"nothing surfaced where the assertion held but the screen was wrong."* That is not quite true: this
+  item's defect was live throughout the 005 walkthrough, and several taps that "did not register" were
+  attributed there to the undo toast's 4.5 s timeout when at least some were this defect discarding the
+  touch. 005's recorded results stand — every step was confirmed against a pulled state diff — but the
+  attribution was wrong and the file should say so, pointing at this item.
 - `backlog.md`: 013 moves to Shipped; the `Debt` note about `DiscoverScreen`'s three scroll effects is
   updated to say they are now implicated in a real defect rather than a tidiness concern.
 - `backlog.md`: the **queue-pane undo** entry owed from the previous design pass — widening
