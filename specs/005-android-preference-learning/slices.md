@@ -193,7 +193,7 @@ The integration slice, and the one that changes shipped behaviour. Latching, the
   - A ViewModel test proving a failed load raises the recovery notice and attempts no write.
   - A ViewModel test proving an ordinary article action's save result is **not** reconciled.
   - No existing assertion edited in this slice.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 4: personalized scoring and deck order
 
