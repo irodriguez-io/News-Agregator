@@ -10,6 +10,8 @@ import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.domain.model.LocalState
+import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
 import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import java.time.Instant
 import kotlin.test.Test
@@ -47,7 +49,7 @@ class ArticleStateMachineTest {
         ArticleAction.entries.forEach { action ->
             ArticleStatus.entries.forEach { status ->
                 val records = recordsFor(status)
-                val result = ArticleStateMachine.transition(records, article(), action, actionTime)
+                val result = ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime)
                 val message = "$action from $status"
 
                 if (status in allowedFrom.getValue(action)) {
@@ -65,7 +67,7 @@ class ArticleStateMachineTest {
     @Test
     fun `open from unseen creates an opened record with write-once metadata`() {
         val result = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(emptyMap(), article(), ArticleAction.OPEN, actionTime),
+            ArticleStateMachine.transition(emptyMap(), noPreferences, article(), ArticleAction.OPEN, actionTime),
         )
 
         assertEquals(
@@ -77,6 +79,12 @@ class ArticleStateMachineTest {
                 savedAt = null,
                 dismissedAt = null,
                 readAt = null,
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = false,
+                ),
             ),
             result.record,
         )
@@ -89,6 +97,7 @@ class ArticleStateMachineTest {
             val result = assertIs<ArticleTransition.Applied>(
                 ArticleStateMachine.transition(
                     mapOf(article().id to existing),
+                    noPreferences,
                     article(),
                     ArticleAction.OPEN,
                     actionTime,
@@ -108,7 +117,7 @@ class ArticleStateMachineTest {
             val records = mapOf(article().id to existing)
 
             val result = assertIs<ArticleTransition.Unchanged>(
-                ArticleStateMachine.transition(records, article(), ArticleAction.OPEN, actionTime),
+                ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.OPEN, actionTime),
             )
 
             assertSame(records, result.records)
@@ -128,6 +137,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
@@ -158,6 +168,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.DISMISS,
                 actionTime,
@@ -188,6 +199,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.MARK_READ,
                 actionTime,
@@ -213,6 +225,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.MARK_UNREAD,
                 actionTime,
@@ -233,6 +246,7 @@ class ArticleStateMachineTest {
         val result = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(article().id to existing),
+                noPreferences,
                 article(),
                 ArticleAction.REMOVE,
                 actionTime,
@@ -252,7 +266,7 @@ class ArticleStateMachineTest {
         val records = mapOf(article().id to existing)
 
         val result = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(records, article(), ArticleAction.SAVE, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.SAVE, actionTime),
         )
 
         assertNotSame(records, result.records)
@@ -275,7 +289,209 @@ class ArticleStateMachineTest {
     }
 
     @Test
-    fun `Android actions preserve foreign learning signals while enforcing structural signals`() {
+    fun `Open applies its signal exactly once`() {
+        assertSignalAppliedExactlyOnce(
+            action = ArticleAction.OPEN,
+            expectedSourceWeight = 0.10,
+            expectedTopicWeight = 0.05,
+        )
+    }
+
+    @Test
+    fun `Save applies its signal exactly once`() {
+        assertSignalAppliedExactlyOnce(
+            action = ArticleAction.SAVE,
+            expectedSourceWeight = 0.45,
+            expectedTopicWeight = 0.30,
+        )
+    }
+
+    @Test
+    fun `Dismiss applies its signal exactly once`() {
+        assertSignalAppliedExactlyOnce(
+            action = ArticleAction.DISMISS,
+            expectedSourceWeight = -0.35,
+            expectedTopicWeight = -0.20,
+        )
+    }
+
+    @Test
+    fun `Mark Read applies its signal exactly once`() {
+        assertSignalAppliedExactlyOnce(
+            action = ArticleAction.MARK_READ,
+            expectedSourceWeight = 0.25,
+            expectedTopicWeight = 0.20,
+        )
+    }
+
+    @Test
+    fun `Remove changes no preference and leaves Save latched`() {
+        val preferences = LocalState.Preferences(
+            sources = mapOf("example" to PreferenceEntry(weight = 0.45, interactions = 1)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = 0.30, interactions = 1)),
+        )
+        val saved = record(
+            status = ArticleStatus.SAVED,
+            savedAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = true,
+                dismissed = false,
+                read = false,
+            ),
+        )
+
+        val removed = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(article().id to saved),
+                preferences = preferences,
+                article = article(),
+                action = ArticleAction.REMOVE,
+                now = actionTime,
+            ),
+        )
+
+        assertSame(preferences, removed.preferences)
+        assertEquals(ArticleStatus.DISMISSED, removed.record.status)
+        assertSignals(removed.record, opened = false, saved = true, dismissed = false, read = false)
+    }
+
+    @Test
+    fun `Mark Unread reverses a latched Read signal without applying Save`() {
+        val storedArticle = article().copy(
+            tags = listOf(ArticleTag("oauth", "OAuth"), ArticleTag("scim", "SCIM")),
+        )
+        val preferences = LocalState.Preferences(
+            sources = mapOf("example" to PreferenceEntry(weight = 1.0, interactions = 2)),
+            topics = mapOf(
+                "oauth" to PreferenceEntry(weight = 0.6, interactions = 2),
+                "scim" to PreferenceEntry(weight = 0.6, interactions = 2),
+            ),
+        )
+        val read = ArticleRecord(
+            article = storedArticle,
+            status = ArticleStatus.READ,
+            firstSeenAt = firstSeenAt,
+            openedAt = null,
+            savedAt = null,
+            dismissedAt = null,
+            readAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = false,
+                dismissed = false,
+                read = true,
+            ),
+        )
+
+        val unread = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(storedArticle.id to read),
+                preferences = preferences,
+                article = storedArticle,
+                action = ArticleAction.MARK_UNREAD,
+                now = actionTime,
+            ),
+        )
+
+        assertEquals(PreferenceEntry(weight = 0.75, interactions = 1), unread.preferences.sources["example"])
+        assertEquals(PreferenceEntry(weight = 0.4, interactions = 1), unread.preferences.topics["oauth"])
+        assertEquals(PreferenceEntry(weight = 0.4, interactions = 1), unread.preferences.topics["scim"])
+        assertEquals(ArticleStatus.SAVED, unread.record.status)
+        assertSignals(unread.record, opened = false, saved = false, dismissed = false, read = false)
+    }
+
+    @Test
+    fun `Mark Unread without a latched Read signal changes no preference`() {
+        val preferences = LocalState.Preferences(
+            sources = mapOf("example" to PreferenceEntry(weight = 1.0, interactions = 2)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = 0.6, interactions = 2)),
+        )
+        val readWithoutSignal = ArticleRecord(
+            article = article(),
+            status = ArticleStatus.READ,
+            firstSeenAt = firstSeenAt,
+            openedAt = null,
+            savedAt = null,
+            dismissedAt = null,
+            readAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = false,
+                dismissed = false,
+                read = false,
+            ),
+        )
+
+        val unread = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(article().id to readWithoutSignal),
+                preferences = preferences,
+                article = article(),
+                action = ArticleAction.MARK_UNREAD,
+                now = actionTime,
+            ),
+        )
+
+        assertSame(preferences, unread.preferences)
+        assertEquals(ArticleStatus.SAVED, unread.record.status)
+        assertSignals(unread.record, opened = false, saved = false, dismissed = false, read = false)
+    }
+
+    @Test
+    fun `Mark Unread reverses against the stored snapshot when the dataset article differs`() {
+        val storedArticle = article().copy(
+            source = ArticleSource("stored-source", "Stored Source"),
+            tags = listOf(ArticleTag("stored-topic", "Stored Topic")),
+        )
+        val incomingArticle = article().copy(
+            source = ArticleSource("incoming-source", "Incoming Source"),
+            tags = listOf(ArticleTag("incoming-topic", "Incoming Topic")),
+        )
+        val preferences = LocalState.Preferences(
+            sources = mapOf(
+                "stored-source" to PreferenceEntry(weight = 0.25, interactions = 1),
+                "incoming-source" to PreferenceEntry(weight = 2.0, interactions = 4),
+            ),
+            topics = mapOf(
+                "stored-topic" to PreferenceEntry(weight = 0.20, interactions = 1),
+                "incoming-topic" to PreferenceEntry(weight = -1.0, interactions = 3),
+            ),
+        )
+        val read = ArticleRecord(
+            article = storedArticle,
+            status = ArticleStatus.READ,
+            firstSeenAt = firstSeenAt,
+            openedAt = null,
+            savedAt = null,
+            dismissedAt = null,
+            readAt = oldActionTime,
+            signalsApplied = SignalsApplied(
+                opened = false,
+                saved = false,
+                dismissed = false,
+                read = true,
+            ),
+        )
+
+        val unread = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(storedArticle.id to read),
+                preferences = preferences,
+                article = incomingArticle,
+                action = ArticleAction.MARK_UNREAD,
+                now = actionTime,
+            ),
+        )
+
+        assertEquals(null, unread.preferences.sources["stored-source"])
+        assertEquals(null, unread.preferences.topics["stored-topic"])
+        assertEquals(preferences.sources["incoming-source"], unread.preferences.sources["incoming-source"])
+        assertEquals(preferences.topics["incoming-topic"], unread.preferences.topics["incoming-topic"])
+    }
+
+    @Test
+    fun `Android actions preserve foreign learning signal latches`() {
         val savedSignal = record(
             status = ArticleStatus.SAVED,
             savedAt = oldActionTime,
@@ -301,7 +517,7 @@ class ArticleStateMachineTest {
         )
         val records = mapOf(article().id to dismissedSignal)
         val unchanged = assertIs<ArticleTransition.Unchanged>(
-            ArticleStateMachine.transition(records, article(), ArticleAction.DISMISS, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), ArticleAction.DISMISS, actionTime),
         )
         assertSignals(
             unchanged.records.getValue(article().id),
@@ -322,7 +538,44 @@ class ArticleStateMachineTest {
             ),
         )
         val saved = applied(mapOf(article().id to inconsistentDismissSignal), ArticleAction.SAVE)
-        assertSignals(saved, opened = true, saved = false, dismissed = false, read = false)
+        // Scenario: stored signals remain authoritative latches across allowed transitions.
+        assertSignals(saved, opened = true, saved = true, dismissed = true, read = false)
+    }
+
+    private fun assertSignalAppliedExactlyOnce(
+        action: ArticleAction,
+        expectedSourceWeight: Double,
+        expectedTopicWeight: Double,
+    ) {
+        val preferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
+        val first = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = emptyMap(),
+                preferences = preferences,
+                article = article(),
+                action = action,
+                now = actionTime,
+            ),
+        )
+        val second = assertIs<ArticleTransition.Unchanged>(
+            ArticleStateMachine.transition(
+                records = first.records,
+                preferences = first.preferences,
+                article = article(),
+                action = action,
+                now = actionTime.plusSeconds(60),
+            ),
+        )
+
+        assertEquals(
+            PreferenceEntry(weight = expectedSourceWeight, interactions = 1),
+            first.preferences.sources["example"],
+        )
+        assertEquals(
+            PreferenceEntry(weight = expectedTopicWeight, interactions = 1),
+            first.preferences.topics["oauth"],
+        )
+        assertSame(first.preferences, second.preferences)
     }
 
     private fun assertIdempotentNoOp(status: ArticleStatus, action: ArticleAction) {
@@ -336,7 +589,7 @@ class ArticleStateMachineTest {
         val records = mapOf(article().id to existing)
 
         val result = assertIs<ArticleTransition.Unchanged>(
-            ArticleStateMachine.transition(records, article(), action, actionTime),
+            ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime),
         )
 
         assertSame(records, result.records)
@@ -347,7 +600,7 @@ class ArticleStateMachineTest {
         records: Map<String, ArticleRecord>,
         action: ArticleAction,
     ): ArticleRecord = assertIs<ArticleTransition.Applied>(
-        ArticleStateMachine.transition(records, article(), action, actionTime),
+        ArticleStateMachine.transition(records, noPreferences, article(), action, actionTime),
     ).record
 
     private fun assertSignals(
@@ -377,9 +630,11 @@ class ArticleStateMachineTest {
         savedAt: Instant? = null,
         dismissedAt: Instant? = null,
         readAt: Instant? = null,
-        signalsApplied: SignalsApplied = SignalsApplied.derivedForAndroid(
-            status = status,
-            openedAtPresent = openedAt != null,
+        signalsApplied: SignalsApplied = SignalsApplied(
+            opened = openedAt != null,
+            saved = false,
+            dismissed = false,
+            read = status == ArticleStatus.READ,
         ),
     ): ArticleRecord = ArticleRecord(
         article = article(),
@@ -408,6 +663,7 @@ class ArticleStateMachineTest {
     )
 
     private companion object {
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
         val firstSeenAt: Instant = Instant.parse("2026-08-20T10:00:00Z")
         val openedAt: Instant = Instant.parse("2026-08-20T11:00:00Z")
         val oldActionTime: Instant = Instant.parse("2026-08-20T12:00:00Z")

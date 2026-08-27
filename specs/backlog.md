@@ -48,30 +48,40 @@ re-gating a rebased head — none of them by reading diffs, and none of them by 
 |---|---|---|---|
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
-| C | 005 Learning, then 006 Diversity | now | `waves/wave-c.md` |
+| C | ~~005 Learning~~, then 006 Diversity | **005 merged; 006 now** | `waves/wave-c.md` |
 
 Waves are ordered by file collisions, not by value — see `execution-model.md` §2 for the hub-file matrix
 that produced them. 007 led the programme deliberately, because `contracts.md` §23 ties Undo to the
 `signalsApplied` reversal guard 005 introduces; that ordering has now been banked.
 
-### 005 — Preference learning and personalized ranking  ·  *wave C*
+### ~~005 — Preference learning and personalized ranking~~  ·  **Shipped**
 
-Port `js/ranking/personalize.js` and the `INTERACTION_DELTAS` table (`js/state/preferences.js:1-6`) to
-Android. `preferences.sources` and `preferences.topics` already persist, validate against
-`contracts.md:632-655`, and round-trip; nothing writes a non-empty entry yet.
+Ported `js/ranking/personalize.js` and the `INTERACTION_DELTAS` table. Four slices: the arithmetic, the
+state machine and undo path, the reconciliation fold, and personalized scoring with deck order.
+198 → 254 tests.
 
-Carries the largest inherited decision in the project: every record already on disk claims
-`signalsApplied` flags with no deltas behind them, so a `Mark Unread` after learning ships would subtract
-weight that was never added. `future-items.md` §"The item that ports preference learning" sets out the
-one-time reconciliation and why the choice should be made deliberately.
+The inherited decision was taken by invariant rather than by marker (`design.md` D1): `interactions` is
+exactly recomputable from the record set, weight is not, so the fold applies only the missing signals'
+deltas and never audits a weight. It runs at two call sites — cold load and import — and deliberately
+not at the single choke point every path funnels through, because that one also runs on every ordinary
+save and would silently repair arithmetic bugs in the state machine.
 
-*Deferred by 002 §3, 003 §3, 004 §3.*
+*Evidence:* `specs/005-android-preference-learning/evidence.md`.
 
 ### 006 — Deck diversity sequencing  ·  *wave C*
 
-The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`). Until this
-lands the Android head article can differ from the browser's for the same dataset. Independent of 005 in
-principle; naturally sequenced with it, since both change what Discover presents first.
+The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`).
+
+**Correction, carried from 005 `design.md` D12: the claim that the Android head article differs from the
+browser's until 006 lands is wrong.** `penaltiesFor` reads `selected.at(-1)`, so the first selection step
+carries no penalty; both clients render exactly one card; and the browser rebuilds the deck on every
+render. The head card is chosen by personalized order alone in both clients, and **005 closed that gap by
+itself**. 006 is a genuine spec-parity gap with no reader-visible effect at today's surface, and the owner
+confirmed on 2026-08-26 that it ships anyway as its own item. Size it against that, not against the head
+article.
+
+005 leaves `DiscoverDeck` holding the ordered candidate list these penalties sequence, so the expected
+surface is `DiscoverDeck.kt` and its tests only.
 
 *Deferred by 002 §3, restated by 004 §3.*
 

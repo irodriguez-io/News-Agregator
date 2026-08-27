@@ -4,6 +4,7 @@ import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.ArticleRecord
 import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.Category
+import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.DiscoverDeck
 import io.irodriguez.intentionalreading.ui.AggregateUiState
 import io.irodriguez.intentionalreading.ui.AppUiState
@@ -29,6 +30,7 @@ object UiStateMapper {
     fun map(
         phase: DatasetPhase,
         records: Map<String, ArticleRecord>,
+        preferences: LocalState.Preferences,
         selectedCategory: Category?,
         heldArticleId: String?,
         now: Instant,
@@ -46,6 +48,7 @@ object UiStateMapper {
             discover = discover(
                 phase = phase,
                 records = records,
+                preferences = preferences,
                 selectedCategory = selectedCategory,
                 heldArticleId = heldArticleId,
                 now = now,
@@ -125,6 +128,7 @@ object UiStateMapper {
     private fun discover(
         phase: DatasetPhase,
         records: Map<String, ArticleRecord>,
+        preferences: LocalState.Preferences,
         selectedCategory: Category?,
         heldArticleId: String?,
         now: Instant,
@@ -152,6 +156,7 @@ object UiStateMapper {
             val deck = DiscoverDeck.build(
                 articles = phase.dataset.articles,
                 records = records,
+                preferences = preferences,
                 selectedCategory = selectedCategory,
                 heldArticleId = heldArticleId,
             )
