@@ -92,7 +92,7 @@ browser's numbers are the specification.
   - A test proving an entry at exactly one interaction whose weight is exactly its delta is **removed**
     from the map by reversal.
   - No existing assertion edited.
-- **Status:** pending
+- **Status:** done
 
 ## Slice 2: the state machine and the undo path
 
