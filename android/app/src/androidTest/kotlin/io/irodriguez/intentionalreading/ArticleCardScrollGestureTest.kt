@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.irodriguez.intentionalreading.domain.model.Appearance
@@ -108,6 +109,51 @@ class ArticleCardScrollGestureTest {
 
         // Then the card receives the gesture and commits its action
         assertEquals(listOf(visibleArticle), committedArticles)
+    }
+
+    @Test
+    fun aVerticalDragOnTheCardRemainsOwnedByItsAncestorScroll() {
+        // Given
+        val visibleArticle = article(id = "visible", title = "Visible article")
+        val committedArticles = mutableListOf<Article>()
+        lateinit var scrollState: ScrollState
+
+        composeTestRule.setContent {
+            scrollState = rememberScrollState()
+            IntentionalReadingTheme(appearance = Appearance.LIGHT) {
+                Column(
+                    modifier = Modifier
+                        .height(700.dp)
+                        .verticalScroll(scrollState),
+                ) {
+                    ArticleCard(
+                        state = card(visibleArticle),
+                        onDismiss = {},
+                        onReadArticle = {},
+                        onSave = {},
+                        onMarkRead = {},
+                        onSwipeCommit = { committedArticle, _: ArticleAction, complete ->
+                            committedArticles += committedArticle
+                            complete(true)
+                        },
+                        reducedMotion = { true },
+                        modifier = Modifier.testTag(CARD_TAG),
+                    )
+                    Spacer(modifier = Modifier.height(700.dp))
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+
+        // When the visible card is dragged vertically
+        composeTestRule.onNodeWithTag(CARD_TAG).performTouchInput {
+            swipeUp()
+        }
+        composeTestRule.waitForIdle()
+
+        // Then the ancestor scroll receives the gesture and the card commits nothing
+        assertTrue("Expected the ancestor scroll to move.", scrollState.value > 0)
+        assertTrue("Expected the card not to commit.", committedArticles.isEmpty())
     }
 
     private fun card(article: Article) = DiscoverUiState.Card(
