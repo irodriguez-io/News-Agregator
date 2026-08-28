@@ -183,4 +183,12 @@ Bookkeeping and evidence, once slice 2's walkthrough is green. `docs(spec)` comm
   `ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS` and adding undo affordances to Read Later
   and History, needing its own amendment and design pass like item 012, citing `contracts.md` §23.
 - Note for item 006, next in wave C: confirm at close that this item still touches no file 006 touches.
-- **Status:** blocked on slice 2
+- **Status:** **done, 2026-08-28.** `evidence.md` records all four passes and the three lessons stated
+  outright, plus the fourth earned twice — a check one notch too weak is indistinguishable from a pass.
+  The artificial-lag evaluation is kept in full (all three forms, not just the survivor). The 005
+  evidence correction owed since `f1f381b` is **discharged**. `backlog.md`: 013 moved to Shipped; items
+  **014** (card buttons, inheriting no cause), **015** (the delay-0 misattribution 013 proved and did not
+  fix) and **016** (queue-pane undo, needing its own amendment) added; the three-scroll-effects Debt entry
+  rewritten from a tidiness note to a real-defect record aimed at item 012; Verification debt updated with
+  the four-test out-of-CI exposure and the residual measurement. Confirmed 013 touches no file 006
+  touches — the only overlap is documentary, and 006 should keep both sides.
