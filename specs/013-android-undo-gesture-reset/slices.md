@@ -139,10 +139,15 @@ this slice is deliberately written against the mechanism rather than against a f
     including the 0.2 s and 0.8 s cases, which must not regress, and the mid-drag photograph. Each result
     confirmed against the pulled state document.
   - No input is refused at any delay, and no non-interactive treatment was added (`design.md` D9, D11).
-- **Status:** **ready** — slice 1's gate is closed. The named mechanism is M1, so the file is
-  `«pkg»/ui/components/ArticleCard.kt` and the change is line 125's `requireUnconsumed`. Carry the two
-  additions in `investigation/step0-undo-window.md` §4: the delay-0 misattribution is a **separate** defect
-  and must be recorded rather than absorbed into this slice, and the D12 scroll is not to be suppressed.
+- **Status:** **done, 2026-08-28** — `49c1ecc` (RED) then `11d8353` (fix: `ArticleCard.kt:125`,
+  `requireUnconsumed = false`, one line, one file), plus `5a86003` adding the vertical-scroll ownership
+  guard raised by slice review. Walkthrough: `investigation/slice2-walkthrough.md` — all four §5.4 steps
+  pass and every delay from 0.05 s to 1.2 s now commits **against the restored article**, where 0.2–0.4 s
+  were discarded before. Gates: 258 JVM tests 0 failures, `assembleDebug` and
+  `connectedDebugAndroidTest` (4 tests) `BUILD SUCCESSFUL`. RED reproduced independently at `49c1ecc` with
+  the fix absent; the new guard verified non-vacuous by mutation (forcing `Intent.HORIZONTAL` in
+  `SwipeGesture.move()` fails it). `SwipeGesture.kt`, `SwipeGestureTest.kt` and `ArticleCardGestureTest.kt`
+  byte-identical. The delay-0 misattribution is **still open** and needs its own item.
 
 ---
 
