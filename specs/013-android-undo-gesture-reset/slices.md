@@ -98,7 +98,13 @@ cause. The commit is `docs(spec)`.
   - The other three candidates falsified or ruled out, each with evidence rather than by assumption.
   - The `design.md` D10 fix shape it implies is named — or the report says none fits, and stops.
   - No file under `android/` modified; both JVM gates still green at 258 tests.
-- **Status:** pending
+- **Status:** **done, 2026-08-28** — `investigation/step0-undo-window.md`. Mechanism is **M1**: while
+  `DiscoverScreen.kt:74-87`'s `animateScrollTo` is in flight, the ancestor `ScrollView` consumes the DOWN
+  in the Initial pass, and `ArticleCard.kt:125`'s `awaitFirstDown(requireUnconsumed = true)` will not adopt
+  it. M2, M3 and M4 falsified with evidence. `design.md` D10's M1 branch applies unchanged.
+  The 0.8 s pass is the scroll having finished; **the "0.2 s pass" was never a pass** — at the bottom of
+  the range the DOWN is adopted against the *outgoing* article, and the previous walkthrough scored it as
+  a success because it checked that a weight moved rather than which article moved.
 
 ---
 
@@ -133,7 +139,10 @@ this slice is deliberately written against the mechanism rather than against a f
     including the 0.2 s and 0.8 s cases, which must not regress, and the mid-drag photograph. Each result
     confirmed against the pulled state document.
   - No input is refused at any delay, and no non-interactive treatment was added (`design.md` D9, D11).
-- **Status:** blocked on slice 1
+- **Status:** **ready** — slice 1's gate is closed. The named mechanism is M1, so the file is
+  `«pkg»/ui/components/ArticleCard.kt` and the change is line 125's `requireUnconsumed`. Carry the two
+  additions in `investigation/step0-undo-window.md` §4: the delay-0 misattribution is a **separate** defect
+  and must be recorded rather than absorbed into this slice, and the D12 scroll is not to be suppressed.
 
 ---
 

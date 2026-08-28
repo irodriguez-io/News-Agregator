@@ -1,0 +1,24 @@
+--------- beginning of main
+08-28 11:11:25.844 D/D13     ( 8803): pointerInput START node=65242305
+08-28 11:11:25.844 D/D13     ( 8803): awaitFirstDown RETURNED article=322d8f25471b4a211096 pos=753.0,343.0
+08-28 11:11:25.844 D/D13     ( 8803): gestureState.down -> true article=322d8f25471b4a211096
+08-28 11:11:25.844 D/D13     ( 8803): PROBE down consumed=false pos=753.0,343.0
+08-28 11:11:26.258 D/D13     ( 8803): compose article=8c80f6f9234ceece97d1 node=65242305 values=7461127
+08-28 11:11:26.273 D/D13     ( 8803): articleEffect changed=true article=8c80f6f9234ceece97d1 scroll=0 target=1084
+08-28 11:11:26.276 D/D13     ( 8803): animateScrollTo BEGIN from=0 to=1084
+08-28 11:11:26.277 D/D13     ( 8803): scrollInProgress=true value=0
+08-28 11:11:26.307 D/D13     ( 8803): scrollInProgress=true value=139
+08-28 11:11:26.323 D/D13     ( 8803): scrollInProgress=true value=396
+08-28 11:11:26.340 D/D13     ( 8803): scrollInProgress=true value=445
+08-28 11:11:26.675 D/D13     ( 8803): animateScrollTo END at=445
+08-28 11:11:26.675 D/D13     ( 8803): scrollInProgress=false value=445
+08-28 11:11:27.219 D/D13     ( 8803): compose article=322d8f25471b4a211096 node=65242305 values=247262053
+08-28 11:11:27.237 D/D13     ( 8803): articleEffect changed=true article=322d8f25471b4a211096 scroll=445 target=1084
+08-28 11:11:27.238 D/D13     ( 8803): animateScrollTo BEGIN from=445 to=1084
+08-28 11:11:27.239 D/D13     ( 8803): scrollInProgress=true value=445
+08-28 11:11:27.257 D/D13     ( 8803): scrollInProgress=true value=527
+08-28 11:11:27.273 D/D13     ( 8803): scrollInProgress=true value=678
+08-28 11:11:27.290 D/D13     ( 8803): scrollInProgress=true value=813
+08-28 11:11:27.306 D/D13     ( 8803): scrollInProgress=true value=892
+08-28 11:11:27.508 D/D13     ( 8803): PROBE down consumed=true pos=753.0,1235.0
+08-28 11:11:27.626 D/D13     ( 8803): scrollInProgress=false value=892
