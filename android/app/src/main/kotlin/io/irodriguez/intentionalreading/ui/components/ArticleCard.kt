@@ -122,7 +122,7 @@ fun ArticleCard(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = true)
+                    val down = awaitFirstDown(requireUnconsumed = false)
                     val gesture = currentGestureValues
                     if (!gesture.gestureState.down(down.position.x, down.position.y)) {
                         return@awaitEachGesture
