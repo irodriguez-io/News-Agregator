@@ -1,0 +1,17 @@
+--------- beginning of main
+08-28 11:11:45.878 D/D13     ( 9070): pointerInput START node=227619240
+08-28 11:11:45.878 D/D13     ( 9070): awaitFirstDown RETURNED article=322d8f25471b4a211096 pos=753.0,343.0
+08-28 11:11:45.878 D/D13     ( 9070): gestureState.down -> true article=322d8f25471b4a211096
+08-28 11:11:45.878 D/D13     ( 9070): PROBE down consumed=false pos=753.0,343.0
+08-28 11:11:46.009 D/D13     ( 9070): compose article=8c80f6f9234ceece97d1 node=227619240 values=267982123
+08-28 11:11:46.023 D/D13     ( 9070): articleEffect changed=true article=8c80f6f9234ceece97d1 scroll=0 target=1084
+08-28 11:11:46.026 D/D13     ( 9070): scrollInProgress=false value=445
+08-28 11:11:47.246 D/D13     ( 9070): compose article=322d8f25471b4a211096 node=227619240 values=20686562
+08-28 11:11:47.261 D/D13     ( 9070): articleEffect changed=true article=322d8f25471b4a211096 scroll=445 target=1084
+08-28 11:11:47.262 D/D13     ( 9070): scrollInProgress=false value=892
+08-28 11:11:47.531 D/D13     ( 9070): awaitFirstDown RETURNED article=322d8f25471b4a211096 pos=753.0,1235.0
+08-28 11:11:47.531 D/D13     ( 9070): gestureState.down -> true article=322d8f25471b4a211096
+08-28 11:11:47.531 D/D13     ( 9070): PROBE down consumed=false pos=753.0,1235.0
+08-28 11:11:47.676 D/D13     ( 9070): compose article=8c80f6f9234ceece97d1 node=227619240 values=90902374
+08-28 11:11:47.691 D/D13     ( 9070): articleEffect changed=true article=8c80f6f9234ceece97d1 scroll=445 target=1084
+08-28 11:11:47.691 D/D13     ( 9070): scrollInProgress=false value=445

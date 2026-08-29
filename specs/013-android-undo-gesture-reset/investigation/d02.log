@@ -1,0 +1,24 @@
+--------- beginning of main
+08-27 10:53:44.627  3401  3401 D IR013Probe: pointerInput start article=e1d9d64902fb505b0d64 state=118660920
+08-27 10:53:44.627  3401  3401 D IR013Probe: awaitEachGesture entry article=e1d9d64902fb505b0d64
+08-27 10:53:44.627  3401  3401 D IR013Probe: awaitFirstDown returned article=e1d9d64902fb505b0d64 x=493.0 y=669.0
+08-27 10:53:44.627  3401  3401 D IR013Probe: gestureState.down article=e1d9d64902fb505b0d64 accepted=true commitInFlight=false
+08-27 10:53:44.884  3401  3401 D IR013Probe: awaitEachGesture entry article=e1d9d64902fb505b0d64
+08-27 10:53:45.229  3401  3401 D IR013Probe: compose app pendingUndo=3 announcement=null
+08-27 10:53:45.243  3401  3401 D IR013Probe: compose ArticleCard article=b64bbf80dbf6b719217b
+08-27 10:53:45.310  3401  3401 D IR013Probe: scroll article effect article=b64bbf80dbf6b719217b changed=true cardTopOffset=1084
+08-27 10:53:45.311  3401  3401 D IR013Probe: scroll opened effect article=b64bbf80dbf6b719217b isOpened=false becameOpened=false max=809
+08-27 10:53:45.779  3401  3401 D IR013Probe: Undo tapped offer=3
+08-27 10:53:45.829  3401  3401 D IR013Probe: compose app pendingUndo=null announcement=UNDO_COMPLETED
+08-27 10:53:45.847  3401  3401 D IR013Probe: compose ArticleCard article=e1d9d64902fb505b0d64
+08-27 10:53:45.958  3401  3401 D IR013Probe: scroll article effect article=e1d9d64902fb505b0d64 changed=true cardTopOffset=1084
+08-27 10:53:45.958  3401  3401 D IR013Probe: scroll opened effect article=e1d9d64902fb505b0d64 isOpened=false becameOpened=false max=809
+08-27 10:53:46.591  3401  3401 D IR013Probe: pointerInput start article=e1d9d64902fb505b0d64 state=101705337
+08-27 10:53:46.592  3401  3401 D IR013Probe: awaitEachGesture entry article=e1d9d64902fb505b0d64
+08-27 10:53:46.592  3401  3401 D IR013Probe: awaitFirstDown returned article=e1d9d64902fb505b0d64 x=493.0 y=669.0
+08-27 10:53:46.592  3401  3401 D IR013Probe: gestureState.down article=e1d9d64902fb505b0d64 accepted=true commitInFlight=false
+08-27 10:53:46.852  3401  3401 D IR013Probe: awaitEachGesture entry article=e1d9d64902fb505b0d64
+08-27 10:53:47.207  3401  3401 D IR013Probe: compose app pendingUndo=4 announcement=UNDO_COMPLETED
+08-27 10:53:47.224  3401  3401 D IR013Probe: compose ArticleCard article=b64bbf80dbf6b719217b
+08-27 10:53:47.292  3401  3401 D IR013Probe: scroll article effect article=b64bbf80dbf6b719217b changed=true cardTopOffset=1084
+08-27 10:53:47.293  3401  3401 D IR013Probe: scroll opened effect article=b64bbf80dbf6b719217b isOpened=false becameOpened=false max=809

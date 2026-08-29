@@ -1,0 +1,28 @@
+--------- beginning of main
+08-28 11:11:16.393 D/D13     ( 8631): pointerInput START node=65242305
+08-28 11:11:16.393 D/D13     ( 8631): awaitFirstDown RETURNED article=322d8f25471b4a211096 pos=753.0,343.0
+08-28 11:11:16.393 D/D13     ( 8631): gestureState.down -> true article=322d8f25471b4a211096
+08-28 11:11:16.393 D/D13     ( 8631): PROBE down consumed=false pos=753.0,343.0
+08-28 11:11:16.809 D/D13     ( 8631): compose article=8c80f6f9234ceece97d1 node=65242305 values=7461127
+08-28 11:11:16.824 D/D13     ( 8631): articleEffect changed=true article=8c80f6f9234ceece97d1 scroll=0 target=1084
+08-28 11:11:16.827 D/D13     ( 8631): animateScrollTo BEGIN from=0 to=1084
+08-28 11:11:16.828 D/D13     ( 8631): scrollInProgress=true value=0
+08-28 11:11:16.858 D/D13     ( 8631): scrollInProgress=true value=139
+08-28 11:11:16.874 D/D13     ( 8631): scrollInProgress=true value=396
+08-28 11:11:16.890 D/D13     ( 8631): scrollInProgress=true value=445
+08-28 11:11:17.222 D/D13     ( 8631): animateScrollTo END at=445
+08-28 11:11:17.222 D/D13     ( 8631): scrollInProgress=false value=445
+08-28 11:11:17.755 D/D13     ( 8631): awaitFirstDown RETURNED article=8c80f6f9234ceece97d1 pos=753.0,788.0
+08-28 11:11:17.756 D/D13     ( 8631): gestureState.down -> true article=8c80f6f9234ceece97d1
+08-28 11:11:17.756 D/D13     ( 8631): PROBE down consumed=false pos=753.0,788.0
+08-28 11:11:17.777 D/D13     ( 8631): compose article=322d8f25471b4a211096 node=65242305 values=81618155
+08-28 11:11:17.796 D/D13     ( 8631): articleEffect changed=true article=322d8f25471b4a211096 scroll=445 target=1084
+08-28 11:11:17.807 D/D13     ( 8631): animateScrollTo BEGIN from=445 to=1084
+08-28 11:11:17.807 D/D13     ( 8631): scrollInProgress=true value=445
+08-28 11:11:17.840 D/D13     ( 8631): scrollInProgress=true value=527
+08-28 11:11:17.856 D/D13     ( 8631): scrollInProgress=true value=678
+08-28 11:11:17.874 D/D13     ( 8631): scrollInProgress=true value=813
+08-28 11:11:17.890 D/D13     ( 8631): scrollInProgress=true value=892
+08-28 11:11:18.191 D/D13     ( 8631): compose article=322d8f25471b4a211096 node=65242305 values=81618155
+08-28 11:11:18.198 D/D13     ( 8631): animateScrollTo END at=892
+08-28 11:11:18.198 D/D13     ( 8631): scrollInProgress=false value=892

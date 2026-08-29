@@ -180,6 +180,17 @@ reading history, and that distinction is preserved under "Outstanding" below.
 | 12 TalkBack | Verified structurally rather than by spot check: the item changed **zero** files under `res/` and **zero** files under `ui/screens` or `ui/components`, so no string, label or content description could have changed. Nothing new is announced, by construction |
 
 The two questions at every step: nothing surfaced where the assertion held but the screen was wrong.
+
+> **Correction, 2026-08-28, owed by item 013 since `f1f381b` and discharged at 013's close.** That
+> sentence was wrong, and 013's defect is why. A swipe landing roughly 0.2–0.5 s after an Undo was
+> silently discarded — no movement, no cue, nothing recorded — and **the defect was live throughout this
+> walkthrough**. Taps recorded here as "did not register" were attributed to the undo toast's 4.5 s
+> timeout; at least some of them were 013's defect instead.
+>
+> **005's results stand.** Every step was confirmed against a pulled state diff, not against the screen,
+> which is exactly why a live UI defect could not corrupt them. What was wrong was the *attribution* of
+> the misses, and the confidence of the sentence above. Fixed in 013 (`11d8353`); see
+> `specs/013-android-undo-gesture-reset/evidence.md`.
 The one moment worth recording is step 5 — a single Save does **not** promote that source's other
 articles to the head, because training a source spends its exploration bonus. That is the designed
 trade-off between preference and exploration, it is correct per §57, and it is the kind of thing only a

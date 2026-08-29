@@ -199,6 +199,85 @@ class SwipeGestureTest {
         assertEquals(SwipeGesture.Action.SAVE, action)
     }
 
+    @Test
+    fun `a commit resolved as persisted accepts and commits a new horizontal gesture`() {
+        // Given
+        val gesture = gesture()
+        gesture.down(x = 0f, y = 0f)
+        gesture.move(x = SwipeGesture.THRESHOLD_DP, y = 0f)
+        assertEquals(SwipeGesture.Action.SAVE, gesture.release())
+
+        // When
+        gesture.releaseCommitLock()
+        val accepted = gesture.down(x = 0f, y = 0f)
+        val shouldConsume = gesture.move(x = -SwipeGesture.THRESHOLD_DP, y = 0f)
+        val action = gesture.release()
+
+        // Then
+        assertTrue(accepted)
+        assertTrue(shouldConsume)
+        assertEquals(SwipeGesture.Intent.HORIZONTAL, gesture.intent)
+        assertEquals(SwipeGesture.Action.DISMISS, action)
+    }
+
+    @Test
+    fun `a commit resolved as not persisted releases the lock and restores the travel`() {
+        // Given
+        val gesture = gesture()
+        gesture.down(x = 0f, y = 0f)
+        gesture.move(x = SwipeGesture.THRESHOLD_DP, y = 0f)
+        assertEquals(SwipeGesture.Action.SAVE, gesture.release())
+
+        // When
+        gesture.releaseCommitLock()
+        val lockReleased = !gesture.commitInFlight
+        gesture.restore()
+
+        // Then
+        assertTrue(lockReleased)
+        assertEquals(SwipeGesture.Intent.PENDING, gesture.intent)
+        assertEquals(0f, gesture.translationX)
+        assertEquals(0f, gesture.exitTranslationX)
+    }
+
+    @Test
+    fun `a commit resolved as persisted releases only the lock and leaves travel untouched`() {
+        // Given
+        val gesture = gesture(viewportWidthPx = 1_000f)
+        gesture.down(x = 0f, y = 0f)
+        gesture.move(x = SwipeGesture.THRESHOLD_DP, y = 0f)
+        assertEquals(SwipeGesture.Action.SAVE, gesture.release())
+        val translationX = gesture.translationX
+        val exitTranslationX = gesture.exitTranslationX
+
+        // When
+        gesture.releaseCommitLock()
+
+        // Then
+        assertFalse(gesture.commitInFlight)
+        assertEquals(translationX, gesture.translationX)
+        assertEquals(exitTranslationX, gesture.exitTranslationX)
+    }
+
+    @Test
+    fun `a commit resolved as persisted retains its action and a stationary release emits nothing`() {
+        // Given
+        val gesture = gesture()
+        gesture.down(x = 0f, y = 0f)
+        gesture.move(x = SwipeGesture.THRESHOLD_DP, y = 0f)
+        assertEquals(SwipeGesture.Action.SAVE, gesture.release())
+
+        // When
+        gesture.releaseCommitLock()
+        val committedAction = gesture.committedAction
+        assertTrue(gesture.down(x = 0f, y = 0f))
+        val stationaryAction = gesture.release()
+
+        // Then
+        assertEquals(SwipeGesture.Action.SAVE, committedAction)
+        assertNull(stationaryAction)
+    }
+
     private fun gesture(
         viewportWidthPx: Float = 1_000f,
         reducedMotion: Boolean = false,
