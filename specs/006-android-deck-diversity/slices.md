@@ -144,7 +144,7 @@ Fixed for the slice — do not re-decide these mid-implementation:
     scratch. The order is the proof the penalty fired. Same shape as `spec.md` §4.1's *"the third card's
     same-source penalty is 0"* (`design.md` D8).
   - No other existing assertion edited, deleted, weakened, or absorbed.
-- **Status:** pending
+- **Status:** done — reviewed and passed 2026-08-31 at `439a116`
 
 ---
 
