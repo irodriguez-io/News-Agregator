@@ -259,7 +259,6 @@ class DiscoverDeckSequencingTest {
             sources = preferences.sources.toMap(),
             topics = preferences.topics.toMap(),
         )
-        var localStateWriteCount = 0
 
         // When
         build(articles, Category.IAM, records, preferences)
@@ -268,7 +267,6 @@ class DiscoverDeckSequencingTest {
         assertEquals(articlesBefore, articles)
         assertEquals(recordsBefore, records)
         assertEquals(preferencesBefore, preferences)
-        assertEquals(0, localStateWriteCount)
     }
 
     @Test
