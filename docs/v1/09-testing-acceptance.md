@@ -1171,7 +1171,7 @@ No separate persisted counters may be required.
 
 # 48. Undo Save Tests
 
-After Save swipe then Undo:
+After a Save then Undo, from any surface that performed it:
 
 - previous state restored exactly;
 - Save preference signal reversed;
@@ -1184,7 +1184,7 @@ After Save swipe then Undo:
 
 # 49. Undo Dismiss Tests
 
-After Dismiss swipe then Undo:
+After a Dismiss then Undo, from any surface that performed it:
 
 - previous state restored exactly;
 - negative signal reversed;
@@ -1200,11 +1200,18 @@ Only the most recent eligible:
 ```text
 save
 dismiss
+mark read
+mark unread
+remove
 ```
 
-swipe must be undoable.
+action must be undoable, and it must be undoable from whichever surface performed it.
+
+Open must not be undoable.
 
 Reload/session reconstruction must not preserve Undo.
+
+*Amended by Amendment 8.*
 
 ---
 

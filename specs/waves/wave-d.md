@@ -1,8 +1,9 @@
 # Wave D — Undo everywhere, and the Discover header
 
 **Items:** 015, 012 concurrently · then 014 · then 016
-**Prerequisite:** wave C merged (`5dd2753`)
+**Prerequisite:** wave C merged (`5dd2753`); Amendments 7 and 8 committed on `main`
 **Cut from:** `main`
+**Design pass:** 2026-08-31 — see *Design pass outcome*, which corrects this brief in four places
 
 Self-contained brief. Read `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`,
 `specs/execution-model.md`, then this file. Read `specs/waves/wave-c-note.md` §5 before designing 014 or
@@ -15,8 +16,64 @@ Self-contained brief. Read `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`,
 Three of the four items are the same subject seen from three angles: **Undo does not work where a reader
 expects it to.** The fourth, 012, is unrelated and rides along because it collides with nothing.
 
-This is the first wave with no parity gap in it. Every item here is either a defect the owner found by
-using the app or an affordance the app promises and does not deliver.
+This is the first wave with no parity gap in it. Three of the items are defects the owner found by using the
+app. **014 is not** — the design pass established that the behaviour it changes is specified, and the item
+reverses a decision rather than repairing a gap. See *Design pass outcome* 1.
+
+---
+
+## Design pass outcome — 2026-08-31
+
+**All four items were designed in one session, in implementation order, as `execution-model.md` §4.1
+requires.** Four things below were wrong or unknown when this brief was written and are corrected here.
+Where this section and an earlier one disagree, this section wins. Specifications:
+`specs/015-android-undo-swipe-attribution/`, `specs/012-android-discover-card-first/`,
+`specs/014-android-undo-offer-surfaces/`, `specs/016-android-reversible-actions/`. Amendments:
+`specs/waves/wave-d-amendments.md`.
+
+**1. 014 needs an amendment after all, and it shares 016's.** This brief and `backlog.md` both said 014 was
+amendment-free because nothing about *what is reversible* changes. But Undo is scoped to the **swipe
+gesture** in five places — `contracts.md` §31, `05-personalization-state.md` §36, `06-ui-ux.md` §70,
+`01-product.md` §14, `09-testing-acceptance.md` §50 — and items 007 and 008 made the labelled buttons
+non-undoable **deliberately**, with the rationale recorded in `007/spec.md` §1.1 and `008/design.md` D8
+(*Undo recovers a mis-trigger; a press on a button labelled "Save for later" is not one*). The browser does
+the same at `js/ui/discover.js:211`. So the *Save for later* button raising no offer is **specified
+behaviour, not a defect**, and 014 reverses a decision rather than fixing a gap. The owner decided on
+2026-08-31 to proceed with the reversal.
+
+**One amendment covers both items — Amendment 8** — because §31, §36 and §70 each state the surface rule and
+the action rule in the same sentence, and editing them twice would leave `docs/v1/**` self-contradictory in
+between. It is **permissive**: it authorises the wider scope without obliging the browser to follow, so 014
+and 016 stay Android-only and fire `android.yml` alone. It is written before 014's branch is cut, which
+means **the wave's one amendment conversation happens before the first undo-surface item, not before the
+last.**
+
+**2. The `?` cell is resolved: 015 does not touch `ArticleCard.kt`.** The fix is an identity guard in
+`AppViewModel.onArticleAction` — an action declared as coming from the Discover card is refused when its
+article is not the published Discover head. It is mechanism-independent, it is assertable in
+`AppViewModelTest` by article id, and it needs no change to the gesture, the deck or the header
+(`015/design.md` D1, D5, D6). **015 ∥ 012 stands.** 015 does touch `IntentionalReadingApp.kt` — four lambdas
+gain one argument — which 014 and 016 also edit, but they are sequential, so it is a rebase note and both
+of their slice plans carry it as a checkable assumption.
+
+**3. 012 got wider than "move the header", and 016 got narrower.** 012 must re-aim the became-opened scroll:
+it targets `scrollState.maxValue` today because the card is the last thing in the column, and after the
+reorder that scrolls the **Mark read** button back off screen — re-opening the wave B defect the owner found
+by hand (`wave-b-note.md` §9). 012 also compacts the masthead, by owner decision: eyebrow and title stay
+above the card, the purpose copy moves below it, because a full masthead still pushes the card's action rail
+below the fold at 360 dp. 016, meanwhile, **does not touch `ui/screens/readlater/**` or
+`ui/screens/history/**` at all** — those screens already call the actions; only the state machine, the undo
+record, `raiseUndoOffer`, `UiStateMapper` and three strings change.
+
+**4. 016's arithmetic is settled on paper, and one part of it needs a new field.** `REMOVE` has **no**
+preference arithmetic in either direction (`contracts.md` §24; no `preferenceEvents` entry) and its previous
+record is always `SAVED` (`allowedFrom[REMOVE] = {SAVED}`), so restoring `previousRecord` is sufficient.
+Undo of `MARK_READ` reverses the Read signal iff the forward transition applied it. **Undo of `MARK_UNREAD`
+must *re-apply* the Read signal** — `transition`'s `MARK_UNREAD` branch reverses it and leaves
+`preferenceSignalApplied` false, so `UndoRecord.preferenceReversal` cannot express what undoing it has to
+do, and widening the set alone would restore a record claiming `signalsApplied.read = true` with the weight
+still subtracted. Silently. That is the exact place this brief predicted the arithmetic would be got wrong.
+`016/spec.md` §2 is the table; `016/design.md` D1 is the field.
 
 ---
 
@@ -32,7 +89,7 @@ they need different work:
 
 | Reason | Actions | Fix | Amendment? |
 |---|---|---|---|
-| **The action is reversible; the offer is never requested.** `undoable = true` is passed at exactly one call site in the whole app — Discover's `onSwipeCommit`, `IntentionalReadingApp.kt:290`. Everything else takes the `undoable = false` default. | `SAVE`, `DISMISS` | raise the offer at the remaining call sites | **No** |
+| **The action is reversible; the offer is never requested.** `undoable = true` is passed at exactly one call site in the whole app — Discover's `onSwipeCommit`, `IntentionalReadingApp.kt:290`. Everything else takes the `undoable = false` default. | `SAVE`, `DISMISS` | raise the offer at the remaining call sites | **Yes** — see *Design pass outcome* 1; corrected 2026-08-31 |
 | **The action is not reversible at all.** `reversibleActions = setOf(SAVE, DISMISS)`, `ArticleStateMachine.kt:254`. `transition` builds no `UndoRecord`, and `undo` returns `UNDO_UNAVAILABLE`. | `MARK_READ`, `MARK_UNREAD`, `REMOVE` | widen `reversibleActions`, then raise the offer | **Yes** — `contracts.md` §23 |
 
 Discover's card buttons span both rows: *Not interested* and *Save for later* are the first, ***Mark
@@ -41,8 +98,10 @@ whichever ran second would have inherited a half-widened `reversibleActions`.
 
 Cut on the reversibility line instead, and the dependency disappears and the amendment is written once:
 
-- **014 — raise the offer where the reversal already exists.** No `docs/v1/**` change.
-- **016 — widen what is reversible, then wire every surface.** One amendment, one §23 conversation.
+- **014 — raise the offer where the reversal already exists.** Needs Amendment 8, shared with 016
+  (*Design pass outcome* 1, which corrects this).
+- **016 — widen what is reversible, then wire every surface.** The same amendment, one §23
+  conversation, written once and before 014.
 
 **Scope correction carried into 016:** `UndoToast` is already hosted globally in
 `IntentionalReadingApp`, outside the destination `when` and gated only on `!settingsOpen`, so it renders
@@ -65,6 +124,20 @@ on Read Later and History today. **There is no per-pane affordance to build** �
 | `ui/screens/readlater/**`, `ui/screens/history/**` | | | | ● |
 | needs a `docs/v1/**` amendment | | ● | | ● |
 
+**Corrected by the design pass** — see *Design pass outcome* 2 and 3:
+
+| Hub file | 015 | 012 | 014 | 016 |
+|---|---|---|---|---|
+| `ui/AppViewModel.kt` | ● | | ● | ● |
+| `ui/IntentionalReadingApp.kt` | ● | | ● | ● |
+| `ui/components/ArticleCard.kt` | **no** | | **no** | |
+| `ui/screens/discover/DiscoverScreen.kt` (+ two new files there) | | ● | | |
+| `ui/components/EditorialHeader.kt` | | ● | | |
+| `domain/state/ArticleStateMachine.kt` | | | ● | ● |
+| `domain/state/UndoRecord.kt`, `ui/AppUiState.kt`, `ui/state/UiStateMapper.kt`, `res/values/strings.xml` | | | | ● |
+| `ui/screens/readlater/**`, `ui/screens/history/**` | | | | **no** |
+| needs a `docs/v1/**` amendment | | ● 7 | ● 8 | ● 8 |
+
 **015 and 012 run concurrently.** `AppViewModel.kt` against `DiscoverScreen.kt`, nothing shared.
 
 **014 and 016 cannot.** They share `IntentionalReadingApp.kt`'s action wiring, and 016 also moves the
@@ -83,8 +156,9 @@ Say so in 015's design note either way, so the next session does not have to re-
 
 1. **015 ∥ 012** — concurrent, both from `main`.
 2. **014** — after 015 merges.
-3. **016** — after 014 merges. Its amendment can be drafted while 014 is being implemented; the
-   amendment is a documents task and blocks only 016's own design pass.
+3. **016** — after 014 merges. **Corrected:** the amendment is shared with 014 and therefore blocks 014's
+   dispatch, not just 016's design pass. It is drafted at the design pass and lands on `main` before any
+   wave-D branch is cut (`specs/waves/wave-d-amendments.md`). See *Design pass outcome* 1.
 
 ---
 
@@ -201,7 +275,8 @@ at 0.35 s.
 call site a design pass finds.
 
 **Out of scope:** *Mark read*, anywhere. It is `MARK_READ`, it is not reversible today, and it belongs to
-016. Splitting it out is what makes this item amendment-free.
+016. Splitting it out keeps this item to one dimension — **it does not make it amendment-free, which is what
+this brief originally claimed; see *Design pass outcome* 1.**
 
 **It inherits no cause from 013.** 013's mechanism is an ancestor scroll consuming the pointer DOWN
 before `ArticleCard`'s gesture handler adopts it. A `Button` is not a `pointerInput` gesture and does not
@@ -272,8 +347,11 @@ Both learned the hard way in wave C (`wave-c-note.md` §6):
 
 ## Owner checkpoints
 
-1. **016's amendment.** Blocks 016's design. What becomes reversible, and what reversing it does to the
-   preference weights.
+1. **Amendment 8.** Now blocks **014 as well as 016**, and it is drafted:
+   `specs/waves/wave-d-amendments.md`. What becomes reversible, which surfaces may offer it, and what
+   reversing each action does to the preference weights. Four sub-decisions were taken on 2026-08-31:
+   proceed with 014's reversal; keep the amendment permissive rather than binding on the browser; compact
+   Discover's masthead; and have undo of `MARK_UNREAD` re-apply the Mark Read delta.
 2. **012's placement rule**, once the amendment is drafted — that the intent is stated in a form wave E
    can inherit.
 3. **A walkthrough of the widened Undo against real accumulated history**, not fresh state. Every wave

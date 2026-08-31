@@ -208,7 +208,7 @@ The user may:
 - save it for later;
 - open the original article;
 - change category;
-- undo the most recent swipe action.
+- undo the most recent eligible action.
 
 Discover is a triage experience, not a conventional scrolling news feed.
 
@@ -419,12 +419,15 @@ Opening an article is insufficient to increase History.
 
 ## 14. Undo
 
-V1 supports undo for the **most recent swipe action**.
+V1 supports undo for the **most recent eligible action**, however the reader triggered it.
 
 Undo may reverse:
 
 - a dismissal;
-- a Save for Later action.
+- a Save for Later action;
+- a Mark Read action;
+- a Mark Unread action;
+- a removal from Read Later.
 
 Undo must:
 
@@ -436,6 +439,8 @@ Undo must:
 Only the most recent eligible action needs to be undoable.
 
 Persistent multi-action undo history is outside V1 scope.
+
+*Amended by Amendment 8.*
 
 ---
 

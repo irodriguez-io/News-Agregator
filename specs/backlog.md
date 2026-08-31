@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-31, at waves D and E planned.
+Last reviewed: 2026-08-31, at wave D designed.
 
 ---
 
@@ -52,6 +52,24 @@ four passes.
 Their numbers and every citation to them still resolve; `waves/wave-d.md` has the reasoning and the
 table.
 
+**Wave D's four items were designed on 2026-08-31**, in one session and in implementation order, per
+`execution-model.md` §4.1. Each now has `spec.md`, `design.md` and `slices.md`; the two amendments they
+need are drafted in `specs/waves/wave-d-amendments.md`; and `waves/wave-d.md`'s *Design pass outcome*
+records the four places the brief was wrong.
+
+| # | Slug | Branch | Cut from |
+|---|---|---|---|
+| 015 | `015-android-undo-swipe-attribution` | `feat/015-android-undo-swipe-attribution` | `main` |
+| 012 | `012-android-discover-card-first` | `feat/012-android-discover-card-first` | `main` |
+| 014 | `014-android-undo-offer-surfaces` | `feat/014-android-undo-offer-surfaces` | `main`, after 015 merges |
+| 016 | `016-android-reversible-actions` | `feat/016-android-reversible-actions` | `main`, after 014 merges |
+
+**The design pass changed 014's premise, and it is the finding of the session.** 014 does **not** fix a
+defect — the labelled buttons raising no undo offer is specified behaviour, scoped to the swipe gesture in
+five documents and chosen deliberately by items 007 and 008. 014 reverses that decision, by owner decision
+of 2026-08-31, and therefore needs **Amendment 8**, which it shares with 016. Everything below that says
+014 is amendment-free is superseded.
+
 **Waves A, B and C are done.** `waves/wave-b-note.md` records what wave B cost and
 `waves/wave-c-note.md` what wave C cost. Their shared headline lesson, now three waves running: the most
 valuable defects were found by the owner using the app — none by reading diffs, and none by any gate.
@@ -61,7 +79,7 @@ valuable defects were found by the owner using the app — none by reading diffs
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
 | ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
-| D | 015 Undo race · 012 Header · 014 Raise the offer · 016 Widen what is reversible | **wave C merged; next** | `waves/wave-d.md` |
+| D | 015 Undo race · 012 Card first · 014 Raise the offer · 016 Widen what is reversible | **designed 2026-08-31; awaiting plan gate, then Amendments 7 and 8** | `waves/wave-d.md`, `waves/wave-d-amendments.md` |
 | E | 017 Tokens · 018 Components · 019 Discover · 020 Read Later + History · 021 Motion | wave D merged | `waves/wave-e.md` |
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
@@ -128,10 +146,16 @@ offers the reversal. Screencaps at 0.2 s, 1.0 s and 2.0 s show no toast; the swi
 **This is not "the button fails."** It succeeds. The original 014 wording described a failing button and
 was wrong about the mechanism.
 
-**No `docs/v1/**` amendment.** Nothing about what is reversible changes — that is 016.
+**Superseded 2026-08-31 at the design pass: this item does need an amendment.** It was recorded here as
+amendment-free on the grounds that nothing about *what is reversible* changes — true, but Undo is scoped to
+the **swipe gesture** in `contracts.md` §31, `05-personalization-state.md` §36, `06-ui-ux.md` §70,
+`01-product.md` §14 and `09-testing-acceptance.md` §50, and items 007 (`spec.md` §1.1) and 008
+(`design.md` D8) made the labelled buttons non-undoable on purpose. **This item reverses a specified
+decision** and needs **Amendment 8**, shared with 016 and drafted in `waves/wave-d-amendments.md`. Owner
+decision, 2026-08-31.
 
 **Out of scope: *Mark read*, anywhere.** It is `MARK_READ`, it is not reversible today, and moving it to
-016 is what keeps this item amendment-free.
+016 keeps this item to one dimension — the surfaces, not the action set.
 
 **It inherits no cause from 013.** 013's mechanism is an ancestor scroll consuming the pointer DOWN
 before `ArticleCard`'s handler adopts it; a `Button` is not a `pointerInput` gesture and does not use
@@ -157,6 +181,11 @@ addresses it nor makes it worse — verified unchanged in 013's walkthrough. It 
 It is also **why 013 spent a pass chasing a mystery that did not exist**: scored by "did a weight move",
 these runs counted as passes and made the failure window look like a band open on both sides. Any item
 that touches this ground must score by **which** article moved.
+
+**Designed 2026-08-31.** The fix is an identity guard in `AppViewModel` — a Discover-card action whose
+article is not the published Discover head is refused — so it lands in neither `ArticleCard.kt` nor the
+gesture, and `waves/wave-d.md`'s open `?` cell closes with 015 ∥ 012 intact
+(`015/design.md` D1, D6).
 
 *Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
 
@@ -190,10 +219,12 @@ hosted globally in `IntentionalReadingApp`, outside the destination `when` and g
 `!settingsOpen`, so it renders on Read Later and History today. **There is no per-pane affordance to
 build — only an offer to raise.**
 
-Settle at design time: what `REMOVE` reverses *to* (its previous state may be `SAVED`); whether
-`MARK_READ`/`MARK_UNREAD` carry deltas at all and what reversing each does to `signalsApplied` — undoing
-`MARK_UNREAD` is a double negative and the obvious place to get it wrong; and whether an offer raised in
-one pane survives the reader switching to another inside the 4.5 s window.
+**Settled at the design pass, 2026-08-31** (`016/spec.md` §2 is the table, `016/design.md` D1 the code):
+`REMOVE` restores its previous record, which `allowedFrom` guarantees is `SAVED`, and moves **no** weight in
+either direction (`contracts.md` §24). `MARK_READ` carries the +0.25/+0.20 delta and undoing it reverses that
+signal iff the forward transition applied it. **Undoing `MARK_UNREAD` re-applies the Read signal** — the
+double negative was real, and `UndoRecord` cannot express it today, so 016 adds a re-application field.
+An offer survives a destination change and needs no code for it, because the record names the article.
 
 ### 012 — Discover header below the card  ·  *wave D, concurrent with 015*
 

@@ -505,6 +505,8 @@ save
 dismiss
 ```
 
+> Amendment 8 widens the eligible set and removes the swipe-only restriction. The browser's existing swipe-and-keyboard scope remains compliant; see `contracts.md` §23 and §31.
+
 Integration must:
 
 - call appropriate state/preference reversal behavior;
