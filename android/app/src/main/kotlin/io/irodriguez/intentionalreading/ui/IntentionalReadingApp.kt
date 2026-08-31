@@ -274,20 +274,33 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                                 onRetry = viewModel::reload,
                                 onViewReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
                                 onDismiss = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.DISMISS)
+                                    viewModel.launchArticleAction(
+                                        article,
+                                        ArticleAction.DISMISS,
+                                        expectDiscoverHead = true,
+                                    )
                                 },
                                 onReadArticle = onOpenArticle,
                                 onSave = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.SAVE)
+                                    viewModel.launchArticleAction(
+                                        article,
+                                        ArticleAction.SAVE,
+                                        expectDiscoverHead = true,
+                                    )
                                 },
                                 onMarkRead = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
+                                    viewModel.launchArticleAction(
+                                        article,
+                                        ArticleAction.MARK_READ,
+                                        expectDiscoverHead = true,
+                                    )
                                 },
                                 onSwipeCommit = { article, action, onComplete ->
                                     viewModel.launchArticleAction(
                                         article = article,
                                         action = action,
                                         undoable = true,
+                                        expectDiscoverHead = true,
                                     ) { result ->
                                         onComplete(result.persisted)
                                     }
