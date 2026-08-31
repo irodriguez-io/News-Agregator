@@ -18,6 +18,10 @@ than the counts (`waves/wave-b-note.md` §7).
 | 2026-08-31, base `6c857a6` | — (baseline) | 275 tests, 0 failures, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
 | 2026-08-31, head `2101b1e` | 1 | **279 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
 | 2026-08-31, head `a6dfae1` | after merging `main` (015) | **284 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+| 2026-08-31, head `04a0554` | 2 | **284 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+
+Slice 2 adds no test — see §3 — so the count is unchanged from the post-merge row, which is the expected
+result and not a missing run.
 
 **Item 015 merged as `88e71b7` and was merged into this branch**, per `execution-model.md` §4.4. The
 post-merge row is the authoritative one and **the pre-rebase numbers above are superseded, not averaged** —
@@ -36,6 +40,7 @@ commit pair.
 | Slice | RED reproduced | Test commit | Implementation commit |
 |---|---|---|---|
 | 1 | **yes, independently** | `b8fbb96` | `2101b1e` |
+| 2 | n/a — no unit test, by design | — | `04a0554` |
 
 Reproduced in a throwaway detached worktree at `b8fbb96`, with `DiscoverScrollTargets.kt` confirmed absent:
 
@@ -58,6 +63,16 @@ that the previous target was wrong is `spec.md` §5.3 step 3, at the wave walkth
 ## 3. Slice reviews
 
 `/feature-review` in slice mode, per slice, in arrival order.
+
+**Slice 2 — PASS, 2026-08-31.** Checked: the split is faithful — `DiscoverMasthead` and
+`DiscoverOperationalBar` reuse the same string resources, typography styles, tokens and
+`Arrangement.spacedBy(12.dp)` as the removed overload, and `CategoryChipRow` is untouched, so no restyling
+crept in ahead of wave E. **The general `EditorialHeader` overload has zero added lines** — the commit only
+deletes the Discover-specific overload and three now-unused imports — which is the structural proof that
+Read Later and History cannot have changed, alongside their captures. `DiscoverScreen`'s column reads
+masthead → state body → operational bar, and all three `LaunchedEffect`s keep their keys and bodies
+including slice 1's `revealCardActions` call. Scope: exactly the three authorized files. No test edited;
+284 tests, 0 failures, both gates green on the supervisor's own run.
 
 **Slice 1 — PASS, 2026-08-31.** Checked: four named cases with four *distinct* expected values (0, 260,
 700, 0), so the assertion is real arithmetic and not a restatement of the implementation; declared
@@ -111,10 +126,35 @@ controls.* This one asserted a geometric outcome that depends on the length of a
 
 ## 4. Walkthrough
 
-Per `spec.md` §5.3. Batched at the end of the wave against merged `main`
-(`execution-model.md` §4.5, §6).
+**Driven at slice 2 rather than batched at wave end, deliberately:** this item's only evidence *is* the
+walkthrough (`spec.md` §5.2 — composition order has no observer in `testDebugUnitTest`), so deferring it
+would have meant reviewing and merging a slice with no evidence at all. The wave-end batch still applies to
+the undo items. Captures are in `walkthrough/`.
+
+| Step | Result |
+|---|---|
+| 1 — cold open, 411 dp | compact eyebrow and title, then the whole card: metadata, six-line title, excerpt, all three action controls, and the remaining-choices note, above the bottom navigation without scrolling. `item012-411-settled.png` |
+| 1 — cold open, 360 dp | eyebrow and title, then the card; **no operational control above it**. This article's title fills the rest of the viewport — recorded, not asserted, per `spec.md` §1.4. `item012-360-cold.png` |
+| 2 — scroll down | purpose copy → Refresh → *Content age · 3h* → degraded-source notice → *154 available in All* → category chips, every string unchanged. `item012-step2.png` |
+| 4 — category change | selecting Science returned to the top with its card leading; Technology likewise, after re-locating the chip row. `item012-step4-science.png` |
+| 5 — swipe advances the deck | the incoming card leads the viewport with its **complete action rail**, ready for the next decision without scrolling. This is item 008's D12 working with the new order, and it is the clearest single demonstration of the item's intent. `item012-step5-swipe.png` |
+| 6 — failed refresh | with airplane mode on, *"Refresh failed. Showing the last available content."* appears below the content-age line, degraded notice directly beneath. `item012-step6-failed-refresh.png` |
+| Read Later | full eyebrow, title, description and *Discover something new* action, unchanged. `item012-read-later.png` |
+| History | full eyebrow, title, description and *Return to Read Later* action, unchanged. `item012-history.png` |
+
+Airplane mode disabled and `wm size` / `wm density` reset afterwards; confirmed by the supervisor
+(`1080x2424`, density `420`, `airplane_mode_on=0`).
+
+**The step 3 regression — the wave B defect this item risked re-opening — is covered by slice 1's
+`revealCardActions` and is re-checked at the wave-end walkthrough against merged `main`.**
 
 ## 5. Departures from the plan
 
-Anything the slice plan predicted wrongly, including every existing assertion that had to move and why.
-_None recorded yet._
+- **`spec.md` §4 scenario 1 was corrected mid-item.** §4a has it in full. The supervisor's scenario, not
+  the implementer's work, was wrong.
+- **The walkthrough was driven at slice 2 instead of at wave end.** §4 says why.
+- **Slice 2 carries no failing-first commit.** Planned that way (`slices.md`), because composition order has
+  no observer at the JVM layer; slice 1 carried the item's RED. Stated rather than satisfied with a vacuous
+  assertion.
+- **No existing assertion moved.** The suite went 275 → 279 at slice 1 and stayed at 284 after `main` was
+  merged in; slice 2 added none.
