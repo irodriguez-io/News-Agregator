@@ -1,6 +1,8 @@
 package io.irodriguez.intentionalreading.ui.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -27,6 +29,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +83,7 @@ fun ArticleCard(
     val viewportWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
     val exitMinimumPx = with(density) { SwipeGesture.EXIT_MINIMUM_DP.dp.toPx() }
     val reducedMotionEnabled = reducedMotion()
-    val gestureState = remember(
+    val gestureValues = remember(
         article.id,
         thresholdPx,
         intentSlopPx,
@@ -88,50 +91,40 @@ fun ArticleCard(
         exitMinimumPx,
         reducedMotionEnabled,
     ) {
-        SwipeGesture.State(
-            thresholdPx = thresholdPx,
-            intentSlopPx = intentSlopPx,
-            viewportWidthPx = viewportWidthPx,
-            exitMinimumPx = exitMinimumPx,
-            reducedMotion = reducedMotionEnabled,
+        ArticleGestureValues(
+            article = article,
+            gestureState = SwipeGesture.State(
+                thresholdPx = thresholdPx,
+                intentSlopPx = intentSlopPx,
+                viewportWidthPx = viewportWidthPx,
+                exitMinimumPx = exitMinimumPx,
+                reducedMotion = reducedMotionEnabled,
+            ),
+            translationX = Animatable(0f),
+            rotationDegrees = Animatable(0f),
+            swipeCue = mutableStateOf<SwipeGesture.Action?>(null),
+            motionSpec = tween(
+                durationMillis = if (reducedMotionEnabled) {
+                    0
+                } else {
+                    SwipeGesture.EXIT_DURATION_MS
+                },
+                easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f),
+            ),
         )
     }
-    val translationX = remember(article.id) { Animatable(0f) }
-    val rotationDegrees = remember(article.id) { Animatable(0f) }
     val restoreScope = rememberCoroutineScope()
     val currentOnSwipeCommit by rememberUpdatedState(onSwipeCommit)
-    var swipeCue by remember(article.id) { mutableStateOf<SwipeGesture.Action?>(null) }
-    val motionDuration = if (reducedMotionEnabled) 0 else SwipeGesture.EXIT_DURATION_MS
-    val motionSpec = tween<Float>(
-        durationMillis = motionDuration,
-        easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f),
-    )
-
-    suspend fun snapToGestureState() {
-        translationX.snapTo(gestureState.translationX)
-        rotationDegrees.snapTo(gestureState.rotationDegrees)
-    }
-
-    suspend fun animateToGestureState() {
-        coroutineScope {
-            launch { translationX.animateTo(gestureState.translationX, motionSpec) }
-            launch { rotationDegrees.animateTo(gestureState.rotationDegrees, motionSpec) }
-        }
-    }
-
-    suspend fun restoreCard() {
-        gestureState.restore()
-        swipeCue = null
-        animateToGestureState()
-    }
+    val currentGestureValues by rememberUpdatedState(gestureValues)
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .pointerInput(gestureState) {
+            .pointerInput(Unit) {
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = true)
-                    if (!gestureState.down(down.position.x, down.position.y)) {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val gesture = currentGestureValues
+                    if (!gesture.gestureState.down(down.position.x, down.position.y)) {
                         return@awaitEachGesture
                     }
 
@@ -139,25 +132,26 @@ fun ArticleCard(
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == down.id }
                         if (change == null) {
-                            restoreScope.launch { restoreCard() }
+                            restoreScope.launch { gesture.restoreCard() }
                             break
                         }
 
                         if (!change.pressed) {
-                            val action = gestureState.release()
-                            swipeCue = null
+                            val action = gesture.gestureState.release()
+                            gesture.swipeCue.value = null
                             if (action == null) {
-                                restoreScope.launch { animateToGestureState() }
+                                restoreScope.launch { gesture.animateToGestureState() }
                             } else {
                                 val articleAction = when (action) {
                                     SwipeGesture.Action.DISMISS -> ArticleAction.DISMISS
                                     SwipeGesture.Action.SAVE -> ArticleAction.SAVE
                                 }
                                 restoreScope.launch {
-                                    animateToGestureState()
-                                    currentOnSwipeCommit(article, articleAction) { persisted ->
+                                    gesture.animateToGestureState()
+                                    currentOnSwipeCommit(gesture.article, articleAction) { persisted ->
+                                        gesture.gestureState.releaseCommitLock()
                                         if (!persisted) {
-                                            restoreScope.launch { restoreCard() }
+                                            restoreScope.launch { gesture.restoreCard() }
                                         }
                                     }
                                 }
@@ -165,25 +159,28 @@ fun ArticleCard(
                             break
                         }
 
-                        val shouldConsume = gestureState.move(
+                        val shouldConsume = gesture.gestureState.move(
                             x = change.position.x,
                             y = change.position.y,
                         )
-                        if (shouldConsume && gestureState.intent == SwipeGesture.Intent.HORIZONTAL) {
+                        if (
+                            shouldConsume &&
+                            gesture.gestureState.intent == SwipeGesture.Intent.HORIZONTAL
+                        ) {
                             change.consume()
-                            swipeCue = if (gestureState.translationX < 0f) {
+                            gesture.swipeCue.value = if (gesture.gestureState.translationX < 0f) {
                                 SwipeGesture.Action.DISMISS
                             } else {
                                 SwipeGesture.Action.SAVE
                             }
-                            restoreScope.launch { snapToGestureState() }
+                            restoreScope.launch { gesture.snapToGestureState() }
                         }
                     }
                 }
             }
             .graphicsLayer {
-                this.translationX = translationX.value
-                rotationZ = rotationDegrees.value
+                this.translationX = gestureValues.translationX.value
+                rotationZ = gestureValues.rotationDegrees.value
             },
         shape = RoundedCornerShape(20.dp),
         color = tokens.surface,
@@ -233,7 +230,7 @@ fun ArticleCard(
                 )
             }
 
-            swipeCue?.let { action ->
+            gestureValues.swipeCue.value?.let { action ->
                 SwipeCue(
                     action = action,
                     modifier = Modifier
@@ -250,6 +247,33 @@ fun ArticleCard(
             }
         }
     }
+}
+
+private class ArticleGestureValues(
+    val article: Article,
+    val gestureState: SwipeGesture.State,
+    val translationX: Animatable<Float, AnimationVector1D>,
+    val rotationDegrees: Animatable<Float, AnimationVector1D>,
+    val swipeCue: MutableState<SwipeGesture.Action?>,
+    val motionSpec: AnimationSpec<Float>,
+)
+
+private suspend fun ArticleGestureValues.snapToGestureState() {
+    translationX.snapTo(gestureState.translationX)
+    rotationDegrees.snapTo(gestureState.rotationDegrees)
+}
+
+private suspend fun ArticleGestureValues.animateToGestureState() {
+    coroutineScope {
+        launch { translationX.animateTo(gestureState.translationX, motionSpec) }
+        launch { rotationDegrees.animateTo(gestureState.rotationDegrees, motionSpec) }
+    }
+}
+
+private suspend fun ArticleGestureValues.restoreCard() {
+    gestureState.restore()
+    swipeCue.value = null
+    animateToGestureState()
 }
 
 @Composable

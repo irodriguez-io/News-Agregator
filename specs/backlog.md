@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-26, at wave B merged (`008`, `009`).
+Last reviewed: 2026-08-28, at item 013 closed.
 
 ---
 
@@ -29,6 +29,7 @@ Last reviewed: 2026-08-26, at wave B merged (`008`, `009`).
 | 011 | Web validator parity and shared copy | Browser + Android | PR #8, 2026-08-25 |
 | 008 | Swipe gestures | Android | PR #12, 2026-08-26 |
 | 009 | Import and export | Android | PR #13, 2026-08-26 |
+| 013 | Undo gesture reset — a card accepts a swipe as soon as it is on screen | Android | 2026-08-28 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -36,9 +37,14 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-Three items. Two are Android deferrals closing the client's remaining distance from the browser's V1
-behaviour, each recorded in writing by a shipped item — the citation is given so the next designer starts
-from the reasoning rather than from the summary. The third came from the owner testing wave B's build.
+Five items, plus 005 shipped. **006** is the last Android deferral closing the client's remaining distance
+from the browser's V1 behaviour, recorded in writing by a shipped item — the citation is given so the next
+designer starts from the reasoning rather than from the summary. **012** came from the owner testing wave
+B's build. **014**, **015** and **016** were all raised by item 013: two defects it proved but deliberately
+did not fix, and one amendment it owes from its first design pass.
+
+Only **006** is scheduled. The other four are unscheduled and need their own design pass; 012 and 016
+additionally need a `docs/v1/**` amendment, which no feature workstream may make silently.
 
 **Waves A and B are done.** `waves/wave-b-note.md` records what wave B cost. Its headline lesson is
 that the two most valuable defects of the wave were found by the owner using the app, and a third by
@@ -48,32 +54,101 @@ re-gating a rebased head — none of them by reading diffs, and none of them by 
 |---|---|---|---|
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
-| C | 005 Learning, then 006 Diversity | now | `waves/wave-c.md` |
+| C | ~~005 Learning~~, then 006 Diversity | **005 merged; 006 now** | `waves/wave-c.md` |
+
+**Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
+was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
+`ui/components/ArticleCard.kt`, `ui/gesture/SwipeGesture.kt` and the instrumented gesture tests; 006's is
+`domain/**` and its JVM tests. The one real overlap is documentary — both edit `specs/backlog.md`, and
+013 also edits `specs/005-android-preference-learning/evidence.md`, which 006's branch has already
+touched. **006 should expect a conflict in those two files and keep both sides**, as `execution-model.md`
+prescribes for rolling documents.
 
 Waves are ordered by file collisions, not by value — see `execution-model.md` §2 for the hub-file matrix
 that produced them. 007 led the programme deliberately, because `contracts.md` §23 ties Undo to the
 `signalsApplied` reversal guard 005 introduces; that ordering has now been banked.
 
-### 005 — Preference learning and personalized ranking  ·  *wave C*
+### ~~005 — Preference learning and personalized ranking~~  ·  **Shipped**
 
-Port `js/ranking/personalize.js` and the `INTERACTION_DELTAS` table (`js/state/preferences.js:1-6`) to
-Android. `preferences.sources` and `preferences.topics` already persist, validate against
-`contracts.md:632-655`, and round-trip; nothing writes a non-empty entry yet.
+Ported `js/ranking/personalize.js` and the `INTERACTION_DELTAS` table. Four slices: the arithmetic, the
+state machine and undo path, the reconciliation fold, and personalized scoring with deck order.
+198 → 254 tests.
 
-Carries the largest inherited decision in the project: every record already on disk claims
-`signalsApplied` flags with no deltas behind them, so a `Mark Unread` after learning ships would subtract
-weight that was never added. `future-items.md` §"The item that ports preference learning" sets out the
-one-time reconciliation and why the choice should be made deliberately.
+The inherited decision was taken by invariant rather than by marker (`design.md` D1): `interactions` is
+exactly recomputable from the record set, weight is not, so the fold applies only the missing signals'
+deltas and never audits a weight. It runs at two call sites — cold load and import — and deliberately
+not at the single choke point every path funnels through, because that one also runs on every ordinary
+save and would silently repair arithmetic bugs in the state machine.
 
-*Deferred by 002 §3, 003 §3, 004 §3.*
+*Evidence:* `specs/005-android-preference-learning/evidence.md`.
 
 ### 006 — Deck diversity sequencing  ·  *wave C*
 
-The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`). Until this
-lands the Android head article can differ from the browser's for the same dataset. Independent of 005 in
-principle; naturally sequenced with it, since both change what Discover presents first.
+The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`).
+
+**Correction, carried from 005 `design.md` D12: the claim that the Android head article differs from the
+browser's until 006 lands is wrong.** `penaltiesFor` reads `selected.at(-1)`, so the first selection step
+carries no penalty; both clients render exactly one card; and the browser rebuilds the deck on every
+render. The head card is chosen by personalized order alone in both clients, and **005 closed that gap by
+itself**. 006 is a genuine spec-parity gap with no reader-visible effect at today's surface, and the owner
+confirmed on 2026-08-26 that it ships anyway as its own item. Size it against that, not against the head
+article.
+
+005 leaves `DiscoverDeck` holding the ordered candidate list these penalties sequence, so the expected
+surface is `DiscoverDeck.kt` and its tests only.
 
 *Deferred by 002 §3, restated by 004 §3.*
+
+### 014 — The Discover card's buttons in the Undo window  ·  *unscheduled*
+
+**Read Later / Save for later and the other card buttons fail in the same window item 013 fixed for
+swipes, and they never consult the gesture state** — so nothing 013 did addresses them, and no fix there
+would have. Split out deliberately as a scope decision rather than a deferral of difficulty
+(`specs/013-android-undo-gesture-reset/design.md` D7).
+
+**It inherits no cause.** 013's mechanism is an ancestor scroll consuming the pointer DOWN before
+`ArticleCard`'s gesture handler can adopt it. A `Button` is not a `pointerInput` gesture and does not use
+`awaitFirstDown`, so whatever is wrong with the buttons is its own mechanism and needs its own
+reproduction. **Do not start from 013's diagnosis** — that assumption is what cost 013 two of its four
+passes.
+
+Worth knowing before designing it: `DiscoverScreen.kt:74-87`'s article-change `animateScrollTo` runs for
+roughly 380 ms after the head article changes, and it is what claims the pointer in 013's case. Whether a
+`Button` inside a scrolling ancestor loses its click the same way is the first thing to measure.
+
+*Owner decision, 2026-08-27. `specs/013-android-undo-gesture-reset/spec.md` §1.8.*
+
+### 015 — A swipe immediately after Undo is attributed to the outgoing article  ·  *unscheduled*
+
+**Found by 013's slice 1, out of its scope, and left deliberately unfixed.** At a very short delay after
+Undo — under roughly one frame — the pointer DOWN is adopted against the article that was *leaving*, not
+the one Undo restored. `awaitFirstDown RETURNED article=8c80f6f9…` fires **22 ms before** the restored
+card composes, and the state document records the wrong source. Three runs at delay 0 gave `ietf_oauth`,
+`ietf_oauth`, `science_aaas` — a race, not a constant.
+
+The reader sees a card, swipes it, and trains a preference for a different article.
+
+**This is a publish-ordering defect, not a consumption one**, so 013's `requireUnconsumed` fix neither
+addresses it nor makes it worse — verified unchanged in 013's walkthrough. It is outside 013's `spec.md`
+§4 scenarios, and 013's slice-2 brief explicitly barred the implementer from absorbing it.
+
+It is also **why 013 spent a pass chasing a mystery that did not exist**: scored by "did a weight move",
+these runs counted as passes and made the failure window look like a band open on both sides. Any item
+that touches this ground must score by **which** article moved.
+
+*Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
+
+### 016 — Undo in Read Later and History  ·  *unscheduled*
+
+Owed since item 013's first design pass and not yet written down anywhere but that pass. Widening
+`ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS`, and adding undo affordances to the
+Read Later and History panes so an action taken there can be taken back the way a Discover action can.
+
+**Needs its own amendment and design pass, like item 012** — it changes what is reversible, and
+`contracts.md` §23 ties Undo to the `signalsApplied` reversal guard that item 005 introduced. That
+coupling is the reason 007 led the programme, and it is the reason this cannot be bolted on.
+
+*Owed from `specs/013-android-undo-gesture-reset` design pass 1; recorded at 013's close, 2026-08-28.*
 
 ### 012 — Discover header below the card  ·  *unscheduled*
 
@@ -120,10 +195,19 @@ Deliberate non-goals, recorded so they are not rediscovered as oversights.
 
 Not items. Things a future item should absorb when it touches the same ground.
 
-- **`DiscoverScreen` now carries three scroll effects** — the reset on category and state-class change,
-  D11's scroll-to-end when an article becomes opened, and D12's scroll-the-card-into-view when the deck
-  advances. Each is individually clear and they do not currently fight. If a fourth appears, or when item
-  012 moves the header, reconcile them. (*008 D11/D12*)
+- **`DiscoverScreen` carries three scroll effects, and one of them was implicated in a real defect.**
+  The reset on category and state-class change, D11's scroll-to-end when an article becomes opened, and
+  D12's scroll-the-card-into-view when the deck advances. **This is no longer a tidiness note.** Item 013
+  proved that D12's `animateScrollTo` — roughly 380 ms of ancestor scroll after every head-article change,
+  including the Undo restore — consumes the pointer DOWN in the Initial pass, which silently ate every
+  swipe that landed inside it. 013 fixed it at the card (`requireUnconsumed = false`) rather than by
+  touching the scroll, deliberately: the scroll is behaving correctly and it is item 012's ground.
+
+  **Item 012 should know this before it moves the header.** 012 largely subsumes D12 — with the
+  operational block below the card there is little left for it to correct — so the reconciliation is
+  likelier to be a *deletion* than a merge. If D12 goes, the window 013 fixed stops occurring at all, and
+  013's fix becomes belt-and-braces rather than the only thing holding. Do not read that as licence to
+  revert it. (*008 D11/D12; `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md`*)
 - **The recovery notice still says *"Reset local data in Settings to recover."*** Import is now also a
   recovery path and the copy does not say so. Left alone deliberately: changing it means authoring copy
   the specification does not provide. (*009 §Outstanding*)
@@ -178,4 +262,22 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   emulator had lost network. The rebase added one production line, covered by a unit test.
 - **The owner's judgement on whether the swipe motion feels right** (`06-ui-ux.md` §44: tactile, quiet,
   controlled). Reported as "smooth and nice" during testing, but that was before the landing defects were
-  fixed, so it is worth one more pass.
+  fixed, so it is worth one more pass. **Still open after 013**, and now more clearly worth doing: 013
+  changed when a gesture is *adopted*, not how it animates, but it is the third item in a row to touch
+  the swipe surface.
+
+**Added by 013, 2026-08-28:**
+
+- **The instrumented suite is now three classes and four tests, and still out of CI** (see Parked, *002
+  slice 4*). `MainActivityLaunchSmokeTest`, `ArticleCardGestureTest` (gesture across a head-article
+  change) and `ArticleCardScrollGestureTest` (two tests: a horizontal swipe is heard through a running
+  ancestor scroll; a vertical drag still belongs to the scroll). **A local
+  `connectedDebugAndroidTest` run is the only thing that exercises any of them** — nothing in CI will
+  notice if all four break. That is a deliberate decision, but the exposure grows with each item that
+  parks a guard here, and 013's whole history is defects a green JVM gate could not see.
+
+- **A residual Undo-window measurement, recorded as a measurement and not as intended behaviour.** After
+  013's fix every delay from 0.05 s to 1.2 s commits against the restored article. At a nominal delay of
+  **0** the swipe still lands on the *outgoing* article — that is item **015**, a real defect with its own
+  entry, not a tolerance. Nothing here refuses input at any delay (`013 design.md` D9, D11); there is no
+  window in which the card declines a touch.

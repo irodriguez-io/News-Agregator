@@ -19,6 +19,7 @@ import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.domain.state.ArticleTransitionErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
@@ -46,6 +47,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -343,7 +345,7 @@ class AppViewModelTest {
         assertEquals(3, held.availableCount)
         assertEquals(2, held.remainingCount)
 
-        val replacementLeader = article(4)
+        val replacementLeader = article(4).copy(publishedAt = now)
         datasets.refreshBehavior = { updated(dataset(listOf(replacementLeader, oldFollower))) }
         viewModel.reload()
         yield()
@@ -546,7 +548,9 @@ class AppViewModelTest {
 
     @Test
     fun `changing category releases an opened held card after persistence`() = runBlocking {
-        val technology = article(1, Category.TECHNOLOGY)
+        val technology = article(1, Category.TECHNOLOGY).copy(
+            score = ArticleScore(92, 50, 20, 15, 5, 2),
+        )
         val iam = article(2, Category.IAM)
         val viewModel = viewModel(refreshResult = updated(dataset(listOf(technology, iam))))
         viewModel.selectCategory(Category.IAM)
@@ -760,7 +764,8 @@ class AppViewModelTest {
     @Test
     fun `Open persistence warning is distinct from navigation failure`() {
         val viewModel = viewModel()
-        val transition = ArticleTransition.Unchanged(emptyMap())
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
+        val transition = ArticleTransition.Unchanged(emptyMap(), noPreferences)
         val failedPersistence = ArticleActionResult(
             transition = transition,
             persisted = false,
@@ -1161,8 +1166,8 @@ class AppViewModelTest {
         val target = article(1)
         val previousRecord = record(target, ArticleStatus.OPENED)
         val preferences = LocalState.Preferences(
-            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 3)),
-            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 2)),
+            sources = mapOf(target.source.id to PreferenceEntry(weight = 1.5, interactions = 1)),
+            topics = mapOf("oauth" to PreferenceEntry(weight = -0.5, interactions = 1)),
         )
         val initial = LocalState.default().copy(
             articles = mapOf(target.id to previousRecord),
@@ -1172,6 +1177,7 @@ class AppViewModelTest {
         val viewModel = viewModel(store = store)
         viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
         assertTrue(viewModel.uiState.value.undoAvailable)
+        val preferencesAfterDismiss = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
 
         // When Undo is taken from the offer
         val result = viewModel.performUndo()
@@ -1180,6 +1186,8 @@ class AppViewModelTest {
         assertTrue(result.persisted)
         val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
         assertEquals(previousRecord, persisted.articles[target.id])
+        // Scenario: Undo Dismiss reverses the signal applied by the forward transition.
+        assertNotEquals(preferences, preferencesAfterDismiss)
         assertEquals(preferences, persisted.preferences)
         assertEquals(AppAnnouncementKind.UNDO_COMPLETED, viewModel.announcement.value?.kind)
         assertNull(viewModel.uiState.value.pendingUndoOffer)
@@ -1344,6 +1352,7 @@ class AppViewModelTest {
         )
         viewModel.onArticleAction(target, ArticleAction.OPEN)
         assertEquals(target.id, viewModel.heldArticleId.value)
+        val preferencesAfterOpen = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
         viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
         assertNull(viewModel.heldArticleId.value)
         assertEquals(next.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
@@ -1360,7 +1369,9 @@ class AppViewModelTest {
         assertNull(viewModel.heldArticleId.value)
         val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
         assertEquals(ArticleStatus.OPENED, persisted.articles.getValue(target.id).status)
-        assertEquals(preferencesBeforeUndo, persisted.preferences)
+        // Scenario: Undo Dismiss removes only Dismiss learning and preserves earlier Open learning.
+        assertNotEquals(preferencesBeforeUndo, persisted.preferences)
+        assertEquals(preferencesAfterOpen, persisted.preferences)
     }
 
     @Test
@@ -1375,8 +1386,8 @@ class AppViewModelTest {
             record(currentRead, ArticleStatus.READ),
         ).copy(
             preferences = LocalState.Preferences(
-                sources = mapOf("current-only" to PreferenceEntry(1.0, 1)),
-                topics = emptyMap(),
+                sources = mapOf(currentRead.source.id to PreferenceEntry(1.0, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
             ),
         )
         val imported = localState(
@@ -1384,8 +1395,8 @@ class AppViewModelTest {
             record(importedRead, ArticleStatus.READ),
         ).copy(
             preferences = LocalState.Preferences(
-                sources = mapOf("import-only" to PreferenceEntry(-1.0, 2)),
-                topics = emptyMap(),
+                sources = mapOf(importedRead.source.id to PreferenceEntry(-1.0, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
             ),
         )
         val candidateBytes = "valid backup".encodeToByteArray()
@@ -1519,9 +1530,219 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `cold load writes one changed reconciliation and writes no unchanged reconciliation`() {
+        val storedArticle = article(71).copy(
+            source = ArticleSource("shared-source", "Shared Source"),
+        )
+        val preLearning = localState(
+            record(storedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val changingStore = FakeLocalStateStore(success(preLearning))
+
+        viewModel(store = changingStore)
+
+        assertEquals(1, changingStore.saveRequests.size)
+        val reconciled = assertIs<LocalStateResult.Success>(changingStore.loadResult).state
+        assertEquals(
+            PreferenceEntry(weight = 0.35, interactions = 2),
+            reconciled.preferences.sources["shared-source"],
+        )
+
+        val unchangedStore = FakeLocalStateStore(success(reconciled))
+
+        viewModel(store = unchangedStore)
+
+        assertEquals(0, unchangedStore.saveRequests.size)
+    }
+
+    @Test
+    fun `pre-learning unread after post-learning open and save preserves exactly the remaining signals`() = runBlocking {
+        val preLearningArticle = article(72).copy(
+            source = ArticleSource("shared-source", "Shared Source"),
+        )
+        val postLearningArticle = article(73).copy(
+            source = preLearningArticle.source,
+            tags = preLearningArticle.tags,
+        )
+        val preLearning = localState(
+            record(preLearningArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val store = FakeLocalStateStore(success(preLearning))
+        val viewModel = viewModel(store = store)
+
+        assertStatus(viewModel, postLearningArticle, ArticleAction.OPEN, ArticleStatus.OPENED)
+        assertStatus(viewModel, postLearningArticle, ArticleAction.SAVE, ArticleStatus.SAVED)
+        assertStatus(viewModel, preLearningArticle, ArticleAction.MARK_UNREAD, ArticleStatus.SAVED)
+
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            PreferenceEntry(weight = 0.65, interactions = 3),
+            persisted.preferences.sources["shared-source"],
+        )
+    }
+
+    @Test
+    fun `import reconciles its replacement and retains no pre-import record`() = runBlocking {
+        val currentOnly = article(74)
+        val importedArticle = article(75).copy(
+            source = ArticleSource("imported-source", "Imported Source"),
+        )
+        val current = localState(record(currentOnly, ArticleStatus.SAVED))
+        val imported = localState(
+            record(importedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+        )
+        val store = FakeLocalStateStore(success(current)).apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.importLocalData("backup".encodeToByteArray()))
+
+        assertEquals(1, store.saveRequests.size)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(setOf(importedArticle.id), persisted.articles.keys)
+        assertFalse(currentOnly.id in persisted.articles)
+        assertEquals(
+            PreferenceEntry(weight = 0.35, interactions = 2),
+            persisted.preferences.sources["imported-source"],
+        )
+    }
+
+    @Test
+    fun `a committed import adopts imported state when reconciliation persistence fails`() = runBlocking {
+        val heldArticle = article(77)
+        val undoableArticle = article(78)
+        val importedArticle = article(79).copy(
+            source = ArticleSource("committed-import-source", "Committed Import Source"),
+        )
+        val imported = localState(
+            record(importedArticle, ArticleStatus.READ).copy(
+                openedAt = now.minusSeconds(120),
+                signalsApplied = SignalsApplied(
+                    opened = true,
+                    saved = false,
+                    dismissed = false,
+                    read = true,
+                ),
+            ),
+            appearance = Appearance.DARK,
+        )
+        val reconciliationFailure = LocalStateResult.Failure(
+            code = LocalStateErrorCode.WRITE_FAILED,
+            message = "reconciliation write failed",
+        )
+        val store = FakeLocalStateStore().apply {
+            importBehavior = { success(imported) }
+        }
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(heldArticle, undoableArticle, importedArticle))),
+            store = store,
+        )
+        viewModel.onArticleAction(heldArticle, ArticleAction.OPEN)
+        viewModel.onArticleAction(undoableArticle, ArticleAction.SAVE, undoable = true)
+        assertEquals(heldArticle.id, viewModel.heldArticleId.value)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+        assertTrue(viewModel.uiState.value.pendingUndoOffer != null)
+        val writesBeforeImport = store.saveRequests.size
+        store.saveBehavior = { reconciliationFailure }
+
+        val completed = viewModel.importLocalData("backup".encodeToByteArray())
+
+        assertTrue(completed)
+        assertEquals(writesBeforeImport + 1, store.saveRequests.size)
+        assertEquals(imported, assertIs<LocalStateResult.Success>(store.loadResult).state)
+        assertEquals(Appearance.DARK, viewModel.appearance.value)
+        assertEquals(
+            listOf(importedArticle.id),
+            viewModel.uiState.value.history.groups.flatMap { it.rows }.map { it.article.id },
+        )
+        assertEquals(reconciliationFailure, viewModel.localStateError.value)
+        assertNull(viewModel.heldArticleId.value)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.recoveryNoticeVisible.value)
+        assertEquals(AppAnnouncementKind.IMPORT_COMPLETE, viewModel.announcement.value?.kind)
+
+        assertTrue(viewModel.exportLocalData { true })
+        assertEquals(listOf(imported), store.exportRequests)
+    }
+
+    @Test
+    fun `failed cold load raises recovery notice and attempts no reconciliation write`() {
+        val store = FakeLocalStateStore(
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.INVALID_STATE,
+                message = "stored state is invalid",
+                state = LocalState.default(),
+            ),
+        )
+        val viewModel = viewModel(store = store)
+
+        assertTrue(viewModel.recoveryNoticeVisible.value)
+        assertEquals(LocalStateErrorCode.INVALID_STATE, viewModel.localStateError.value?.code)
+        assertEquals(0, store.saveRequests.size)
+    }
+
+    @Test
+    fun `an ordinary article save result is adopted without reconciliation`() = runBlocking {
+        val store = FakeLocalStateStore().apply {
+            saveBehavior = { candidate ->
+                success(
+                    candidate.copy(
+                        preferences = LocalState.Preferences(
+                            sources = emptyMap(),
+                            topics = emptyMap(),
+                        ),
+                    ),
+                )
+            }
+        }
+        val viewModel = viewModel(store = store)
+
+        val result = viewModel.onArticleAction(article(76), ArticleAction.SAVE)
+
+        assertTrue(result.persisted)
+        assertEquals(1, store.saveRequests.size)
+        assertEquals(emptyMap(), applied(result).preferences.sources)
+        assertEquals(emptyMap(), applied(result).preferences.topics)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(emptyMap(), persisted.preferences.sources)
+        assertEquals(emptyMap(), persisted.preferences.topics)
+    }
+
+    @Test
     fun `export writes nothing when the destination cannot be written`() = runBlocking {
         // Given valid current state and a destination that cannot be opened
-        val current = localState(record(article(71), ArticleStatus.READ))
+        val current = localState(record(article(71), ArticleStatus.READ)).copy(
+            preferences = LocalState.Preferences(
+                sources = mapOf("source_71" to PreferenceEntry(0.25, 1)),
+                topics = mapOf("oauth" to PreferenceEntry(0.20, 1)),
+            ),
+        )
         val exportedBytes = "exported state".encodeToByteArray()
         val store = FakeLocalStateStore(success(current)).apply {
             exportBehavior = { LocalStateExport.Success(exportedBytes) }
@@ -1641,6 +1862,12 @@ class AppViewModelTest {
             savedAt = if (status == ArticleStatus.SAVED) actionAt else null,
             dismissedAt = if (status == ArticleStatus.DISMISSED) actionAt else null,
             readAt = if (status == ArticleStatus.READ) actionAt else null,
+            signalsApplied = SignalsApplied(
+                opened = status == ArticleStatus.OPENED,
+                saved = false,
+                dismissed = false,
+                read = status == ArticleStatus.READ,
+            ),
         )
     }
 

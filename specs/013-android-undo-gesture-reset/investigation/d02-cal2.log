@@ -1,0 +1,45 @@
+--------- beginning of main
+08-27 10:57:07.067  4329  4329 D IR013Probe: pointerInput start article=f9efe11ca9eba3856407 state=222393362
+08-27 10:57:07.068  4329  4329 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:07.068  4329  4329 D IR013Probe: awaitFirstDown returned article=f9efe11ca9eba3856407 x=493.0 y=347.0
+08-27 10:57:07.068  4329  4329 D IR013Probe: gestureState.down article=f9efe11ca9eba3856407 accepted=true commitInFlight=false
+08-27 10:57:07.154  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.182  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.276  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.289  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.359  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.365  4329  4329 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:07.417  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.435  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.448  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.460  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.480  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.516  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.530  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.546  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.561  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.582  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.597  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.612  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.630  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.644  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.665  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.741  4329  4329 D IR013Probe: compose app pendingUndo=1 announcement=null
+08-27 10:57:07.755  4329  4329 D IR013Probe: compose ArticleCard article=eb011ad202c8a4eef5dc
+08-27 10:57:07.845  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:07.864  4329  4329 D IR013Probe: scroll article effect article=eb011ad202c8a4eef5dc changed=true cardTopOffset=1084
+08-27 10:57:07.864  4329  4329 D IR013Probe: scroll opened effect article=eb011ad202c8a4eef5dc isOpened=false becameOpened=false max=809
+08-27 10:57:07.912  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1318.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1734.5
+08-27 10:57:07.929  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1061.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1606.0
+08-27 10:57:07.946  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=832.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1491.5
+08-27 10:57:07.962  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=672.0 right=1033.0 bottom=2010.0 centerX=540.0 centerY=1341.0
+08-27 10:57:07.978  4329  4329 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=648.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1317.0
+08-27 10:57:08.312  4329  4329 D IR013Probe: Undo tapped offer=1
+08-27 10:57:08.350  4329  4329 D IR013Probe: compose app pendingUndo=null announcement=UNDO_COMPLETED
+08-27 10:57:08.368  4329  4329 D IR013Probe: compose ArticleCard article=f9efe11ca9eba3856407
+08-27 10:57:08.425  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:08.436  4329  4329 D IR013Probe: scroll article effect article=f9efe11ca9eba3856407 changed=true cardTopOffset=1084
+08-27 10:57:08.436  4329  4329 D IR013Probe: scroll opened effect article=f9efe11ca9eba3856407 isOpened=false becameOpened=false max=610
+08-27 10:57:08.440  4329  4329 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:08.542  4329  4329 D IR013Probe: pointerInput start article=f9efe11ca9eba3856407 state=188609758
+08-27 10:57:08.542  4329  4329 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407

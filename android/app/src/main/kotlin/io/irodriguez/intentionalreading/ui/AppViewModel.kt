@@ -16,6 +16,7 @@ import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
+import io.irodriguez.intentionalreading.domain.state.PreferenceReconciliation
 import io.irodriguez.intentionalreading.domain.state.UndoRecord
 import io.irodriguez.intentionalreading.domain.validation.LocalStateErrorCode
 import io.irodriguez.intentionalreading.domain.validation.LocalStateExport
@@ -322,15 +323,31 @@ class AppViewModel(
     suspend fun importLocalData(candidateBytes: ByteArray): Boolean = stateMutex.withLock {
         when (val result = importLocalState(candidateBytes)) {
             is LocalStateResult.Success -> {
-                adoptPersistedState(result.state)
-                undoRecord = null
-                pendingUndoOffer = null
-                _heldArticleId.value = null
-                _localStateError.value = null
-                _recoveryNoticeVisible.value = false
-                publish()
-                announce(AppAnnouncementKind.IMPORT_COMPLETE)
-                true
+                val reconciled = PreferenceReconciliation.reconcile(result.state)
+                when (val persisted = persistReconciliationIfChanged(result, reconciled)) {
+                    is LocalStateResult.Success -> {
+                        adoptPersistedState(persisted.state)
+                        undoRecord = null
+                        pendingUndoOffer = null
+                        _heldArticleId.value = null
+                        _localStateError.value = null
+                        _recoveryNoticeVisible.value = false
+                        publish()
+                        announce(AppAnnouncementKind.IMPORT_COMPLETE)
+                        true
+                    }
+                    is LocalStateResult.Failure -> {
+                        adoptPersistedState(result.state)
+                        undoRecord = null
+                        pendingUndoOffer = null
+                        _heldArticleId.value = null
+                        _localStateError.value = persisted
+                        _recoveryNoticeVisible.value = false
+                        publish()
+                        announce(AppAnnouncementKind.IMPORT_COMPLETE)
+                        true
+                    }
+                }
             }
             is LocalStateResult.Failure -> {
                 announce(AppAnnouncementKind.IMPORT_FAILED)
@@ -360,6 +377,7 @@ class AppViewModel(
         stateMutex.withLock {
             val transition = ArticleStateMachine.transition(
                 records = localState.articles,
+                preferences = localState.preferences,
                 article = article,
                 action = action,
                 now = nowProvider(),
@@ -384,7 +402,13 @@ class AppViewModel(
 
     suspend fun performUndo(): ArticleActionResult = stateMutex.withLock {
         val pendingUndo = undoRecord
-        when (val transition = ArticleStateMachine.reverse(localState.articles, pendingUndo)) {
+        when (
+            val transition = ArticleStateMachine.reverse(
+                records = localState.articles,
+                preferences = localState.preferences,
+                undoRecord = pendingUndo,
+            )
+        ) {
             is ArticleTransition.Invalid -> {
                 if (pendingUndo != null) announce(AppAnnouncementKind.UNDO_FAILED)
                 ArticleActionResult(
@@ -420,7 +444,10 @@ class AppViewModel(
         is LocalStateResult.Success -> {
             adoptPersistedState(result.state)
             _localStateError.value = null
-            val persistedTransition = ArticleTransition.Unchanged(localState.articles)
+            val persistedTransition = ArticleTransition.Unchanged(
+                records = localState.articles,
+                preferences = localState.preferences,
+            )
             if (
                 action == ArticleAction.OPEN &&
                 localState.articles[article.id]?.status == ArticleStatus.OPENED
@@ -442,7 +469,10 @@ class AppViewModel(
         transition: ArticleTransition.Applied,
         undoable: Boolean,
     ): ArticleActionResult {
-        val candidate = localState.copy(articles = transition.records)
+        val candidate = localState.copy(
+            articles = transition.records,
+            preferences = transition.preferences,
+        )
         return when (val result = saveLocalState(candidate)) {
             is LocalStateResult.Failure -> {
                 _localStateError.value = result
@@ -462,6 +492,7 @@ class AppViewModel(
                     records = localState.articles,
                     record = persistedRecord,
                     undoRecord = transition.undoRecord,
+                    preferences = localState.preferences,
                 )
                 if (undoable) {
                     transition.undoRecord?.let { record ->
@@ -487,7 +518,10 @@ class AppViewModel(
         undoRecord: UndoRecord,
         transition: ArticleTransition.Reverted,
     ): ArticleActionResult {
-        val candidate = localState.copy(articles = transition.records)
+        val candidate = localState.copy(
+            articles = transition.records,
+            preferences = transition.preferences,
+        )
         return when (val result = saveLocalState(candidate)) {
             is LocalStateResult.Failure -> {
                 recordPersistenceFailure(result)
@@ -504,6 +538,7 @@ class AppViewModel(
                 val persistedTransition = ArticleTransition.Reverted(
                     records = localState.articles,
                     record = localState.articles[undoRecord.articleId],
+                    preferences = localState.preferences,
                 )
                 this.undoRecord = null
                 pendingUndoOffer = null
@@ -522,7 +557,16 @@ class AppViewModel(
     private suspend fun restoreLocalState() {
         stateMutex.withLock {
             when (val result = loadLocalState()) {
-                is LocalStateResult.Success -> adoptPersistedState(result.state)
+                is LocalStateResult.Success -> {
+                    val reconciled = PreferenceReconciliation.reconcile(result.state)
+                    when (val persisted = persistReconciliationIfChanged(result, reconciled)) {
+                        is LocalStateResult.Success -> adoptPersistedState(persisted.state)
+                        is LocalStateResult.Failure -> {
+                            adoptPersistedState(result.state)
+                            _localStateError.value = persisted
+                        }
+                    }
+                }
                 is LocalStateResult.Failure -> {
                     adoptPersistedState(result.state ?: LocalState.default())
                     _localStateError.value = result
@@ -533,6 +577,15 @@ class AppViewModel(
             publish()
             _localStateReady.value = true
         }
+    }
+
+    private suspend fun persistReconciliationIfChanged(
+        original: LocalStateResult.Success,
+        reconciled: LocalState,
+    ): LocalStateResult = if (reconciled == original.state) {
+        original
+    } else {
+        saveLocalState(reconciled)
     }
 
     private suspend fun loadCachedDatasetNow() {
@@ -636,6 +689,7 @@ class AppViewModel(
     private fun mapUiState(): AppUiState = UiStateMapper.map(
         phase = phase,
         records = localState.articles,
+        preferences = localState.preferences,
         selectedCategory = _selectedCategory.value,
         heldArticleId = _heldArticleId.value,
         now = nowProvider(),

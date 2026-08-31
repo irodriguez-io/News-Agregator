@@ -11,7 +11,10 @@ import io.irodriguez.intentionalreading.domain.model.ArticleStatus
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PipelineMetadata
+import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
+import io.irodriguez.intentionalreading.domain.model.SignalsApplied
 import io.irodriguez.intentionalreading.domain.state.ArticleStateMachine
 import io.irodriguez.intentionalreading.domain.state.ArticleTransition
 import io.irodriguez.intentionalreading.ui.AppUiState
@@ -39,6 +42,7 @@ class UiStateMapperTest {
         val loading = UiStateMapper.map(
             phase = DatasetPhase.Loading,
             records = emptyMap(),
+            preferences = noPreferences,
             selectedCategory = null,
             heldArticleId = null,
             now = now,
@@ -48,6 +52,7 @@ class UiStateMapperTest {
         val error = UiStateMapper.map(
             phase = DatasetPhase.Error,
             records = emptyMap(),
+            preferences = noPreferences,
             selectedCategory = null,
             heldArticleId = null,
             now = now,
@@ -139,6 +144,22 @@ class UiStateMapperTest {
     }
 
     @Test
+    fun `Discover head reflects source preferences despite the exploration disadvantage`() {
+        val first = article(1)
+        val preferred = article(2)
+        val preferences = LocalState.Preferences(
+            sources = mapOf(preferred.source.id to PreferenceEntry(weight = 5.0, interactions = 3)),
+            topics = emptyMap(),
+        )
+
+        val card = assertIs<DiscoverUiState.Card>(
+            map(dataset = dataset(listOf(first, preferred)), preferences = preferences).discover,
+        )
+
+        assertEquals(preferred, card.article)
+    }
+
+    @Test
     fun `an ineligible or category-mismatched held article does not replace the first eligible head`() {
         val first = article(1, Category.IAM)
         val held = article(2, Category.TECHNOLOGY)
@@ -162,7 +183,13 @@ class UiStateMapperTest {
         val articles = listOf(article(1), article(2))
         val initial = assertIs<DiscoverUiState.Card>(map(dataset = dataset(articles)).discover)
         val transition = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(emptyMap(), articles.first(), ArticleAction.DISMISS, now),
+            ArticleStateMachine.transition(
+                emptyMap(),
+                noPreferences,
+                articles.first(),
+                ArticleAction.DISMISS,
+                now,
+            ),
         )
 
         val next = assertIs<DiscoverUiState.Card>(
@@ -183,6 +210,7 @@ class UiStateMapperTest {
         val transition = assertIs<ArticleTransition.Applied>(
             ArticleStateMachine.transition(
                 mapOf(olderSaved.article.id to olderSaved),
+                noPreferences,
                 first,
                 ArticleAction.SAVE,
                 now,
@@ -201,10 +229,22 @@ class UiStateMapperTest {
     fun `marking read removes Discover head and groups it under Today without undo state`() {
         val first = article(1)
         val opened = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(emptyMap(), first, ArticleAction.OPEN, now.minusSeconds(120)),
+            ArticleStateMachine.transition(
+                emptyMap(),
+                noPreferences,
+                first,
+                ArticleAction.OPEN,
+                now.minusSeconds(120),
+            ),
         )
         val read = assertIs<ArticleTransition.Applied>(
-            ArticleStateMachine.transition(opened.records, first, ArticleAction.MARK_READ, now),
+            ArticleStateMachine.transition(
+                opened.records,
+                opened.preferences,
+                first,
+                ArticleAction.MARK_READ,
+                now,
+            ),
         )
 
         val state = map(dataset = dataset(listOf(first, article(2))), records = read.records)
@@ -246,6 +286,27 @@ class UiStateMapperTest {
     }
 
     @Test
+    fun `Read Later stays ordered by savedAt descending regardless of weights`() {
+        val newest = record(article(1), ArticleStatus.SAVED, savedAt = now)
+        val older = record(article(2), ArticleStatus.SAVED, savedAt = now.minusSeconds(60))
+        val preferences = LocalState.Preferences(
+            sources = mapOf(
+                newest.article.source.id to PreferenceEntry(-5.0, 3),
+                older.article.source.id to PreferenceEntry(5.0, 3),
+            ),
+            topics = emptyMap(),
+        )
+
+        val readLater = map(
+            dataset = dataset(emptyList()),
+            records = listOf(older, newest).associateBy { it.article.id },
+            preferences = preferences,
+        ).readLater
+
+        assertEquals(listOf(newest.article.id, older.article.id), readLater.rows.map { it.article.id })
+    }
+
+    @Test
     fun `aggregate topic id and label are null when no record has tags`() {
         val saved = record(
             article = article(1, tags = emptyList()),
@@ -284,6 +345,27 @@ class UiStateMapperTest {
 
         val onlyToday = UiStateMapper.history(mapOf(todayEarly.article.id to todayEarly), localNow, localZone, Locale.US)
         assertEquals(listOf(HistoryPeriod.TODAY), onlyToday.groups.map { it.period })
+    }
+
+    @Test
+    fun `History stays ordered by readAt descending regardless of weights`() {
+        val newest = record(article(1), ArticleStatus.READ, readAt = now)
+        val older = record(article(2), ArticleStatus.READ, readAt = now.minusSeconds(60))
+        val preferences = LocalState.Preferences(
+            sources = mapOf(
+                newest.article.source.id to PreferenceEntry(-5.0, 3),
+                older.article.source.id to PreferenceEntry(5.0, 3),
+            ),
+            topics = emptyMap(),
+        )
+
+        val history = map(
+            dataset = dataset(emptyList()),
+            records = listOf(older, newest).associateBy { it.article.id },
+            preferences = preferences,
+        ).history
+
+        assertEquals(listOf(newest.article.id, older.article.id), history.groups.flatMap { it.rows }.map { it.article.id })
     }
 
     @Test
@@ -369,6 +451,7 @@ class UiStateMapperTest {
         val state = UiStateMapper.map(
             phase = DatasetPhase.Error,
             records = emptyMap(),
+            preferences = noPreferences,
             selectedCategory = null,
             heldArticleId = null,
             now = now,
@@ -473,6 +556,7 @@ class UiStateMapperTest {
     ): AppUiState = UiStateMapper.map(
         phase = DatasetPhase.Ready(dataset(listOf(article(1)))),
         records = emptyMap(),
+        preferences = noPreferences,
         selectedCategory = null,
         heldArticleId = null,
         now = now,
@@ -486,12 +570,14 @@ class UiStateMapperTest {
     private fun map(
         dataset: ArticleDataset,
         records: Map<String, ArticleRecord> = emptyMap(),
+        preferences: LocalState.Preferences = noPreferences,
         selectedCategory: Category? = null,
         heldArticleId: String? = null,
         refresh: DatasetRefreshPhase = DatasetRefreshPhase.Idle,
     ) = UiStateMapper.map(
         phase = DatasetPhase.Ready(dataset),
         records = records,
+        preferences = preferences,
         selectedCategory = selectedCategory,
         heldArticleId = heldArticleId,
         now = now,
@@ -531,6 +617,12 @@ class UiStateMapperTest {
         savedAt = savedAt,
         dismissedAt = dismissedAt,
         readAt = readAt,
+        signalsApplied = SignalsApplied(
+            opened = openedAt != null,
+            saved = false,
+            dismissed = false,
+            read = status == ArticleStatus.READ,
+        ),
     )
 
     private fun article(
@@ -554,6 +646,7 @@ class UiStateMapperTest {
     )
 
     private companion object {
+        val noPreferences = LocalState.Preferences(sources = emptyMap(), topics = emptyMap())
         val now: Instant = Instant.parse("2026-08-22T12:00:00Z")
         val zone: ZoneId = ZoneId.of("America/Managua")
     }

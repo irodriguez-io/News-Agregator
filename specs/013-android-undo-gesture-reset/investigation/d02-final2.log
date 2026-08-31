@@ -1,0 +1,73 @@
+--------- beginning of main
+08-27 10:57:47.445  4462  4462 D IR013Probe: awaitFirstDown returned article=f9efe11ca9eba3856407 x=493.0 y=347.0
+08-27 10:57:47.445  4462  4462 D IR013Probe: gestureState.down article=f9efe11ca9eba3856407 accepted=true commitInFlight=false
+08-27 10:57:47.494  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.508  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.583  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.625  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.646  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.699  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.717  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.724  4462  4462 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:47.760  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.768  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.839  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.850  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.865  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:47.893  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:48.000  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:48.018  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:48.106  4462  4462 D IR013Probe: compose app pendingUndo=1 announcement=null
+08-27 10:57:48.124  4462  4462 D IR013Probe: compose ArticleCard article=eb011ad202c8a4eef5dc
+08-27 10:57:48.198  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1457.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1804.0
+08-27 10:57:48.216  4462  4462 D IR013Probe: scroll article effect article=eb011ad202c8a4eef5dc changed=true cardTopOffset=1084
+08-27 10:57:48.216  4462  4462 D IR013Probe: scroll opened effect article=eb011ad202c8a4eef5dc isOpened=false becameOpened=false max=809
+08-27 10:57:48.277  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1318.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1734.5
+08-27 10:57:48.294  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=1061.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1606.0
+08-27 10:57:48.311  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=832.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1491.5
+08-27 10:57:48.333  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=672.0 right=1033.0 bottom=2010.0 centerX=540.0 centerY=1341.0
+08-27 10:57:48.343  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=648.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1317.0
+08-27 10:57:48.706  4462  4462 D IR013Probe: Undo tapped offer=1
+08-27 10:57:48.840  4462  4462 D IR013Probe: compose app pendingUndo=null announcement=UNDO_COMPLETED
+08-27 10:57:48.872  4462  4462 D IR013Probe: compose ArticleCard article=f9efe11ca9eba3856407
+08-27 10:57:48.982  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.004  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.012  4462  4462 D IR013Probe: pointerInput start article=f9efe11ca9eba3856407 state=196155071
+08-27 10:57:49.013  4462  4462 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:49.013  4462  4462 D IR013Probe: awaitFirstDown returned article=f9efe11ca9eba3856407 x=493.0 y=570.0
+08-27 10:57:49.018  4462  4462 D IR013Probe: gestureState.down article=f9efe11ca9eba3856407 accepted=true commitInFlight=false
+08-27 10:57:49.040  4462  4462 D IR013Probe: scroll article effect article=f9efe11ca9eba3856407 changed=true cardTopOffset=1084
+08-27 10:57:49.040  4462  4462 D IR013Probe: scroll opened effect article=f9efe11ca9eba3856407 isOpened=false becameOpened=false max=610
+08-27 10:57:49.083  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.106  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.138  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.181  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.213  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.230  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.255  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.260  4462  4462 D IR013Probe: awaitEachGesture entry article=f9efe11ca9eba3856407
+08-27 10:57:49.286  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.296  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.313  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.333  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.366  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.379  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.396  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.416  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.431  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.457  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.477  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.488  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.496  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.510  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.526  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.558  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.577  4462  4462 D IR013Probe: cardBounds article=f9efe11ca9eba3856407 left=47.0 top=847.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1416.5
+08-27 10:57:49.657  4462  4462 D IR013Probe: compose app pendingUndo=2 announcement=UNDO_COMPLETED
+08-27 10:57:49.674  4462  4462 D IR013Probe: compose ArticleCard article=eb011ad202c8a4eef5dc
+08-27 10:57:49.736  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=847.0 right=1033.0 bottom=2151.0 centerX=540.0 centerY=1499.0
+08-27 10:57:49.750  4462  4462 D IR013Probe: scroll article effect article=eb011ad202c8a4eef5dc changed=true cardTopOffset=1084
+08-27 10:57:49.750  4462  4462 D IR013Probe: scroll opened effect article=eb011ad202c8a4eef5dc isOpened=false becameOpened=false max=809
+08-27 10:57:49.778  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=786.0 right=1033.0 bottom=2124.0 centerX=540.0 centerY=1455.0
+08-27 10:57:49.792  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=674.0 right=1033.0 bottom=2012.0 centerX=540.0 centerY=1343.0
+08-27 10:57:49.811  4462  4462 D IR013Probe: cardBounds article=eb011ad202c8a4eef5dc left=47.0 top=648.0 right=1033.0 bottom=1986.0 centerX=540.0 centerY=1317.0
