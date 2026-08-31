@@ -41,7 +41,7 @@ D1 and D2 (the shape and why it is opt-in).
 - **Not in this slice, and not assertable at this layer:** that the *defect* is gone. The unit tests prove
   the invariant; `spec.md` §5.3's walkthrough proves the defect. Stated here rather than closed with an
   assertion that cannot see it.
-- **Status:** pending
+- **Status:** done — `89de9aa` (RED) + `318ee86` (GREEN), slice review PASS 2026-08-31
 
 ---
 

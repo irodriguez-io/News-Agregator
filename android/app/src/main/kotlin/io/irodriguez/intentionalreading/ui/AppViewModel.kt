@@ -180,10 +180,11 @@ class AppViewModel(
         article: Article,
         action: ArticleAction,
         undoable: Boolean = false,
+        expectDiscoverHead: Boolean = false,
         onComplete: (ArticleActionResult) -> Unit = {},
     ) {
         viewModelScope.launch(loadDispatcher) {
-            onComplete(onArticleAction(article, action, undoable))
+            onComplete(onArticleAction(article, action, undoable, expectDiscoverHead))
         }
     }
 
@@ -373,8 +374,22 @@ class AppViewModel(
         article: Article,
         action: ArticleAction,
         undoable: Boolean = false,
+        expectDiscoverHead: Boolean = false,
     ): ArticleActionResult =
         stateMutex.withLock {
+            val head = (_uiState.value.discover as? DiscoverUiState.Card)?.article?.id
+            if (expectDiscoverHead && head != null && head != article.id) {
+                return@withLock ArticleActionResult(
+                    transition = ArticleTransition.Invalid(
+                        records = localState.articles,
+                        action = action,
+                        fromStatus = localState.articles[article.id]?.status,
+                        preferences = localState.preferences,
+                    ),
+                    persisted = false,
+                    allowNavigation = false,
+                )
+            }
             val transition = ArticleStateMachine.transition(
                 records = localState.articles,
                 preferences = localState.preferences,
