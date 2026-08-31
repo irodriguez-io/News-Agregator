@@ -129,6 +129,12 @@ offer at all**: screencaps at 0.2 s, 1.0 s and 2.0 s show no toast, while the sw
 available for `SAVE`. Whether that is the same defect as the one described above is an open question this
 item must answer, not assume. See `specs/006-android-deck-diversity/evidence.md` §5 step 5.
 
+**This is a different class from item 016's, and the two must not be merged into one item.** `SAVE` **is**
+in `reversibleActions`; Discover's button simply never asks for the offer, because `undoable = true` is
+passed only at `onSwipeCommit` (`IntentionalReadingApp.kt:290`). **This item needs no `docs/v1/**`
+amendment** — nothing about what is reversible changes. 016's actions are genuinely irreversible today
+and do need one.
+
 *Owner decision, 2026-08-27. `specs/013-android-undo-gesture-reset/spec.md` §1.8.*
 
 ### 015 — A swipe immediately after Undo is attributed to the outgoing article  ·  *unscheduled*
@@ -152,6 +158,25 @@ that touches this ground must score by **which** article moved.
 *Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
 
 ### 016 — Undo in Read Later and History  ·  *unscheduled*
+
+**Confirmed by the owner from the running app, 2026-08-31.** In **Read Later**, *Mark read* and *Remove*
+raise no undo offer. In **History**, *Mark unread* raises none. This is no longer an inference from the
+first design pass — it reproduces by hand.
+
+**Two independent gates gets it, and a design pass must close both:**
+
+1. `ArticleStateMachine.kt:254` — `reversibleActions = setOf(SAVE, DISMISS)`. `MARK_READ`,
+   `MARK_UNREAD` and `REMOVE` are outside it, so `transition` builds no `UndoRecord` and `undo` returns
+   `UNDO_UNAVAILABLE`. Widening this is what needs the `docs/v1/**` amendment, because `contracts.md` §23
+   ties Undo to the `signalsApplied` reversal guard item 005 introduced.
+2. `IntentionalReadingApp.kt:290` — **`undoable = true` is passed at exactly one call site in the entire
+   app**, Discover's `onSwipeCommit`. Every other action, in every pane, takes the `undoable = false`
+   default. Widening `reversibleActions` alone changes nothing until these call sites ask for the offer.
+
+**Scope correction: this item's UI work is smaller than its title suggests.** `UndoToast` is already
+hosted globally in `IntentionalReadingApp`, outside the destination `when` and gated only on
+`!settingsOpen`, so it renders on Read Later and History today. There is no per-pane affordance to build
+— only an offer to raise.
 
 Owed since item 013's first design pass and not yet written down anywhere but that pass. Widening
 `ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS`, and adding undo affordances to the
