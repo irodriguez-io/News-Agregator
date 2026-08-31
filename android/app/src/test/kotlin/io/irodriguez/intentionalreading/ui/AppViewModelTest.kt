@@ -2046,29 +2046,6 @@ class AppViewModelTest {
         assertEquals(expected, applied(result).record.status)
     }
 
-    // Keeps RED executable against the pre-guard API; the production member shadows this after GREEN.
-    private suspend fun AppViewModel.onArticleAction(
-        article: Article,
-        action: ArticleAction,
-        undoable: Boolean,
-        expectDiscoverHead: Boolean,
-    ): ArticleActionResult {
-        check(expectDiscoverHead)
-        return onArticleAction(article, action, undoable)
-    }
-
-    // Keeps RED executable against the pre-guard API; the production member shadows this after GREEN.
-    private fun AppViewModel.launchArticleAction(
-        article: Article,
-        action: ArticleAction,
-        undoable: Boolean,
-        expectDiscoverHead: Boolean,
-        onComplete: (ArticleActionResult) -> Unit,
-    ) {
-        check(expectDiscoverHead)
-        launchArticleAction(article, action, undoable, onComplete = onComplete)
-    }
-
     private fun applied(result: ArticleActionResult): ArticleTransition.Applied =
         assertIs<ArticleTransition.Applied>(result.transition)
 
