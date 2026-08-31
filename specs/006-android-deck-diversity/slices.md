@@ -124,7 +124,12 @@ Fixed for the slice — do not re-decide these mid-implementation:
     candidate's `PersonalizedScore` and its four components are unchanged.
   - A test asserting a tie after penalties resolves by §58's five keys.
   - A test asserting `articles`, `records`, and `preferences` are equal by value before and after a
-    build, and that no local-state write occurs.
+    build. **`spec.md` §4.4's "no local-state write occurs" is structural at this layer, not assertable:**
+    `DiscoverDeck.build` is a pure `domain/` function with no persistence dependency and no writer to
+    observe, and the "nothing under `domain/` may import `android.*`" invariant is what enforces it.
+    Assert the value equality and stop. **A variable that is declared, never touched, and asserted equal
+    to its initializer is not an assertion** — it cannot fail, and it makes an unchecked requirement read
+    as checked. If a bullet here looks unassertable, escalate; do not simulate it.
   - A test asserting two builds of identical inputs are equal candidate for candidate, including
     penalties.
   - A test asserting the deck is a permutation — same articles, each once — and that `availableCount` and
