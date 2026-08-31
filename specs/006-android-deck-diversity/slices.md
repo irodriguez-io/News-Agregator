@@ -18,9 +18,17 @@ rm -rf app/build/test-results/testDebugUnitTest
 ./gradlew :app:testDebugUnitTest && ./gradlew :app:assembleDebug
 ```
 
-**Before slice 1 starts:** item 005 must be merged, this branch rebased onto merged `main`, and both
-gates run on the rebased head. The baseline for this item is that run's count — read from the
-`BUILD SUCCESSFUL` run, not carried over from any 005 slice report (`waves/wave-b-note.md` §7).
+**Done, on 2026-08-31.** Item 005 is merged. `main` (`f06a32b`) was **merged** into this branch as
+`c27d87e` — merged, not rebased, because `AGENTS.md` requires existing history be preserved — and both
+gates were re-run on that head. None of the documentary conflicts the wave brief predicted materialised.
+
+**The baseline for this item is that run, and nothing carried over from any 005 slice report**
+(`waves/wave-b-note.md` §7):
+
+- `:app:testDebugUnitTest` — **258 tests, 0 failures, 0 errors, 0 skipped**
+- `:app:assembleDebug` — BUILD SUCCESSFUL
+- `npm test` — **114 pass, 0 fail** (the `spec.md` §5.1 parity cross-check; any movement here means
+  `js/**` was touched, which is out of scope)
 
 Fixed for the slice — do not re-decide these mid-implementation:
 
@@ -41,9 +49,16 @@ Fixed for the slice — do not re-decide these mid-implementation:
 - **The initial §58 sort stays.** The greedy loop's tie-breaks depend on it.
 - **No caching, no memoisation, no background dispatch** for the deck build (`design.md` D4).
 - **Nothing under `«pkg»/domain/` may import `android.*` or `androidx.*`.**
-- **No existing assertion may be edited, deleted, weakened, or absorbed.** 005's deck and score tests
-  stay exactly as 005 left them; this slice only adds. Any pressure to change one is a report to the
-  supervisor, not a decision (`waves/wave-b-note.md` §1).
+- **Exactly one existing test may be modified, and only in one way** (`design.md` D8).
+  `DiscoverDeckTest.kt`'s *"candidate order follows all five keys with a deliberate collision at each
+  key"* is retargeted from `DiscoverDeck.build(...).candidates` at the `candidateComparator` directly.
+  **Its fixture, its eight expected IDs, their order, and its name all stay exactly as 005 left them** —
+  only what is sorted changes. This is not licence to adjust an expectation that fails: it is the one
+  edit this item's own scope makes unavoidable, and D8 is the reasoning.
+- **Every other existing assertion stays frozen** — in that file, in `PersonalizedScoreTest.kt`, in
+  `ArticleStateMachineUndoTest.kt`, everywhere. Nothing else may be edited, deleted, weakened, skipped,
+  or absorbed. Any further pressure to change one is a report to the supervisor, not a decision
+  (`waves/wave-b-note.md` §1).
 - **No new dependency**, and no Compose file touched.
 - Everything outside `android/` is untouched, except this item's own `specs/006-*/` documents.
 - **Escalate rather than infer.** If an expected order in the scenarios below looks wrong against the
@@ -56,11 +71,15 @@ Fixed for the slice — do not re-decide these mid-implementation:
 
 - **Scenarios:** `spec.md` §4 in full — §4.1 same-source, §4.2 category, §4.3 composition with 005's
   weights, §4.4 purity and determinism.
-- **Files:** `«pkg»/domain/state/DiscoverDeck.kt` (the `DeckSequencing` type, the per-step penalty
-  computation, the greedy selection loop), and
-  `domain/state/DiscoverDeckSequencingTest.kt` — a **new** test file, so that 005's
-  `DiscoverDeckTest.kt` stays untouched and the review diff shows added coverage rather than edited
-  coverage.
+- **Files:**
+  - `«pkg»/domain/state/DiscoverDeck.kt` — the `DeckSequencing` type, the per-step penalty computation,
+    the greedy selection loop, and `candidateComparator` changing from `private val` to `internal val`
+    (`design.md` D8). `internal` is module-scoped and `:app`'s unit-test source set already has friend
+    access, so this exposes the comparator to tests without widening the public API.
+  - `domain/state/DiscoverDeckSequencingTest.kt` — a **new** test file, so the bulk of this item's
+    coverage is added rather than edited.
+  - `domain/state/DiscoverDeckTest.kt` — **one authorized edit only**, the retargeting described in the
+    fixed-constraints list above. Every other test in the file is untouched.
 - **Must not touch:** `«pkg»/domain/ranking/**`, `«pkg»/domain/state/PreferenceLearning.kt`,
   `«pkg»/domain/state/PreferenceReconciliation.kt`, `«pkg»/domain/state/ArticleStateMachine.kt`,
   `«pkg»/ui/**`, `«pkg»/data/**`, `res/**`, any Gradle file.
@@ -111,7 +130,12 @@ Fixed for the slice — do not re-decide these mid-implementation:
   - A test asserting the deck is a permutation — same articles, each once — and that `availableCount` and
     `remainingCount` are unchanged from 005's values.
   - A test asserting a held card whose sequenced position is not first is still the card returned.
-  - No existing assertion edited.
+  - **005's five-key assertion retargeted at `candidateComparator` and still green**, asserting the same
+    eight IDs in the same order against the same fixture (`design.md` D8).
+  - **A test asserting that same fixture's sequenced order**, which ends `sourceAFirst, sourceB,
+    sourceASecond`, with `sourceASecond`'s `sameSourcePenalty` recorded as `-8.0` — so the coverage the
+    retargeting moved off `build()` is replaced, not dropped. Net assertions go up.
+  - No other existing assertion edited, deleted, weakened, or absorbed.
 - **Status:** pending
 
 ---

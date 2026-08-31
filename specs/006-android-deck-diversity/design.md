@@ -10,12 +10,16 @@ answer a question the answer is ported and cited rather than re-derived.
 tests, plus this item's own `specs/006-android-deck-diversity/`. Forbidden: `pipeline/**`, `config/**`,
 `js/**`, `css/**`, `index.html`, `scripts/**`, `tests/**`, `docs/v1/**`.
 
-**Runs after 005, on a branch cut from `main`.** This branch exists now carrying only these three
-documents, so the design is committed with the wave's design pass (`execution-model.md` §4). Before its
-first implementation slice it **rebases onto merged `main`** — which is where 005's restructured
-`DiscoverDeck` lives — and both gates run on the rebased head, with pre-rebase numbers discarded
-(`waves/wave-b-note.md` §3). A docs-only branch rebases cleanly; the rebase is bookkeeping here, but the
-re-gate is not.
+**Runs after 005, on a branch cut from `main`.** This branch was cut carrying only these three
+documents, so the design is committed with the wave's design pass (`execution-model.md` §4).
+
+**What actually happened, recorded because the prediction was wrong in two ways.** By the time the first
+implementation slice was dispatched the branch sat 46 commits behind `main` — 005's merge and the whole
+of the unplanned item 013. It was **merged, not rebased** (`c27d87e`, 2026-08-31): `AGENTS.md` requires
+existing history be preserved, and a rebase of a branch this far behind buys nothing a merge does not.
+The merge was clean — none of the documentary conflicts the wave brief predicted in `specs/backlog.md`
+or `005/evidence.md` materialised. The re-gate on the merged head, which was never optional
+(`waves/wave-b-note.md` §3), gave the baseline `slices.md` now records.
 
 ## D1 — The greedy algorithm is ported as an algorithm, not as an ordering rule
 
@@ -135,3 +139,56 @@ single failing-first test commit plus an implementation commit.
 The temptation this item's size creates is to fold it into 005's PR at review time. It stays separate: it
 has its own scenarios, its own evidence, and — because of §1.1 — its own honest claim about what it does
 and does not change. Merging it into 005 would bury that.
+
+## D8 — §58's comparator is asserted directly; the deck test asserts the sequenced order
+
+**Written after the first dispatch escalated.** The implementer was briefed to touch no existing
+assertion, found that this item cannot satisfy that, and stopped without writing code. It was right.
+
+`DiscoverDeckTest.kt`'s *"candidate order follows all five keys with a deliberate collision at each key"*
+asserts the full ordered `deck.candidates` list, ending `sourceAFirst, sourceASecond, sourceB`. Those
+last three tie at personalized total 95, and the two `source-a` articles are adjacent **on purpose**, so
+that key 5 — article ID ascending — has a collision to resolve. D5's −8 breaks exactly that adjacency:
+once `sourceAFirst` is selected, `sourceASecond` scores 87 against `sourceB`'s 95, and the deck must end
+`sourceAFirst, sourceB, sourceASecond`. **This item's scope guarantees that assertion fails.** No
+implementation satisfies both it and `spec.md` §4.1.
+
+The blast radius is that one assertion and no other. The remaining `DiscoverDeckTest` tests use distinct
+sources in single-category fixtures, so the −5 applies uniformly and cannot reorder them;
+`ArticleStateMachineUndoTest` reads only `.article`; `UiStateMapper` consumes `deck.article` and the two
+counts, never `candidates`; and `DeckCandidate` is constructed only inside `DiscoverDeck.kt`, so D6's
+third field breaks no call site.
+
+**The browser does not have this problem, and the reason is structural.** `js/**` asserts
+`compareCandidates` directly against a sorted array (`tests/js/ranking.test.js:60-74`) and asserts
+`buildDeck` separately (`:92-143`). Item 005 routed its comparator assertion through
+`DiscoverDeck.build()` instead — reasonably, since nothing then reordered the comparator's output — and
+006's slice plan then froze that coupling.
+
+**Decision:** port the browser's test structure along with its algorithm.
+
+- `DiscoverDeck.candidateComparator` becomes `internal` rather than `private`. Kotlin's `internal` is
+  module-scoped and `:app`'s unit-test source set has friend access, so the comparator is reachable from
+  tests without widening the public API.
+- 005's five-key assertion sorts the candidate list with `candidateComparator` directly. Same fixture,
+  same eight IDs, same order, same test name — only what is sorted changes.
+- 006 adds a test asserting that same fixture's **sequenced** order, ending `sourceAFirst, sourceB,
+  sourceASecond`, with `sameSourcePenalty == -8.0`. The coverage moved off `build()` is replaced, not
+  dropped; net assertions go up.
+
+**The rejected alternative, and why it is rejected.** Correcting the expected list in place is a one-line
+change and it *works* — at that step the previously selected card is `publicationUnknown`, whose source
+matches neither candidate, so no penalty applies and §58 still decides by keys 4 and 5. Every key still
+bites. It is rejected because a test named for the five keys would then silently also encode the
+sequencing rules, and every future change to sequencing — item 012, any third penalty — perturbs it again
+and makes someone re-derive whether the new order is legitimate. That re-derivation is precisely what
+this item just paid for once. Splitting the two concerns once makes the comparator test stable against
+all future sequencing work.
+
+**Also rejected: leaving `candidates` unsequenced and adding a second, sequenced field.** It would edit
+nothing, but `candidates` *is* the deck. Two orderings on one state object leaves every later reader
+asking which one Discover consumes, and `spec.md` §1.1's honest claim about what this item changes gets
+harder to state, not easier.
+
+**Sizing is unchanged.** D7 still holds: one slice. This adds one visibility modifier and one retargeted
+assertion.
