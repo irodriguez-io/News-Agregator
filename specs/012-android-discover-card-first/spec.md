@@ -8,7 +8,7 @@ written and committed before the item branch is cut** — the implementer does n
 **Authority:** `docs/v1/06-ui-ux.md` §§21/22/23/24/48/71, `docs/v1/README.md` Amendment 6 and
 **Amendment 7**\
 **Wave:** D (`specs/waves/wave-d.md`), concurrent with 015 · **Branch:** `feat/012-android-discover-card-first` → `main`\
-**Cut from:** `main`, at the merge of PR #19. Record the SHA in `evidence.md` at branch creation.
+**Cut from:** `main` at `6c857a6` — the merge of PR #19, which carries this item's design artifacts and the wave's amendments. Hosted CI green on that commit (Test `33422480339`, Pages `33422480328`).
 
 ---
 
