@@ -8,7 +8,7 @@ none.\
 **Authority:** `docs/v1/contracts.md` §§18/22/23/31, `docs/v1/05-personalization-state.md` §§36–41,
 `docs/v1/06-ui-ux.md` §§39–45, `docs/v1/README.md` Amendment 6\
 **Wave:** D (`specs/waves/wave-d.md`), leads · **Branch:** `feat/015-android-undo-swipe-attribution` → `main`\
-**Cut from:** `main`, at the merge of PR #19. Record the SHA in `evidence.md` at branch creation.
+**Cut from:** `main` at `6c857a6` — the merge of PR #19, which carries this item's design artifacts and the wave's amendments. Hosted CI green on that commit (Test `33422480339`, Pages `33422480328`).
 
 ---
 
