@@ -1375,6 +1375,238 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `a swipe in the window after Undo is not attributed to the displaced article`() = runBlocking {
+        // Given A was dismissed, B became head, and Undo published A as head again
+        val restored = article(1)
+        val displaced = article(2).copy(
+            tags = listOf(
+                ArticleTag("displaced_topic_one", "Displaced topic one"),
+                ArticleTag("displaced_topic_two", "Displaced topic two"),
+            ),
+        )
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(restored, displaced))),
+            store = store,
+        )
+        viewModel.onArticleAction(restored, ArticleAction.DISMISS, undoable = true)
+        assertEquals(displaced.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertTrue(viewModel.performUndo().persisted)
+        assertEquals(restored.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        val before = assertIs<LocalStateResult.Success>(store.loadResult).state
+        val writesBefore = store.saveRequests.size
+        val announcementBefore = viewModel.announcement.value
+        val completed = CompletableDeferred<ArticleActionResult>()
+
+        // When the Discover-card commit still carries B
+        viewModel.launchArticleAction(
+            article = displaced,
+            action = ArticleAction.SAVE,
+            undoable = true,
+            expectDiscoverHead = true,
+            onComplete = completed::complete,
+        )
+        val result = completed.await()
+
+        // Then B has no record or source/topic movement, A stays head, and nothing new is offered
+        val after = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertNull(after.articles[displaced.id], "article ${displaced.id} must remain absent")
+        assertEquals(
+            before.preferences.sources[displaced.source.id],
+            after.preferences.sources[displaced.source.id],
+            "source ${displaced.source.id} must not move",
+        )
+        displaced.tags.forEach { topic ->
+            assertEquals(
+                before.preferences.topics[topic.id],
+                after.preferences.topics[topic.id],
+                "topic ${topic.id} must not move",
+            )
+        }
+        assertIs<ArticleTransition.Invalid>(result.transition)
+        assertFalse(result.persisted)
+        assertFalse(result.allowNavigation)
+        assertEquals(writesBefore, store.saveRequests.size)
+        assertEquals(restored.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertEquals(announcementBefore, viewModel.announcement.value)
+    }
+
+    @Test
+    fun `an ordinary swipe still commits`() = runBlocking {
+        // Given A is the published Discover head
+        val currentHead = article(1)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(currentHead, article(2)))),
+            store = store,
+        )
+        assertEquals(currentHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+
+        // When the reader swipes A
+        val result = viewModel.onArticleAction(
+            article = currentHead,
+            action = ArticleAction.SAVE,
+            undoable = true,
+            expectDiscoverHead = true,
+        )
+
+        // Then A is applied and persisted by id and raises the Save offer
+        assertTrue(result.persisted)
+        assertEquals(ArticleStatus.SAVED, applied(result).records.getValue(currentHead.id).status)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(ArticleStatus.SAVED, persisted.articles.getValue(currentHead.id).status)
+        assertEquals(
+            PreferenceEntry(weight = 0.45, interactions = 1),
+            persisted.preferences.sources[currentHead.source.id],
+        )
+        currentHead.tags.forEach { topic ->
+            assertEquals(
+                PreferenceEntry(weight = 0.30, interactions = 1),
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must carry A's Save signal",
+            )
+        }
+        assertEquals(PendingUndoMessage.SAVED, viewModel.uiState.value.pendingUndoOffer?.message)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
+    fun `a swipe is refused when the head changed under it for any other reason`() = runBlocking {
+        // Given A is head when a swipe begins, then category selection publishes C as head
+        val previousHead = article(1, Category.TECHNOLOGY).copy(
+            score = ArticleScore(95, 50, 20, 15, 8, 2),
+            tags = listOf(ArticleTag("previous_head_topic", "Previous head topic")),
+        )
+        val currentHead = article(2, Category.IAM)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(previousHead, currentHead))),
+            store = store,
+        )
+        assertEquals(previousHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        viewModel.selectCategory(Category.IAM)
+        assertEquals(currentHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        val before = assertIs<LocalStateResult.Success>(store.loadResult).state
+        val writesBefore = store.saveRequests.size
+
+        // When the in-flight Discover swipe commits against A
+        val result = viewModel.onArticleAction(
+            article = previousHead,
+            action = ArticleAction.DISMISS,
+            undoable = true,
+            expectDiscoverHead = true,
+        )
+
+        // Then A is refused by id without moving its source or topic
+        val after = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertNull(after.articles[previousHead.id], "article ${previousHead.id} must remain absent")
+        assertEquals(
+            before.preferences.sources[previousHead.source.id],
+            after.preferences.sources[previousHead.source.id],
+            "source ${previousHead.source.id} must not move",
+        )
+        previousHead.tags.forEach { topic ->
+            assertEquals(
+                before.preferences.topics[topic.id],
+                after.preferences.topics[topic.id],
+                "topic ${topic.id} must not move",
+            )
+        }
+        assertIs<ArticleTransition.Invalid>(result.transition)
+        assertFalse(result.persisted)
+        assertEquals(writesBefore, store.saveRequests.size)
+        assertEquals(currentHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+    }
+
+    @Test
+    fun `the guard is confined to the Discover card`() = runBlocking {
+        // Given a Read Later row whose article is not the published Discover head
+        val discoverHead = article(1)
+        val readLaterArticle = article(2)
+        val initial = LocalState.default().copy(
+            articles = mapOf(readLaterArticle.id to record(readLaterArticle, ArticleStatus.SAVED)),
+        )
+        val store = FakeLocalStateStore(success(initial))
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(discoverHead, readLaterArticle))),
+            store = store,
+        )
+        assertEquals(discoverHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+        assertEquals(readLaterArticle.id, viewModel.uiState.value.readLater.rows.single().article.id)
+
+        // When the Read Later row is marked read through the default, unguarded path
+        val result = viewModel.onArticleAction(readLaterArticle, ArticleAction.MARK_READ)
+
+        // Then that row action is applied and persisted normally by article, source, and topic id
+        assertTrue(result.persisted)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(ArticleStatus.READ, persisted.articles.getValue(readLaterArticle.id).status)
+        assertEquals(
+            PreferenceEntry(weight = 0.25, interactions = 1),
+            persisted.preferences.sources[readLaterArticle.source.id],
+        )
+        readLaterArticle.tags.forEach { topic ->
+            assertEquals(
+                PreferenceEntry(weight = 0.20, interactions = 1),
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must carry the Read signal",
+            )
+        }
+        assertEquals(discoverHead.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
+    }
+
+    @Test
+    fun `a refused action leaves the reader nothing to undo`() = runBlocking {
+        // Given a pending offer exists while A is head and a stale Discover action still names B
+        val currentHead = article(1)
+        val displaced = article(2).copy(
+            tags = listOf(ArticleTag("stale_offer_topic", "Stale offer topic")),
+        )
+        val pendingArticle = article(3)
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(currentHead, displaced))),
+            store = store,
+        )
+        viewModel.onArticleAction(pendingArticle, ArticleAction.SAVE, undoable = true)
+        val pendingBefore = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        val stateBefore = assertIs<LocalStateResult.Success>(store.loadResult).state
+        val writesBefore = store.saveRequests.size
+
+        // When the stale action asks to replace that offer
+        val result = viewModel.onArticleAction(
+            article = displaced,
+            action = ArticleAction.DISMISS,
+            undoable = true,
+            expectDiscoverHead = true,
+        )
+
+        // Then B remains untouched and the existing offer and Undo slot are unchanged
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertNull(persisted.articles[displaced.id], "article ${displaced.id} must remain absent")
+        assertEquals(
+            stateBefore.preferences.sources[displaced.source.id],
+            persisted.preferences.sources[displaced.source.id],
+            "source ${displaced.source.id} must not move",
+        )
+        displaced.tags.forEach { topic ->
+            assertEquals(
+                stateBefore.preferences.topics[topic.id],
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must not move",
+            )
+        }
+        assertIs<ArticleTransition.Invalid>(result.transition)
+        assertFalse(result.persisted)
+        assertEquals(writesBefore, store.saveRequests.size)
+        assertEquals(pendingBefore, viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+    }
+
+    @Test
     fun `a valid backup replaces local state wholesale`() = runBlocking {
         // Given current state and a valid backup with disjoint records and preferences
         val currentSaved = article(21)
@@ -1812,6 +2044,29 @@ class AppViewModelTest {
         val result = viewModel.onArticleAction(article, action)
         assertTrue(result.persisted)
         assertEquals(expected, applied(result).record.status)
+    }
+
+    // Keeps RED executable against the pre-guard API; the production member shadows this after GREEN.
+    private suspend fun AppViewModel.onArticleAction(
+        article: Article,
+        action: ArticleAction,
+        undoable: Boolean,
+        expectDiscoverHead: Boolean,
+    ): ArticleActionResult {
+        check(expectDiscoverHead)
+        return onArticleAction(article, action, undoable)
+    }
+
+    // Keeps RED executable against the pre-guard API; the production member shadows this after GREEN.
+    private fun AppViewModel.launchArticleAction(
+        article: Article,
+        action: ArticleAction,
+        undoable: Boolean,
+        expectDiscoverHead: Boolean,
+        onComplete: (ArticleActionResult) -> Unit,
+    ) {
+        check(expectDiscoverHead)
+        launchArticleAction(article, action, undoable, onComplete = onComplete)
     }
 
     private fun applied(result: ArticleActionResult): ArticleTransition.Applied =
