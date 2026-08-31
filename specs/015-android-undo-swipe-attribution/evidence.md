@@ -46,6 +46,18 @@ AppViewModelTest > a swipe in the window after Undo is not attributed to the dis
 persisted after the category changed — the failures name the article that moved, not merely that
 something moved.
 
+**How the RED was made executable, recorded because `89de9aa` is otherwise confusing to reproduce.** The
+new tests call a four-argument `onArticleAction`/`launchArticleAction` that does not exist at `89de9aa`, so
+the implementer added two temporary *private extension functions* in the test file that assert the flag and
+then delegate to the three-argument API — a faithful stand-in for "no guard exists". The implementation
+commit deletes them, which is why `318ee86` shows 23 deleted test lines. **All five test bodies are
+byte-identical across `89de9aa..318ee86`; no assertion was edited and no pre-existing test line was touched
+anywhere in the range.** The technique is why the RED is behavioural — it failed by persisting the wrong
+article id — rather than a compile failure, which would have proved nothing about attribution.
+
+The implementer's report did not mention the shims. Future briefs on this ground should ask for the RED
+*technique*, not just its output.
+
 Two of the five new cases — *an ordinary swipe still commits* and *the guard is confined to the Discover
 card* — passed at `89de9aa` as well as at `318ee86`. That is correct: they are regression guards for
 behaviour the guard must not break, not assertions about the fix.
@@ -53,6 +65,22 @@ behaviour the guard must not break, not assertions about the fix.
 ## 3. Slice reviews
 
 `/feature-review` in slice mode, per slice, in arrival order.
+
+**Slice 1 — PASS, 2026-08-31.** Checked: all five `spec.md` §4 scenarios asserted by article id and by
+source and topic id; commit order (RED precedes GREEN); declared boundaries respected — only
+`AppViewModel.kt`, `IntentionalReadingApp.kt` and `AppViewModelTest.kt` differ from the base, with
+`domain/state/ArticleStateMachine.kt`, `ui/components/ArticleCard.kt`, `ui/gesture/**` and
+`ui/screens/**` untouched; coverage strictly increased 275 → 280 with no existing case edited; the
+implementation matches `design.md` D1 exactly, including the `head != null` conservatism and the silent
+refusal (no announcement, no offer raised, no store write).
+
+Noted in the implementer's favour: the three refusal tests override the `article()` helper's default shared
+`oauth` tag with distinct topic ids. Without that the "topic must not move" assertions would have been
+vacuous whenever another article moved `oauth` — `waves/wave-c-note.md` §2's lesson, applied unprompted.
+
+Author independence holds: the Codex implementer wrote every line of product and test code; the supervisor
+wrote `spec.md`, `design.md`, `slices.md` and this file. The git author line is the machine's configured
+identity, not an attribution to a Claude session.
 
 ## 4. Walkthrough
 
