@@ -32,7 +32,6 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
-import io.irodriguez.intentionalreading.ui.components.EditorialHeader
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import kotlin.math.roundToInt
@@ -114,16 +113,7 @@ fun DiscoverScreen(
             .padding(horizontal = 18.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp),
     ) {
-        EditorialHeader(
-            availableCount = cardState?.availableCount,
-            contentFreshness = state.contentFreshness,
-            failedRefreshDisclosure = state.failedRefreshDisclosure,
-            degraded = degraded,
-            selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected,
-            actionLabel = refreshActionLabel,
-            onAction = onRefreshAction,
-        )
+        DiscoverMasthead()
 
         when (state) {
             is DiscoverUiState.Loading -> LoadingPanel(state)
@@ -156,6 +146,17 @@ fun DiscoverScreen(
                 },
             )
         }
+
+        DiscoverOperationalBar(
+            availableCount = cardState?.availableCount,
+            contentFreshness = state.contentFreshness,
+            failedRefreshDisclosure = state.failedRefreshDisclosure,
+            degraded = degraded,
+            selectedCategory = selectedCategory,
+            onCategorySelected = onCategorySelected,
+            actionLabel = refreshActionLabel,
+            onAction = onRefreshAction,
+        )
     }
 }
 
