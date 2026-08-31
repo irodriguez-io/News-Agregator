@@ -49,7 +49,7 @@ rm -rf app/build/test-results/testDebugUnitTest
   - `DiscoverScreen` no longer passes `scrollState.maxValue` as the became-opened target.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
   - **Report which viewport source was used** — `scrollState.viewportSize` or `BoxWithConstraints`.
-- **Status:** pending
+- **Status:** done — `b8fbb96` (RED) + `2101b1e` (GREEN), slice review PASS 2026-08-31
 
 ## Slice 2: put the card first and the operational block below it
 

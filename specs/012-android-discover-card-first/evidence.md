@@ -15,7 +15,11 @@ than the counts (`waves/wave-b-note.md` §7).
 
 | When | Slice | `:app:testDebugUnitTest` | `:app:assembleDebug` |
 |---|---|---|---|
-| _pending_ | | | |
+| 2026-08-31, base `6c857a6` | — (baseline) | 275 tests, 0 failures, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+| 2026-08-31, head `2101b1e` | 1 | **279 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+
+Head rows are the **supervisor's own runs**, `test-results` deleted first
+(`execution-model.md` §5.1 control 4).
 
 ## 2. Failing-first evidence
 
@@ -24,11 +28,47 @@ commit pair.
 
 | Slice | RED reproduced | Test commit | Implementation commit |
 |---|---|---|---|
-| _pending_ | | | |
+| 1 | **yes, independently** | `b8fbb96` | `2101b1e` |
+
+Reproduced in a throwaway detached worktree at `b8fbb96`, with `DiscoverScrollTargets.kt` confirmed absent:
+
+```
+> Task :app:compileDebugUnitTestKotlin FAILED
+DiscoverScrollTargetsTest.kt:11:13 Unresolved reference 'DiscoverScrollTargets'.
+DiscoverScrollTargetsTest.kt:23:13 Unresolved reference 'DiscoverScrollTargets'.
+DiscoverScrollTargetsTest.kt:35:13 Unresolved reference 'DiscoverScrollTargets'.
+DiscoverScrollTargetsTest.kt:47:13 Unresolved reference 'DiscoverScrollTargets'.
+BUILD FAILED
+```
+
+**This is a compile-level RED and it was declared as one** rather than dressed up as behavioural
+(`design.md` D3). It is the strongest form available for a new pure function, and the behavioural proof
+that the previous target was wrong is `spec.md` §5.3 step 3, at the wave walkthrough.
+
+**Assumption 4 resolved:** `scrollState.viewportSize` exists — Compose BOM `2026.08.00` resolves Foundation
+`1.12.0`, which exposes `getViewportSize()`. `BoxWithConstraints` was not needed.
 
 ## 3. Slice reviews
 
 `/feature-review` in slice mode, per slice, in arrival order.
+
+**Slice 1 — PASS, 2026-08-31.** Checked: four named cases with four *distinct* expected values (0, 260,
+700, 0), so the assertion is real arithmetic and not a restatement of the implementation; declared
+boundaries respected — only `DiscoverScreen.kt` plus the two new files differ, and the two other scroll
+effects (`:71-73`, `:74-87`) are untouched, as is `ui/AppViewModel.kt`, which was item 015's ground while
+it was in flight; coverage 275 → 279 with no existing case edited; no copy authored and no string resource
+added.
+
+Two things read carefully rather than waved through:
+
+- **`cardBottomOffset` is the bottom of `CardBody`, not of `ArticleCard`** — `CardBody` also contains the
+  remaining-choices side note. Aligning `CardBody`'s bottom with the viewport bottom therefore reveals the
+  side note as well as the card, and the **Mark read** button, which sits above both, stays on screen. The
+  target is slightly more generous than the DoD wording; it is not wrong, and the walkthrough is what
+  confirms it.
+- **Slice 1 alone is behaviour-neutral.** With the card still last in the column, `cardBottomOffset -
+  viewportHeight` and `maxValue` differ only by the column's bottom padding, so nothing regresses between
+  the two slices. That is why this slice was ordered first.
 
 ## 4. Walkthrough
 
