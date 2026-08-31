@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-31, at item 006 closed — wave C, and the wave programme, complete.
+Last reviewed: 2026-08-31, at waves D and E planned.
 
 ---
 
@@ -38,26 +38,31 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-Four items, all unscheduled and all parked on purpose. **012** came from the owner testing wave B's
-build. **014**, **015** and **016** were all raised by item 013: two defects it proved but deliberately
-did not fix, and one amendment it owes from its first design pass.
+**Nine items across two planned waves.** With 006 shipped, every Android parity gap the shipped items
+deferred is closed, so nothing left here is parity work: wave D is defects and missing affordances, wave
+E is the Material 3 Expressive redesign.
 
-**Nothing is scheduled.** Each needs its own design pass; 012 and 016 additionally need a `docs/v1/**`
-amendment, which no feature workstream may make silently. **014 and 015 must not inherit 013's
-diagnosis** — assuming an inherited cause is what cost 013 two of its four passes.
+**012** came from the owner testing wave B's build. **014**, **015** and **016** were raised by item 013
+and by 006's walkthrough. **017–021** are wave E's decomposition, allocated in `waves/wave-e.md`.
 
-**With 006 shipped, every Android parity gap the shipped items deferred is closed.**
+**014 and 015 must not inherit 013's diagnosis** — assuming an inherited cause is what cost 013 two of its
+four passes.
 
-**Waves A, B and C are done — the wave programme is complete.** `waves/wave-b-note.md` records what
-wave B cost and `waves/wave-c-note.md` what wave C cost. Its headline lesson is
-that the two most valuable defects of the wave were found by the owner using the app, and a third by
-re-gating a rebased head — none of them by reading diffs, and none of them by any gate.
+**014 and 016 were re-scoped in place on 2026-08-31**, on the reversibility line rather than by pane.
+Their numbers and every citation to them still resolve; `waves/wave-d.md` has the reasoning and the
+table.
+
+**Waves A, B and C are done.** `waves/wave-b-note.md` records what wave B cost and
+`waves/wave-c-note.md` what wave C cost. Their shared headline lesson, now three waves running: the most
+valuable defects were found by the owner using the app — none by reading diffs, and none by any gate.
 
 | Wave | Items | Runs after | Brief |
 |---|---|---|---|
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
 | ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
+| D | 015 Undo race · 012 Header · 014 Raise the offer · 016 Widen what is reversible | **wave C merged; next** | `waves/wave-d.md` |
+| E | 017 Tokens · 018 Components · 019 Discover · 020 Read Later + History · 021 Motion | wave D merged | `waves/wave-e.md` |
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
@@ -104,40 +109,38 @@ comparator, not through the algorithm that consumes it.**
 
 *Evidence:* `specs/006-android-deck-diversity/evidence.md`. *Deferred by 002 §3, restated by 004 §3.*
 
-### 014 — The Discover card's buttons in the Undo window  ·  *unscheduled*
+### 014 — Raise the undo offer where the reversal already exists  ·  *wave D*
 
-**Read Later / Save for later and the other card buttons fail in the same window item 013 fixed for
-swipes, and they never consult the gesture state** — so nothing 013 did addresses them, and no fix there
-would have. Split out deliberately as a scope decision rather than a deferral of difficulty
-(`specs/013-android-undo-gesture-reset/design.md` D7).
+**Re-scoped 2026-08-31 on the reversibility line** (was: "The Discover card's buttons in the Undo
+window"). The number and every citation to it — including
+`specs/013-android-undo-gesture-reset/spec.md` §1.8 — still resolve. `waves/wave-d.md` has the table.
 
-**It inherits no cause.** 013's mechanism is an ancestor scroll consuming the pointer DOWN before
-`ArticleCard`'s gesture handler can adopt it. A `Button` is not a `pointerInput` gesture and does not use
-`awaitFirstDown`, so whatever is wrong with the buttons is its own mechanism and needs its own
-reproduction. **Do not start from 013's diagnosis** — that assumption is what cost 013 two of its four
-passes.
+`SAVE` and `DISMISS` are already in `ArticleStateMachine.reversibleActions`. Every surface that performs
+them **except Discover's swipe** fails to ask for the offer, because **`undoable = true` is passed at
+exactly one call site in the whole app** — `IntentionalReadingApp.kt:290`, `onSwipeCommit`. Everything
+else takes the `undoable = false` default.
 
-Worth knowing before designing it: `DiscoverScreen.kt:74-87`'s article-change `animateScrollTo` runs for
-roughly 380 ms after the head article changes, and it is what claims the pointer in 013's case. Whether a
-`Button` inside a scrolling ancestor loses its click the same way is the first thing to measure.
+**Confirmed in the app on both the 006 and pre-006 builds** (`006/evidence.md` §5 step 5): the *Save for
+later* button **commits the save** — the record is written, Read Later increments — and simply never
+offers the reversal. Screencaps at 0.2 s, 1.0 s and 2.0 s show no toast; the swipe path raises one at
+0.35 s.
 
-**New observation from 006's walkthrough, 2026-08-31 — start here, not from 014's wording above.** On
-both the 006 build and the pre-006 build, the **Save for later button commits the save but raises no Undo
-offer at all**: screencaps at 0.2 s, 1.0 s and 2.0 s show no toast, while the swipe path raises one at
-0.35 s. That is not "the button fails" — the record is written and Read Later increments. The button
-**succeeds and never offers the reversal** that `ArticleStateMachine.reversibleActions` already makes
-available for `SAVE`. Whether that is the same defect as the one described above is an open question this
-item must answer, not assume. See `specs/006-android-deck-diversity/evidence.md` §5 step 5.
+**This is not "the button fails."** It succeeds. The original 014 wording described a failing button and
+was wrong about the mechanism.
 
-**This is a different class from item 016's, and the two must not be merged into one item.** `SAVE` **is**
-in `reversibleActions`; Discover's button simply never asks for the offer, because `undoable = true` is
-passed only at `onSwipeCommit` (`IntentionalReadingApp.kt:290`). **This item needs no `docs/v1/**`
-amendment** — nothing about what is reversible changes. 016's actions are genuinely irreversible today
-and do need one.
+**No `docs/v1/**` amendment.** Nothing about what is reversible changes — that is 016.
 
-*Owner decision, 2026-08-27. `specs/013-android-undo-gesture-reset/spec.md` §1.8.*
+**Out of scope: *Mark read*, anywhere.** It is `MARK_READ`, it is not reversible today, and moving it to
+016 is what keeps this item amendment-free.
 
-### 015 — A swipe immediately after Undo is attributed to the outgoing article  ·  *unscheduled*
+**It inherits no cause from 013.** 013's mechanism is an ancestor scroll consuming the pointer DOWN
+before `ArticleCard`'s handler adopts it; a `Button` is not a `pointerInput` gesture and does not use
+`awaitFirstDown`. **Do not start from 013's diagnosis** — that assumption cost 013 two of its four
+passes, and the evidence now says the button is not failing at all.
+
+*Owner decision 2026-08-27; mechanism corrected by 006's walkthrough, 2026-08-31.*
+
+### 015 — A swipe immediately after Undo is attributed to the outgoing article  ·  *wave D, leads*
 
 **Found by 013's slice 1, out of its scope, and left deliberately unfixed.** At a very short delay after
 Undo — under roughly one frame — the pointer DOWN is adopted against the article that was *leaving*, not
@@ -157,38 +160,42 @@ that touches this ground must score by **which** article moved.
 
 *Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
 
-### 016 — Undo in Read Later and History  ·  *unscheduled*
+### 016 — Widen what is reversible  ·  *wave D*
+
+**Re-scoped 2026-08-31 on the reversibility line** (was: "Undo in Read Later and History"). The number
+and its citations still resolve. `waves/wave-d.md` has the table.
+
+Widen `ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS` to cover **`MARK_READ`,
+`MARK_UNREAD` and `REMOVE`**, then raise the offer at every call site that performs them —
+**including Discover's own *Mark read***, moved here from 014 by the re-cut.
 
 **Confirmed by the owner from the running app, 2026-08-31.** In **Read Later**, *Mark read* and *Remove*
-raise no undo offer. In **History**, *Mark unread* raises none. This is no longer an inference from the
-first design pass — it reproduces by hand.
+raise no undo offer. In **History**, *Mark unread* raises none. No longer an inference from a design
+pass; it reproduces by hand.
 
-**Two independent gates gets it, and a design pass must close both:**
+**Two independent gates, and this item must close both:**
 
-1. `ArticleStateMachine.kt:254` — `reversibleActions = setOf(SAVE, DISMISS)`. `MARK_READ`,
-   `MARK_UNREAD` and `REMOVE` are outside it, so `transition` builds no `UndoRecord` and `undo` returns
-   `UNDO_UNAVAILABLE`. Widening this is what needs the `docs/v1/**` amendment, because `contracts.md` §23
-   ties Undo to the `signalsApplied` reversal guard item 005 introduced.
-2. `IntentionalReadingApp.kt:290` — **`undoable = true` is passed at exactly one call site in the entire
-   app**, Discover's `onSwipeCommit`. Every other action, in every pane, takes the `undoable = false`
-   default. Widening `reversibleActions` alone changes nothing until these call sites ask for the offer.
+1. `ArticleStateMachine.kt:254` — `reversibleActions = setOf(SAVE, DISMISS)`, so those three actions
+   build no `UndoRecord` and `undo` returns `UNDO_UNAVAILABLE`.
+2. `IntentionalReadingApp.kt:290` — the offer is requested at one call site only. **Widening
+   `reversibleActions` alone changes nothing on screen.**
 
-**Scope correction: this item's UI work is smaller than its title suggests.** `UndoToast` is already
+**Needs a `docs/v1/**` amendment, and it is not a formality.** `contracts.md` §23 ties Undo to the
+`signalsApplied` reversal guard item 005 introduced. Widening what is reversible changes which preference
+deltas can be reversed and when. That coupling is why 007 led the whole programme and why this cannot be
+bolted on. **Design the amendment and the reversal arithmetic together, on paper, before dispatching.**
+
+**Scope correction: the UI work is smaller than the original title suggested.** `UndoToast` is already
 hosted globally in `IntentionalReadingApp`, outside the destination `when` and gated only on
-`!settingsOpen`, so it renders on Read Later and History today. There is no per-pane affordance to build
-— only an offer to raise.
+`!settingsOpen`, so it renders on Read Later and History today. **There is no per-pane affordance to
+build — only an offer to raise.**
 
-Owed since item 013's first design pass and not yet written down anywhere but that pass. Widening
-`ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS`, and adding undo affordances to the
-Read Later and History panes so an action taken there can be taken back the way a Discover action can.
+Settle at design time: what `REMOVE` reverses *to* (its previous state may be `SAVED`); whether
+`MARK_READ`/`MARK_UNREAD` carry deltas at all and what reversing each does to `signalsApplied` — undoing
+`MARK_UNREAD` is a double negative and the obvious place to get it wrong; and whether an offer raised in
+one pane survives the reader switching to another inside the 4.5 s window.
 
-**Needs its own amendment and design pass, like item 012** — it changes what is reversible, and
-`contracts.md` §23 ties Undo to the `signalsApplied` reversal guard that item 005 introduced. That
-coupling is the reason 007 led the programme, and it is the reason this cannot be bolted on.
-
-*Owed from `specs/013-android-undo-gesture-reset` design pass 1; recorded at 013's close, 2026-08-28.*
-
-### 012 — Discover header below the card  ·  *unscheduled*
+### 012 — Discover header below the card  ·  *wave D, concurrent with 015*
 
 Move Discover's **operational** header below the article card: Refresh, content age, the failed-refresh
 disclosure, the available count, and the category selector. The masthead — eyebrow, title, purpose copy —
@@ -211,6 +218,44 @@ little left for it to correct.
 *Raised by the owner, 2026-08-26. Not a deferral of any shipped item.*
 
 
+
+
+### 017–021 — Material 3 Expressive redesign  ·  *wave E*
+
+The Android client redesigned onto **Material 3 Expressive**: new palette, Playfair Display for editorial
+type against Roboto Flex for functional, 24dp card radii, pill chips, an expressive bottom bar, and
+directional motion between destinations. Design sources are vendored at
+`specs/design/m3-expressive-DESIGN.md` and `specs/design/m3-expressive-PRD.md` so they cannot drift.
+
+**The information architecture does not change**, and **no behaviour change is authorized** — not a
+transition, not a count, not a ranking, not an undo path.
+
+| # | Item | Blocks / blocked by |
+|---|---|---|
+| 017 | Design tokens and theme, including a dark scheme | blocks all of 018–021 |
+| 018 | Shared components — app bar, bottom bar, chips, buttons | after 017; blocks 019 and 020 |
+| 019 | Discover — deck card, truncation rules | after 018; concurrent with 020 |
+| 020 | Read Later and History — Queue Row, StatBand, empty state | after 018; concurrent with 019 |
+| 021 | Motion — directional tab slide, modal sheet reveal | last; needs 018's nav bar final |
+
+**Imagery is out of scope, by owner decision of 2026-08-31.** The design sources call for a 16:9 deck-card
+image slot and an 80dp Queue Row thumbnail. **`ArticleDataset v1` carries no image field of any kind** —
+the Article contract (`contracts.md` §5–6) has no image, thumbnail, media or enclosure, and Android
+consumes that contract read-only. Adding imagery is a frozen-contract change — new field, `schemaVersion`
+bump, pipeline extraction, validator and web-runtime updates, and a hotlinking decision — and would be
+its own wave ahead of E. This wave ships type, colour, shape and motion, which is where the editorial
+character lives. **Design every component so imagery can be added later without a re-layout.**
+
+**Two gaps the design sources leave, both owner checkpoints:** the palette is **light-only** while item
+010 shipped theming and Settings offers Light/Dark/System, so 017 must derive a dark scheme or regress a
+shipped feature; and the two type families should be **bundled as `res/font/` assets**, which need no
+Gradle dependency, rather than `androidx.compose.ui.text.googlefonts`, which is one and needs approval.
+
+**One amendment for the whole wave, written before 017 is designed.** This rewrites `06-ui-ux.md` — closer
+in kind to Amendment 6 than to the narrow amendments 012 and 016 need. Five items each amending the same
+document on five branches is a merge nobody should be asked to review.
+
+*Raised by the owner, 2026-08-31. Brief: `waves/wave-e.md`.*
 
 ---
 
