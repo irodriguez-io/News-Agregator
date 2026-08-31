@@ -7,9 +7,20 @@ import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.ranking.PersonalizedScore
 
+data class DeckSequencing(
+    val score: Double,
+    val sameSourcePenalty: Double,
+    val categoryPenalty: Double,
+)
+
 data class DeckCandidate(
     val article: Article,
     val score: PersonalizedScore,
+    val sequencing: DeckSequencing = DeckSequencing(
+        score = score.total,
+        sameSourcePenalty = 0.0,
+        categoryPenalty = 0.0,
+    ),
 )
 
 data class DiscoverDeckState(
@@ -31,7 +42,7 @@ object DiscoverDeck {
             isEligible(records[article.id]) &&
                 (selectedCategory == null || article.category == selectedCategory)
         }
-        val candidates = eligible
+        val initialCandidates = eligible
             .map { article ->
                 DeckCandidate(
                     article = article,
@@ -39,6 +50,7 @@ object DiscoverDeck {
                 )
             }
             .sortedWith(candidateComparator)
+        val candidates = sequenceCandidates(initialCandidates, selectedCategory)
         val article = candidates
             .firstOrNull { candidate -> candidate.article.id == heldArticleId }
             ?.article
@@ -54,7 +66,7 @@ object DiscoverDeck {
     fun isEligible(record: ArticleRecord?): Boolean =
         record == null || record.status == ArticleStatus.OPENED
 
-    private val candidateComparator = Comparator<DeckCandidate> { left, right ->
+    internal val candidateComparator = Comparator<DeckCandidate> { left, right ->
         val totalDifference = right.score.total.compareTo(left.score.total)
         if (totalDifference != 0) return@Comparator totalDifference
 
@@ -68,6 +80,66 @@ object DiscoverDeck {
         if (sourceDifference != 0) return@Comparator sourceDifference
 
         left.article.id.compareTo(right.article.id)
+    }
+
+    private val sequencedComparator = Comparator<DeckCandidate> { left, right ->
+        val sequencingDifference = right.sequencing.score.compareTo(left.sequencing.score)
+        if (sequencingDifference != 0) return@Comparator sequencingDifference
+
+        candidateComparator.compare(left, right)
+    }
+
+    private fun sequenceCandidates(
+        initialCandidates: List<DeckCandidate>,
+        selectedCategory: Category?,
+    ): List<DeckCandidate> {
+        val remaining = initialCandidates.toMutableList()
+        val selected = mutableListOf<DeckCandidate>()
+
+        while (remaining.isNotEmpty()) {
+            val winner = remaining
+                .map { candidate ->
+                    candidate.copy(
+                        sequencing = sequencingFor(candidate, selected, selectedCategory),
+                    )
+                }
+                .minWithOrNull(sequencedComparator)
+                ?: break
+            selected += winner
+            remaining.removeAt(
+                remaining.indexOfFirst { candidate -> candidate.article.id == winner.article.id },
+            )
+        }
+
+        return selected
+    }
+
+    private fun sequencingFor(
+        candidate: DeckCandidate,
+        selected: List<DeckCandidate>,
+        selectedCategory: Category?,
+    ): DeckSequencing {
+        val previous = selected.lastOrNull()
+        val sameSourcePenalty = if (previous?.article?.source?.id == candidate.article.source.id) {
+            -8.0
+        } else {
+            0.0
+        }
+        val categoryPenalty = if (
+            selectedCategory == null &&
+            selected.size >= 2 &&
+            previous?.article?.category == candidate.article.category &&
+            selected[selected.lastIndex - 1].article.category == candidate.article.category
+        ) {
+            -5.0
+        } else {
+            0.0
+        }
+        return DeckSequencing(
+            score = candidate.score.total + sameSourcePenalty + categoryPenalty,
+            sameSourcePenalty = sameSourcePenalty,
+            categoryPenalty = categoryPenalty,
+        )
     }
 
     private fun comparePublicationDescending(left: Article, right: Article): Int {

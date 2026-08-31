@@ -11,6 +11,7 @@ import io.irodriguez.intentionalreading.domain.model.ContentTypeId
 import io.irodriguez.intentionalreading.domain.model.LocalState
 import io.irodriguez.intentionalreading.domain.model.PreferenceEntry
 import io.irodriguez.intentionalreading.domain.model.SignalsApplied
+import io.irodriguez.intentionalreading.domain.ranking.PersonalizedScore
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -61,13 +62,11 @@ class DiscoverDeckTest {
             "source-b" to PreferenceEntry(2.0, 3),
         )
 
-        val deck = DiscoverDeck.build(
-            articles = inputs,
-            records = emptyMap(),
-            preferences = preferences,
-            selectedCategory = null,
-            heldArticleId = null,
-        )
+        val candidates = inputs
+            .map { article ->
+                DeckCandidate(article, PersonalizedScore.calculate(article, preferences))
+            }
+            .sortedWith(DiscoverDeck.candidateComparator)
 
         assertEquals(
             listOf(
@@ -80,7 +79,7 @@ class DiscoverDeckTest {
                 sourceASecond.id,
                 sourceB.id,
             ),
-            deck.candidates.map { it.article.id },
+            candidates.map { it.article.id },
         )
     }
 

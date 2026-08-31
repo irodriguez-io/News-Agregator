@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-28, at item 013 closed.
+Last reviewed: 2026-08-31, at item 006 closed — wave C, and the wave programme, complete.
 
 ---
 
@@ -30,6 +30,7 @@ Last reviewed: 2026-08-28, at item 013 closed.
 | 008 | Swipe gestures | Android | PR #12, 2026-08-26 |
 | 009 | Import and export | Android | PR #13, 2026-08-26 |
 | 013 | Undo gesture reset — a card accepts a swipe as soon as it is on screen | Android | 2026-08-28 |
+| 006 | Deck diversity sequencing | Android | 2026-08-31 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -37,16 +38,18 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-Five items, plus 005 shipped. **006** is the last Android deferral closing the client's remaining distance
-from the browser's V1 behaviour, recorded in writing by a shipped item — the citation is given so the next
-designer starts from the reasoning rather than from the summary. **012** came from the owner testing wave
-B's build. **014**, **015** and **016** were all raised by item 013: two defects it proved but deliberately
+Four items, all unscheduled and all parked on purpose. **012** came from the owner testing wave B's
+build. **014**, **015** and **016** were all raised by item 013: two defects it proved but deliberately
 did not fix, and one amendment it owes from its first design pass.
 
-Only **006** is scheduled. The other four are unscheduled and need their own design pass; 012 and 016
-additionally need a `docs/v1/**` amendment, which no feature workstream may make silently.
+**Nothing is scheduled.** Each needs its own design pass; 012 and 016 additionally need a `docs/v1/**`
+amendment, which no feature workstream may make silently. **014 and 015 must not inherit 013's
+diagnosis** — assuming an inherited cause is what cost 013 two of its four passes.
 
-**Waves A and B are done.** `waves/wave-b-note.md` records what wave B cost. Its headline lesson is
+**With 006 shipped, every Android parity gap the shipped items deferred is closed.**
+
+**Waves A, B and C are done — the wave programme is complete.** `waves/wave-b-note.md` records what
+wave B cost and `waves/wave-c-note.md` what wave C cost. Its headline lesson is
 that the two most valuable defects of the wave were found by the owner using the app, and a third by
 re-gating a rebased head — none of them by reading diffs, and none of them by any gate.
 
@@ -54,7 +57,7 @@ re-gating a rebased head — none of them by reading diffs, and none of them by 
 |---|---|---|---|
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
-| C | ~~005 Learning~~, then 006 Diversity | **005 merged; 006 now** | `waves/wave-c.md` |
+| ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
@@ -82,22 +85,24 @@ save and would silently repair arithmetic bugs in the state machine.
 
 *Evidence:* `specs/005-android-preference-learning/evidence.md`.
 
-### 006 — Deck diversity sequencing  ·  *wave C*
+### ~~006 — Deck diversity sequencing~~  ·  **Shipped**
 
-The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`).
+The −8 same-source and −5 third-consecutive-category penalties (`js/ranking/deck.js:26-38`), ported as a
+greedy per-step algorithm rather than a sort key. One slice, 76 lines of production code, 258 → 275 tests.
 
-**Correction, carried from 005 `design.md` D12: the claim that the Android head article differs from the
-browser's until 006 lands is wrong.** `penaltiesFor` reads `selected.at(-1)`, so the first selection step
-carries no penalty; both clients render exactly one card; and the browser rebuilds the deck on every
-render. The head card is chosen by personalized order alone in both clients, and **005 closed that gap by
-itself**. 006 is a genuine spec-parity gap with no reader-visible effect at today's surface, and the owner
-confirmed on 2026-08-26 that it ships anyway as its own item. Size it against that, not against the head
-article.
+**It has no reader-visible effect at today's surface, and its walkthrough says so at every step.** The
+claim that the Android head article differed from the browser's until this landed was **wrong** — item
+005 closed that gap by itself, because `penaltiesFor` reads `selected.at(-1)` and the first selection
+step carries no penalty. Recorded in 005's `design.md` D12, this item's `spec.md` §1.1, and
+`waves/wave-c-note.md` §4 so it stops being re-inherited. It shipped anyway, on the owner's decision of
+2026-08-26, as a genuine spec-parity gap.
 
-005 leaves `DiscoverDeck` holding the ordered candidate list these penalties sequence, so the expected
-surface is `DiscoverDeck.kt` and its tests only.
+Its real cost was three plan defects — two of them supervisor arithmetic and scope errors caught by the
+implementer refusing to build a contradiction, one a vacuous assertion caught at review. None reached
+shipped code. The transferable lesson is in `waves/wave-c-note.md` §2: **assert a comparator against the
+comparator, not through the algorithm that consumes it.**
 
-*Deferred by 002 §3, restated by 004 §3.*
+*Evidence:* `specs/006-android-deck-diversity/evidence.md`. *Deferred by 002 §3, restated by 004 §3.*
 
 ### 014 — The Discover card's buttons in the Undo window  ·  *unscheduled*
 
@@ -115,6 +120,20 @@ passes.
 Worth knowing before designing it: `DiscoverScreen.kt:74-87`'s article-change `animateScrollTo` runs for
 roughly 380 ms after the head article changes, and it is what claims the pointer in 013's case. Whether a
 `Button` inside a scrolling ancestor loses its click the same way is the first thing to measure.
+
+**New observation from 006's walkthrough, 2026-08-31 — start here, not from 014's wording above.** On
+both the 006 build and the pre-006 build, the **Save for later button commits the save but raises no Undo
+offer at all**: screencaps at 0.2 s, 1.0 s and 2.0 s show no toast, while the swipe path raises one at
+0.35 s. That is not "the button fails" — the record is written and Read Later increments. The button
+**succeeds and never offers the reversal** that `ArticleStateMachine.reversibleActions` already makes
+available for `SAVE`. Whether that is the same defect as the one described above is an open question this
+item must answer, not assume. See `specs/006-android-deck-diversity/evidence.md` §5 step 5.
+
+**This is a different class from item 016's, and the two must not be merged into one item.** `SAVE` **is**
+in `reversibleActions`; Discover's button simply never asks for the offer, because `undoable = true` is
+passed only at `onSwipeCommit` (`IntentionalReadingApp.kt:290`). **This item needs no `docs/v1/**`
+amendment** — nothing about what is reversible changes. 016's actions are genuinely irreversible today
+and do need one.
 
 *Owner decision, 2026-08-27. `specs/013-android-undo-gesture-reset/spec.md` §1.8.*
 
@@ -139,6 +158,25 @@ that touches this ground must score by **which** article moved.
 *Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
 
 ### 016 — Undo in Read Later and History  ·  *unscheduled*
+
+**Confirmed by the owner from the running app, 2026-08-31.** In **Read Later**, *Mark read* and *Remove*
+raise no undo offer. In **History**, *Mark unread* raises none. This is no longer an inference from the
+first design pass — it reproduces by hand.
+
+**Two independent gates gets it, and a design pass must close both:**
+
+1. `ArticleStateMachine.kt:254` — `reversibleActions = setOf(SAVE, DISMISS)`. `MARK_READ`,
+   `MARK_UNREAD` and `REMOVE` are outside it, so `transition` builds no `UndoRecord` and `undo` returns
+   `UNDO_UNAVAILABLE`. Widening this is what needs the `docs/v1/**` amendment, because `contracts.md` §23
+   ties Undo to the `signalsApplied` reversal guard item 005 introduced.
+2. `IntentionalReadingApp.kt:290` — **`undoable = true` is passed at exactly one call site in the entire
+   app**, Discover's `onSwipeCommit`. Every other action, in every pane, takes the `undoable = false`
+   default. Widening `reversibleActions` alone changes nothing until these call sites ask for the offer.
+
+**Scope correction: this item's UI work is smaller than its title suggests.** `UndoToast` is already
+hosted globally in `IntentionalReadingApp`, outside the destination `when` and gated only on
+`!settingsOpen`, so it renders on Read Later and History today. There is no per-pane affordance to build
+— only an offer to raise.
 
 Owed since item 013's first design pass and not yet written down anywhere but that pass. Widening
 `ArticleStateMachine.reversibleActions` beyond `SAVE`/`DISMISS`, and adding undo affordances to the
