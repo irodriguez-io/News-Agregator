@@ -88,6 +88,55 @@ Say so in 015's design note either way, so the next session does not have to re-
 
 ---
 
+## Designing this wave — and the wave-C trap
+
+`execution-model.md` §4.1 says design all of the wave's items first, in one session, before any
+implementation starts. Do that. Design in the **implementation order** — 015, 012, 014, 016 — so each
+later design pass can read the surfaces the earlier ones declared.
+
+**But wave C's three plan defects all came from one thing, and two of this wave's four items are exposed
+to it:** item 006 was designed against a tree that did not exist yet. It assumed item 005's
+`DiscoverDeck` shape without being able to see 005's *tests*, and its slice plan then froze an assertion
+that 005's merge had made unfreezable. The plan was approved in plan mode and only failed at dispatch,
+weeks later.
+
+> **A design pass that depends on an unmerged item's output is a forecast, not a design.** Write it as
+> one.
+
+Which items are exposed here:
+
+| Item | Cut against | Exposure |
+|---|---|---|
+| 015 | merged `main` | none |
+| 012 | merged `main` | none |
+| 014 | **015 unmerged** | 015's fix may land in `ArticleCard.kt`, which is 014's ground |
+| 016 | **014 unmerged** | 016 rewires the same `undoable` call sites 014 will have just changed |
+
+**Three rules for 014's and 016's slice plans specifically:**
+
+1. **Do not freeze an existing assertion.** State which tests you expect to exist and what they should
+   still prove, but never write "no existing assertion may be edited" — that is the exact sentence that
+   made 006 unimplementable. If an assertion must change, the design pass says so and says why.
+2. **State assumptions as assumptions, with the file and the fact each depends on.** "Assumes 015 leaves
+   `ArticleCard.kt` untouched" is checkable at dispatch. A silent assumption is not.
+3. **Every DoD bullet must be assertable at the layer it names.** 006 shipped a bullet demanding proof
+   that "no local-state write occurs" from a pure function with no writer to observe, and got a vacuous
+   assertion in return. If a bullet cannot be tested where it sits, say what enforces it instead.
+
+`/feature-implementation` Step 0.4 re-reconciles the slice plan against anything decided since design.
+For 014 and 016 that step is not a formality — it is where these forecasts get checked against the tree
+that actually exists.
+
+**Two owner checkpoints will block design inside the session**, so expect the design pass to stop and
+ask rather than guess:
+
+- **012's amendment** — the narrow `06-ui-ux.md` ordering change.
+- **016's amendment** — what becomes reversible and what reversing it does to the preference weights.
+  This is the long pole of the wave. It can be drafted before 016's design pass begins, and probably
+  should be.
+
+---
+
 ## 015 — A swipe immediately after Undo is attributed to the outgoing article
 
 Found by item 013's slice 1, deliberately left unfixed, and the reason 013 spent a whole pass chasing a
