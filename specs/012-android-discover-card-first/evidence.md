@@ -77,6 +77,38 @@ Two things read carefully rather than waved through:
   viewportHeight` and `maxValue` differ only by the column's bottom padding, so nothing regresses between
   the two slices. That is why this slice was ordered first.
 
+## 4a. The scenario this item had to correct, and why
+
+**Slice 2's walkthrough failed a scenario that could not have passed, and the implementer stopped rather
+than claim it.** That is the outcome the brief asked for and it is recorded here in full because the defect
+was the supervisor's.
+
+`spec.md` §4's first scenario originally required the card's **full action rail** to be visible at 360 dp
+on cold open. Codex built the reorder, took both gates green (284 tests, 0 failures), drove the emulator,
+and reported: at 411 dp everything is visible; at 360 dp the article title alone reaches the bottom
+navigation. It then refused to commit, on the grounds that closing the gap needed either
+`ArticleCard.kt` or restyling — both fenced off by `spec.md` §3.
+
+Verified independently against the captures and the corpus:
+
+- `walkthrough/item012-411-settled.png` — the intent delivered: compact masthead, then the whole card with
+  metadata, six-line title, excerpt and all three action controls, plus the remaining-choices note, above
+  the bottom navigation with no scrolling.
+- `walkthrough/item012-360-cold.png` — the card leads the viewport and no operational control sits above
+  it, but this article's title fills the rest of the screen.
+- `ArticleCard` sets `maxLines = 4` on the excerpt and **nothing** on the title, and `06-ui-ux.md` §25
+  requires exactly that: *"no arbitrary hard two-line clamp"*, *"supports very long titles"*.
+- `06-ui-ux.md` §71 requires actions be **reachable** at every width — not visible without scrolling.
+- **Amendment 7 binds one sentence**, and it is about ordering, not about the card's bottom edge.
+
+So the scenario asserted something (a) past its own amendment, (b) contrary to §71's actual requirement,
+and (c) unreachable without violating §25. It was corrected rather than weakened, and `spec.md` §1.4 now
+carries the measurement table and hands the 360 dp case to wave E's item 019. **Owner decision,
+2026-08-31.**
+
+The transferable lesson, and it is the same shape as wave C's: *a scenario must assert what the item
+controls.* This one asserted a geometric outcome that depends on the length of a title in the dataset.
+
 ## 4. Walkthrough
 
 Per `spec.md` §5.3. Batched at the end of the wave against merged `main`

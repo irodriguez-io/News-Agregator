@@ -48,6 +48,28 @@ constrains the card itself and says nothing about order, and it is not amended.
 (`waves/wave-d.md`, 2026-08-31). Amendment 7 therefore states the **intent** and marks the widget order
 illustrative, so wave E inherits a rule rather than a layout.
 
+### 1.4 What this item cannot deliver, and it is not the header's fault
+
+**The card's height is unbounded in the article's title.** `ArticleCard` applies `maxLines = 4` to the
+excerpt and **nothing** to the title, and that is required: `06-ui-ux.md` §25 forbids *"an arbitrary hard
+two-line clamp"* and demands the card *"supports very long titles"*. A real dataset title — *"Nonviral
+delivery of chemically modified tRNA rescues nonsense mutations in cystic fibrosis | Science"* — wraps to
+six lines at `headlineLarge` and consumes a 360 dp viewport by itself.
+
+So **no header arrangement makes the full action rail clear the fold at 360 dp for every article.** Moving
+or compacting the header changes where the card *starts*, never how tall it is. Measured at slice 2's
+walkthrough:
+
+| Width | Result |
+|---|---|
+| **411 dp** (the emulator's native width) | the intent is fully delivered — compact masthead, then the whole card including all three action controls and the remaining-choices note, no scrolling (`walkthrough/item012-411-settled.png`) |
+| **360 dp** | the card leads the viewport and no operational control sits above it, but this article's title alone reaches the bottom navigation; the excerpt and action rail are one short scroll below (`walkthrough/item012-360-cold.png`) |
+
+This is **wave E's ground, not this item's.** Card height is a function of the type scale, the card's
+padding and its geometry, all of which wave E re-lays out (`waves/wave-e.md`). Bounding the title to force
+the rail above the fold would need its own amendment against §25's explicit prohibition, and truncating an
+editorial headline is a product decision rather than a layout fix. **Hand this table to item 019.**
+
 ### 1.3 What it subsumes, and the one thing it must not break
 
 **It largely subsumes item 008's D12.** That fix scrolls the incoming card into view after a swipe
@@ -97,10 +119,23 @@ in front of me when I open the app and the controls that describe it sit out of 
 
 ### Scenario: the card leads the viewport
 
-Given a reader opens Discover on a 360 dp-wide device with a card available\
+Given a reader opens Discover on a supported width with a card available\
 When the screen first renders and before any scrolling\
-Then the article card and its full action rail are visible\
-And only the eyebrow and the screen title appear above the card
+Then the article card is the first thing in the viewport\
+And only the eyebrow and the screen title appear above it\
+And every operational control appears below it
+
+> **Corrected 2026-08-31, at slice 2's walkthrough, and the correction is the supervisor's error to own.**
+> This scenario originally read *"the article card and its full action rail are visible"* at 360 dp. That
+> over-reached past the amendment it implements. **Amendment 7 binds one sentence** — *the first thing in
+> the viewport on Discover is the article card, not the controls that describe it* — and says nothing about
+> the card's bottom edge. `06-ui-ux.md` §71 likewise requires actions be **reachable** at every width, not
+> visible without scrolling.
+>
+> It was also unsatisfiable. Card height is unbounded in the article's title: `ArticleCard` sets no
+> `maxLines` on it, and `06-ui-ux.md` §25 **forbids** bounding it — *"no arbitrary hard two-line clamp"*,
+> *"supports very long titles"*. A six-line title at 360 dp fills the viewport on its own, whatever the
+> header does. See §1.4.
 
 ### Scenario: the operational block follows the card
 
@@ -184,9 +219,10 @@ adb shell wm size 1080x1920 && adb shell wm density 480   # ≈ 360 dp wide
 adb shell wm size reset && adb shell wm density reset
 ```
 
-1. **Cold open, no scrolling, at 360 dp and at 411 dp.** `screencap` each. The card and its three action
-   controls must be fully visible. Describe what a reader would see before checking the assertion
-   (`execution-model.md` §9).
+1. **Cold open, no scrolling, at 360 dp and at 411 dp.** `screencap` each. The card must be the first thing
+   in the viewport with only the eyebrow and title above it, and no operational control above it. Describe
+   what a reader would see before checking the assertion (`execution-model.md` §9). **How much of the card
+   clears the fold is recorded, not asserted** — §1.4 says why.
 2. **Scroll down.** The operational block is in §1.1's order and reads the same text as today.
 3. **Tap Read article, return, and settle.** `screencap`. The **Mark read** button must be on screen. This
    is the wave B defect and it is the step most likely to fail.
@@ -196,8 +232,9 @@ adb shell wm size reset && adb shell wm density reset
 5. **Swipe to advance the deck.** The incoming card is in the viewport with its action rail, and the
    reader does not have to scroll to act again.
 6. **Force a failed refresh** (airplane mode, then tap Refresh). The disclosure appears below the card.
-7. **Enable the largest system font scale** and repeat step 1. The card may now start below the fold; record
-   what the reader sees rather than asserting a pass. This is a §5.4 judgment call, not a gate.
+7. **Enable the largest system font scale** and repeat step 1. Record what the reader sees rather than
+   asserting a pass — §1.4 already establishes that how much of the card clears the fold is not this item's
+   to guarantee.
 
 Each step carries the second question: *and is what the reader needs next actually on screen?*
 
@@ -205,11 +242,13 @@ Each step carries the second question: *and is what the reader needs next actual
 
 - **The placement rule as drafted in Amendment 7** — that the intent is stated in a form wave E can inherit,
   and that dropping the purpose copy from above the card reads acceptably (`waves/wave-d.md` checkpoint 2).
-- **Step 7's largest-font behaviour**, if the card no longer leads at that scale.
+  **Settled 2026-08-31:** the owner accepted the corrected scenario and the §1.4 limitation, and directed
+  that the 360 dp case be handed to wave E rather than fixed here.
 
 ### 5.5 Stop conditions
 
 Stop and report rather than proceeding if: step 3's **Mark read** button is off screen after the reorder;
+the reorder cannot put the card first with only the eyebrow and title above it;
 any existing test needs editing; the reorder requires a change to `ArticleCard.kt` or to the shared
 `EditorialHeader` overload used by Read Later and History; or the operational block cannot be assembled
 without authoring new copy.
