@@ -68,6 +68,7 @@ fun DiscoverScreen(
         mutableStateOf(articleId)
     }
     var cardTopOffset by remember { mutableIntStateOf(0) }
+    var cardBottomOffset by remember { mutableIntStateOf(0) }
     LaunchedEffect(selectedCategory, state::class) {
         scrollState.scrollTo(0)
     }
@@ -94,10 +95,15 @@ fun DiscoverScreen(
         wasOpened = isOpened
         if (becameOpened) {
             withFrameNanos { }
+            val target = DiscoverScrollTargets.revealCardActions(
+                cardBottomOffset = cardBottomOffset,
+                viewportHeight = scrollState.viewportSize,
+                maxValue = scrollState.maxValue,
+            )
             if (reducedMotion()) {
-                scrollState.scrollTo(scrollState.maxValue)
+                scrollState.scrollTo(target)
             } else {
-                scrollState.animateScrollTo(scrollState.maxValue)
+                scrollState.animateScrollTo(target)
             }
         }
     }
@@ -145,6 +151,8 @@ fun DiscoverScreen(
                 reducedMotion = reducedMotion,
                 modifier = Modifier.onGloballyPositioned { coordinates ->
                     cardTopOffset = coordinates.positionInParent().y.roundToInt()
+                    cardBottomOffset =
+                        (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
                 },
             )
         }
