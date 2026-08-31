@@ -17,6 +17,13 @@ than the counts (`waves/wave-b-note.md` §7).
 |---|---|---|---|
 | 2026-08-31, base `6c857a6` | — (baseline) | 275 tests, 0 failures, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
 | 2026-08-31, head `2101b1e` | 1 | **279 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+| 2026-08-31, head `a6dfae1` | after merging `main` (015) | **284 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+
+**Item 015 merged as `88e71b7` and was merged into this branch**, per `execution-model.md` §4.4. The
+post-merge row is the authoritative one and **the pre-rebase numbers above are superseded, not averaged** —
+wave B's cross-item defect was caught precisely by re-gating a rebased head that both branches' green gates
+had passed (`waves/wave-b-note.md` §3). No cross-item defect here: 280 (015 on `main`) + 4 (this item's new
+cases) = 284, and the merge was conflict-free.
 
 Head rows are the **supervisor's own runs**, `test-results` deleted first
 (`execution-model.md` §5.1 control 4).
