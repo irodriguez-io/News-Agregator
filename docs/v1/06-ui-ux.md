@@ -567,17 +567,31 @@ It must not become:
 
 # 21. Discover Header
 
-Discover begins with an editorial header area.
+Discover's header is split, and the article card sits between the two halves.
 
-It may include:
+The **masthead** comes first and is deliberately compact:
 
 - small metadata/eyebrow;
-- application title;
-- concise purpose copy;
-- category selector;
-- available/current article context.
+- application/screen title.
 
-The header should feel like publication masthead/content framing rather than dashboard chrome.
+The **operational block** follows the article card:
+
+- concise purpose copy;
+- refresh affordance and content-age context;
+- failed-refresh disclosure;
+- available/current article context;
+- category selector.
+
+The binding rule is the ordering intent, not the widget list:
+
+```text
+the first thing in the viewport on Discover is the article card,
+not the controls that describe it
+```
+
+The masthead should feel like publication masthead/content framing rather than dashboard chrome, and framing placed below its subject is still framing. A redesign may re-lay out either half provided the card still leads the viewport.
+
+*Amended by Amendment 7.*
 
 ---
 
@@ -1464,7 +1478,9 @@ When the static dataset cannot be loaded or validated, show a concise recoverabl
 
 Successful save, dismiss, read/unread, import, export, and reset outcomes are announced through an appropriate live region. Toasts must not steal focus.
 
-Undo is offered only for the most recent eligible Discover swipe and remains available for approximately the approved toast duration.
+Undo is offered for the most recent eligible action, from whichever surface performed it, and remains available for approximately the approved toast duration. The eligible set is in `contracts.md` §23.
+
+*Amended by Amendment 8.*
 
 ---
 

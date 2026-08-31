@@ -878,6 +878,49 @@ status = saved
 
 This does **not** apply a new Save signal.
 
+### Undo Mark Read
+
+If the Mark Read action applied a Read signal:
+
+```text
+reverse read signal
+```
+
+and decrement corresponding interaction counts. If it applied none, reverse nothing.
+
+The exact previous record is restored, including `signalsApplied.read`.
+
+### Undo Mark Unread
+
+Mark Unread is itself a corrective action. If it reversed a Read signal, undoing it **re-applies** that signal:
+
+```text
+apply read signal
+signalsApplied.read = true
+```
+
+and increments corresponding interaction counts. If Mark Unread reversed nothing, undoing it applies nothing.
+
+The article returns to:
+
+```text
+status = read
+```
+
+This is the only reversal in V1 that applies a signal rather than reversing one.
+
+### Undo Remove from Read Later
+
+Remove applies no preference signal (§24), so undoing it applies and reverses **nothing**.
+
+The exact previous record is restored:
+
+```text
+status = saved
+```
+
+*Amended by Amendment 8.*
+
 ---
 
 # 24. Remove from Read Later
@@ -1057,7 +1100,9 @@ Conceptually:
 }
 ```
 
-Only the most recent eligible swipe action must be retained.
+Only the most recent eligible action must be retained, regardless of which surface or destination performed it. The reversible set is defined in §23.
+
+*Amended by Amendment 8.*
 
 Reloading the page clears Undo availability.
 

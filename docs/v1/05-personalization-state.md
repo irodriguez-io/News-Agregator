@@ -815,22 +815,28 @@ Do not maintain separate persistent counters that can drift from article state.
 
 # 36. Undo Scope
 
-V1 Undo supports only the most recent successful Discover swipe action:
+V1 Undo supports the most recent successful **eligible action**, from any surface that performs it:
 
 ```text
-dismiss
 save
+dismiss
+mark read
+mark unread
+remove from read later
 ```
 
-Undo is not required for:
+The trigger does not determine reversibility. A swipe, a labelled control, and a keyboard shortcut are equivalent for this purpose.
+
+Undo is **not** available for:
 
 - Open;
-- Mark Read;
-- Mark Unread;
-- Remove;
 - import;
 - reset;
 - appearance changes.
+
+Reversal arithmetic for each eligible action is in `contracts.md` §23.
+
+*Amended by Amendment 8.*
 
 ---
 
@@ -907,7 +913,7 @@ The UI exposes Undo for approximately the design-specified toast duration:
 
 The in-memory record may remain available for the current action until:
 
-- another eligible swipe replaces it;
+- another eligible action replaces it;
 - the page reloads;
 - the application explicitly clears it.
 

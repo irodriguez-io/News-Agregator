@@ -465,6 +465,7 @@ Do not persist independent counters.
 Undo supports only the most recent successful Discover:
 save
 dismiss
+> Amendment 8 widens the eligible set and removes the swipe-only restriction. The browser's existing swipe-and-keyboard scope remains compliant; see `contracts.md` §23 and §31.
 Store Undo in memory only.
 Do not persist it.
 43. Undo Record
