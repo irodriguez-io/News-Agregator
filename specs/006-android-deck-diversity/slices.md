@@ -133,8 +133,11 @@ Fixed for the slice — do not re-decide these mid-implementation:
   - **005's five-key assertion retargeted at `candidateComparator` and still green**, asserting the same
     eight IDs in the same order against the same fixture (`design.md` D8).
   - **A test asserting that same fixture's sequenced order**, which ends `sourceAFirst, sourceB,
-    sourceASecond`, with `sourceASecond`'s `sameSourcePenalty` recorded as `-8.0` — so the coverage the
-    retargeting moved off `build()` is replaced, not dropped. Net assertions go up.
+    sourceASecond` — so the coverage the retargeting moved off `build()` is replaced, not dropped. Net
+    assertions go up. **`sourceASecond` records `sameSourcePenalty == 0.0`**: the −8 decides step 7,
+    where it loses to `sourceB`; by step 8 the previous card is `sourceB` and D1 recomputes from
+    scratch. The order is the proof the penalty fired. Same shape as `spec.md` §4.1's *"the third card's
+    same-source penalty is 0"* (`design.md` D8).
   - No other existing assertion edited, deleted, weakened, or absorbed.
 - **Status:** pending
 

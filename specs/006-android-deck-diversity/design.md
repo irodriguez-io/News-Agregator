@@ -173,8 +173,17 @@ third field breaks no call site.
 - 005's five-key assertion sorts the candidate list with `candidateComparator` directly. Same fixture,
   same eight IDs, same order, same test name — only what is sorted changes.
 - 006 adds a test asserting that same fixture's **sequenced** order, ending `sourceAFirst, sourceB,
-  sourceASecond`, with `sameSourcePenalty == -8.0`. The coverage moved off `build()` is replaced, not
-  dropped; net assertions go up.
+  sourceASecond`. The coverage moved off `build()` is replaced, not dropped; net assertions go up.
+
+  **`sourceASecond` records `sameSourcePenalty == 0.0`, not `-8.0`** — corrected here after a second
+  dispatch escalated on it, and the escalation was right. The −8 decides *step 7*, where `sourceASecond`
+  scores 82 against `sourceB`'s 90 and loses. By step 8 the previously selected card is `sourceB`, D1
+  recomputes from scratch, and the penalty the winner carries is the one computed at the step it won.
+  The reordering is the observable proof the −8 fired; the recorded value is 0.0. This is the same shape
+  `spec.md` §4.1 already states outright — *"the third card's same-source penalty is 0"* — and a DoD line
+  that contradicted it was an arithmetic error in the amendment, not in the item. `spec.md` §4.1's second
+  scenario is where `-8.0` is asserted as a recorded value, because there the penalized candidate wins
+  its step.
 
 **The rejected alternative, and why it is rejected.** Correcting the expected list in place is a one-line
 change and it *works* — at that step the previously selected card is `publicationUnknown`, whose source
