@@ -32,7 +32,6 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
-import io.irodriguez.intentionalreading.ui.components.EditorialHeader
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import kotlin.math.roundToInt
@@ -68,6 +67,7 @@ fun DiscoverScreen(
         mutableStateOf(articleId)
     }
     var cardTopOffset by remember { mutableIntStateOf(0) }
+    var cardBottomOffset by remember { mutableIntStateOf(0) }
     LaunchedEffect(selectedCategory, state::class) {
         scrollState.scrollTo(0)
     }
@@ -94,10 +94,15 @@ fun DiscoverScreen(
         wasOpened = isOpened
         if (becameOpened) {
             withFrameNanos { }
+            val target = DiscoverScrollTargets.revealCardActions(
+                cardBottomOffset = cardBottomOffset,
+                viewportHeight = scrollState.viewportSize,
+                maxValue = scrollState.maxValue,
+            )
             if (reducedMotion()) {
-                scrollState.scrollTo(scrollState.maxValue)
+                scrollState.scrollTo(target)
             } else {
-                scrollState.animateScrollTo(scrollState.maxValue)
+                scrollState.animateScrollTo(target)
             }
         }
     }
@@ -108,16 +113,7 @@ fun DiscoverScreen(
             .padding(horizontal = 18.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp),
     ) {
-        EditorialHeader(
-            availableCount = cardState?.availableCount,
-            contentFreshness = state.contentFreshness,
-            failedRefreshDisclosure = state.failedRefreshDisclosure,
-            degraded = degraded,
-            selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected,
-            actionLabel = refreshActionLabel,
-            onAction = onRefreshAction,
-        )
+        DiscoverMasthead()
 
         when (state) {
             is DiscoverUiState.Loading -> LoadingPanel(state)
@@ -145,9 +141,22 @@ fun DiscoverScreen(
                 reducedMotion = reducedMotion,
                 modifier = Modifier.onGloballyPositioned { coordinates ->
                     cardTopOffset = coordinates.positionInParent().y.roundToInt()
+                    cardBottomOffset =
+                        (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
                 },
             )
         }
+
+        DiscoverOperationalBar(
+            availableCount = cardState?.availableCount,
+            contentFreshness = state.contentFreshness,
+            failedRefreshDisclosure = state.failedRefreshDisclosure,
+            degraded = degraded,
+            selectedCategory = selectedCategory,
+            onCategorySelected = onCategorySelected,
+            actionLabel = refreshActionLabel,
+            onAction = onRefreshAction,
+        )
     }
 }
 

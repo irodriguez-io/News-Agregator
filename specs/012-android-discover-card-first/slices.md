@@ -49,7 +49,7 @@ rm -rf app/build/test-results/testDebugUnitTest
   - `DiscoverScreen` no longer passes `scrollState.maxValue` as the became-opened target.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
   - **Report which viewport source was used** — `scrollState.viewportSize` or `BoxWithConstraints`.
-- **Status:** pending
+- **Status:** done — `b8fbb96` (RED) + `2101b1e` (GREEN), slice review PASS 2026-08-31
 
 ## Slice 2: put the card first and the operational block below it
 
@@ -73,7 +73,7 @@ rm -rf app/build/test-results/testDebugUnitTest
 - **Not assertable in this slice, and enforced by the walkthrough instead:** composition order and
   first-viewport fit. `spec.md` §5.2 says why, and this slice therefore carries **no** failing-first unit
   test. That is deliberate and it is the exception, not a pattern — slice 1 carries the item's RED.
-- **Status:** pending
+- **Status:** done — `04a0554`, slice review PASS 2026-08-31; `spec.md` §4 scenario 1 corrected first (see `evidence.md` §4a)
 
 ---
 
