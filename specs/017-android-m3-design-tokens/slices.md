@@ -133,7 +133,28 @@ items 018–020 will consume.
   placeholder it holds today (§16.2); the tonal container role is `tonal` and the nav-pill role reads from
   it (§8.2); the shape scale carries §15.2's values and the spacing rhythm §14.2's; the diff touches no
   file outside the boundary.
-- **Status:** pending
+- **Status:** **done** — RED `24ab94e`, GREEN `ceef959`. Gate reproduced independently with
+  `--rerun-tasks`: **315 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful. Slice review
+  PASS.
+
+**Strongest RED of the three slices — six value failures, reproduced independently as
+`315 tests completed, 6 failed`:** the decorative outline expecting `#CBCCDE` and receiving the
+control-grade `#757686`; the light surface tint expecting `#212B56` at 10% and receiving transparent; the
+navigation indicator expecting `#ABD2FA`; the 48-role map's first mismatch on `secondary`; spacing expecting
+`[4, 12, 16, 18, 24, 32, 680].dp` against a deliberately wrong `[2, 8, 12, 16, 20, 24, 640]`; and the shape
+scale. The RED commit's only production change was `private fun` → `internal fun` plus a `darkTheme`
+parameter so the test could reach the factory — **no value was fixed in RED.**
+
+Both inherited defects verified present before change and then fixed: `outline` ← `outlineControl` and
+`outlineVariant` ← `outlineVariant`, now distinct per §78.3; and `surfaceTint` real at
+`(if (darkTheme) bg else tertiary).copy(alpha = 0.10f)` — a correct reading of §78.4, which makes the dark
+shadow near-black rather than navy. `secondaryContainer` ← `tonal` so item 018's pill indicator can read it
+from `MaterialTheme`. **All 48 roles still supplied explicitly**, asserted. `darkTheme` threaded at the call
+site with both branches covered by test.
+
+Shape and spacing exposed as `CompositionLocal`s alongside the tokens, matching the file's existing idiom,
+plus `shapes = IntentionalReadingMaterialShapes` on `MaterialTheme`. **D6 honoured — no consumer file
+touched, so all ~160 `dp` literals are intact.**
 
 ---
 
