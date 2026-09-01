@@ -34,7 +34,31 @@ pressed and disabled treatment.
   the only thing that exercises it.
 - **Definition of done:** both gates green; 52 dp, 56 dp, 1.5 dp, 12%, 0.95 and 38% all asserted; triage
   controls carry accessible names; no literals.
-- **Status:** pending
+- **Status:** **done** — RED `1ec1fbd`, GREEN `779fdaa`, findings fix `7a6a923`. Gate reproduced
+  independently with `--rerun-tasks`: **322 tests, 0 failures, 0 errors**, `assembleDebug` successful
+  (baseline 315). Slice review **FINDINGS, then PASS.**
+
+**Genuine value-failing RED**, reproduced as `322 tests completed, 3 failed` — `expected:<0.95> but was:<0.8>`,
+`expected:<52.0.dp> but was:<40.0.dp>`, `expected:<1.5.dp> but was:<1.0.dp>`.
+
+**One finding, caused by an error in the dispatch brief rather than by the implementation.** The brief said
+*"no colour, radius, dimension or font literal — every value from 017."* The **dimension** half was wrong:
+§77.1 prohibits a component naming a **colour**, and says nothing about dimensions. 52 dp (§32.2), 56 dp and
+1.5 dp (§35.2) and 48 dp (§72.2) are component and accessibility specifications, not entries in a spacing
+rhythm, and item 017 was never asked to define them.
+
+With no correct way to satisfy the instruction, the implementation satisfied its letter by deriving all four
+from the spacing scale — `sectionGap + gutter + baseUnit` for 52, `sectionGap + gutter` for 48,
+`sectionGap + tabletMargin` for 56, `baseUnit * 3f / 8f` for 1.5. Numerically correct, semantically false,
+and a real hazard: **it made §72.2's accessibility floor a function of the spacing rhythm**, so a later
+spacing change could silently drop the app below it.
+
+Fixed at `7a6a923` as four named constants citing their sections. The tell that settled it: the test already
+asserted `52.0.dp` and `1.5.dp` as literals, so there was no principled reason production could not be
+equally direct.
+
+**Non-blocking:** the constants use `Dp(52f)` rather than the more idiomatic `52.dp` — likely residue of the
+brief's ban on `.dp` literals. Functionally identical; not worth a round trip.
 
 ---
 
