@@ -148,12 +148,48 @@ in it. Worth a decision before item 019, which inherits a 360 dp requirement of 
 
 ## 10. Walkthrough
 
-**Outstanding.** Batched at wave close per `execution-model.md` §6, plus the owner look this item's merge
-requires (`wave-e.md` checkpoint 4). `spec.md` §5.4 states the steps.
+**Driven by the orchestrator over `adb`**, AVD `Pixel_10` at 411 dp native, both schemes, installed with
+`adb install -r`. Screenshots in `walkthrough/`.
 
-**The step that matters most:** the active pill must read as an *indicator* rather than a highlight, with a
-legible icon on it. That is the pairing slice 2 was briefed around, and it is a visual judgment no test
-settles.
+### 10.1 The pairing this item was briefed around
+
+**It works in both schemes, and the icon is legible on the pill in each.**
+
+| Scheme | Indicator | Icon |
+|---|---|---|
+| Light | pale `tonal` `#ABD2FA` pill | dark navy `onTonal` `#212B56` compass — clearly legible |
+| Dark | `tonal` inverted to slate `#2D5072` | near-white `onTonal` `#E4ECF3` — clearly legible |
+
+Had only `indicatorColor` changed, the light pill would have carried a `surface`-coloured icon and been
+effectively blank. The unit test would still have passed. **This is the defect the pair assertion exists to
+prevent, and it is confirmed absent on device.**
+
+### 10.2 What else was confirmed
+
+| Check | Result |
+|---|---|
+| Masthead | centred and in Playfair (`headlineSmall`), both schemes — §76.4 delivered |
+| Settings control | one only, trailing, ≥ 48 dp target, not a destination |
+| Bottom bar | 28 dp top corners visible; bar reads as a distinct surface |
+| One baseline | all three destinations level — the 7 dp Discover lift is gone |
+| Chips | fully rounded pills; `All` filled `primary` (`#1B2CC1` light, `#6C9DFF` dark) with its on-primary label; the rest surface-filled with a visible outline |
+| Amendment 7 | ordering intact — card, then the operational block, then the chip row |
+| Action rail | **unchanged**, still the inline treatment — correct, since the shared controls ship unconsumed for item 019 |
+| Crash / ANR | none |
+
+### 10.3 A visual confirmation that §78.3's two-role split matters
+
+**In dark, the inactive chip outlines are clearly visible** because `outlineControl` resolves to the `muted`
+seed at 6.6:1. Had they used `outlineVariant` — the decorative hairline, ~1.7:1 against the card — they would
+be very nearly invisible while still passing any assertion that merely checked *an* outline was set.
+
+That is the concrete reason §73.1 and §78.3 exist, seen rather than argued.
+
+### 10.4 Nothing regressed
+
+Unlike item 017, this item introduces **no temporary regression**. The 360 dp behaviour is unchanged from
+017's merge — the deck card's fold problem is still present and is still item 019's to fix under §13.2, and
+nothing this item did made it worse.
 
 ## 11. Hosted CI
 
