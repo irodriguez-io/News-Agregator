@@ -136,9 +136,14 @@ exactly once** — by source id and topic id, not by an aggregate.
 `waves/wave-d.md`'s rule 1. Complete as the tree stands today; the implementer reports anything not on this
 list before touching it.
 
+**One row was added after the design pass** — see the `:30` row and its reason. That is the protocol
+working, not a defect in it: the list is named cases with reasons, the implementer reported before editing,
+and the addition is recorded here rather than absorbed into the diff.
+
 | Test | What happens | Why |
 |---|---|---|
 | `ArticleStateMachineUndoTest.kt:99` `only save and dismiss are reversible` | **rewritten** as `only Open is not reversible`, keeping the per-action table shape | Its subject is exactly what this item changes. What must still be proved: that a per-action list is checked, and that `OPEN` carries no record. `MARK_READ`, `MARK_UNREAD` and `REMOVE` move from the "no record" column to the "record" column with their §2 arithmetic. |
+| `ArticleStateMachineUndoTest.kt:30` `reversible actions carry undo state without caller eligibility` | **rewritten** — `MARK_READ` drops out of the non-reversible loop at `:49`, leaving `OPEN` alone | **Added 2026-08-31, at slice 1's preflight, on the implementer's report.** This case did not exist in this form when the design pass read the tree — item 014 created it to prove that the offer follows the record rather than a caller argument. Its subject is caller eligibility, and that subject is untouched: `SAVE` still carries a record with no eligibility argument and `OPEN` still carries none. Only the incidental claim that `MARK_READ` is non-reversible moves, and Amendment 8 is what overturns it. `MARK_READ`'s new reversibility is asserted in the rewritten `only Open is not reversible`, so keeping it in this loop would duplicate that case rather than add cover. |
 | `ArticleStateMachineUndoTest.kt:127` `an idempotent no-op produces no undo record` | **kept, must still pass**, and extended with `MARK_READ` on an already-read article | `isIdempotentNoOp` is unchanged, so an idempotent `MARK_READ` must still produce nothing. Widening reversibility must not widen what counts as a change. |
 | `ArticleStateMachineUndoTest.kt:314` `Undo Dismiss reverses the signal applied by the forward transition` and `:352`, `:385` | **kept unchanged** | The `SAVE` and `DISMISS` arithmetic does not move. If any of these three breaks, D1's new field has leaked into the existing path — stop and report. |
 | `UiStateMapperTest.kt:543-549` | **extended**; the four existing assertions keep their expected values | `null → false`, `SAVE → true`, `DISMISS → true` all stay true under `undoAction != null`. Three cases are added for the new actions. |
