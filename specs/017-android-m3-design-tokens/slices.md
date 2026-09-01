@@ -83,7 +83,21 @@ A compile error proves a thing is missing; it does not prove the test can catch 
 - **Definition of done:** both gates green; the nine §76.1 styles match their specified family, size, line
   height, weight and tracking; **no consumed slot equals Material 3's default**, which is what closes the
   `titleMedium` fallback at `LocalStateMessages.kt:48`; sizes are `sp`; no version gate; no new dependency.
-- **Status:** pending
+- **Status:** **done** — RED `edf8842`, GREEN `e4a08c0`. Gate reproduced independently with
+  `--rerun-tasks`: **308 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful. Slice review
+  PASS.
+
+**The value-failure RED requirement worked, and the implementer found a better route than the brief asked
+for.** Rather than stubbing production symbols with wrong values, it asserted against the *existing*
+Typography slots, which still held the old serif/Avenir metrics — so the suite compiled and ran, and exactly
+the three new tests failed on values: *"displayMedium still equals the Material 3 default"* and *"display-lg
+family expected:<FontListFontFamily(… weight=FontWeight(weight=600) …)>"*. Reproduced independently as
+`308 tests completed, 3 failed`. **Use this pattern in slice 3** — assert against what exists and let it fail
+on the value; there is no scaffolding to remove afterwards.
+
+All nine §76.1 styles verified exact; D7's three mappings honoured with no invented metrics;
+`@OptIn(ExperimentalTextApi::class)` on the family helper only and **no version gate**. The test re-declares
+every expected metric independently rather than importing production's, so it is not tautological.
 
 **The silent-fallback trap.** A misnamed font resource does not fail a test — Compose falls back and the
 text still renders. Assert that each style's family resolves to the bundled resource, and treat the
