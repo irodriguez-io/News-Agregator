@@ -149,7 +149,7 @@ and the addition is recorded here rather than absorbed into the diff.
 | `UiStateMapperTest.kt:543-549` | **extended**; the four existing assertions keep their expected values | `null → false`, `SAVE → true`, `DISMISS → true` all stay true under `undoAction != null`. Three cases are added for the new actions. |
 | `AppViewModelTest` — any case that performs `MARK_READ`, `MARK_UNREAD` or `REMOVE` and asserts no offer or `undoAvailable == false` | **each reported, then updated** | These encode the narrow set. The implementer lists them at slice 2 before editing, because the count is not knowable from this document — item 014's diff will have moved some of them. |
 | `ArticleStateMachineTest.kt` (forward transitions, 23 cases) | **expected unchanged** | This item does not touch `allowedFrom`, `isIdempotentNoOp` or any forward transition. A failure here means the change reached further than intended. |
-| `PreferenceLearningTest.kt` (11 cases) | **expected unchanged** | `apply` and `reverse` are not modified (`spec.md` §2.3). |
+| `PreferenceLearningTest.kt` | **expected unchanged** | `apply` and `reverse` are not modified (`spec.md` §2.3). **Count corrected 2026-08-31:** the file holds two classes — `PreferenceLearningDeltaTest` (parameterized) and `PreferenceLearningTest` (10 cases). The "11" here counted `@Test` annotations across the file, not cases in the class. Flagged by slice B's implementer against the gate XML; nothing is skipped. |
 
 ## D6 — Collision record for the wave
 

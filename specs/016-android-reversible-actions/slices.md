@@ -159,12 +159,20 @@ replaces while only `SAVE` and `DISMISS` can produce a record.
     non-reversible loop per D5's added row. **Both carry their reason in the commit message.**
   - `:314`, `:352` and `:385` still pass **unedited** — if any of them fails, the new field has leaked into
     the `SAVE`/`DISMISS` path, so stop and report.
-  - `ArticleStateMachineTest` (23 forward cases) and `PreferenceLearningTest` (11 cases) pass unedited.
+  - `ArticleStateMachineTest` (23 forward cases) and `PreferenceLearningTest` pass unedited.
   - **The seven tests that the original slice 1 broke come back green**, because slice A already put the
     mapping in place. They are the ones that asserted no offer for these three actions, and they are named
     in the *Known consumers* list below — each is reported before it is edited, with its reason.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** **done** — `c6881ef` (RED, 96 focused tests with 8 intended failures: seven missing undo
+  records and the cross-pane case missing the Mark Read offer) then `ed80df4` (implementation).
+  Gate re-run independently at `ed80df4`: **297 tests, 0 failures, 0 errors**, `:app:assembleDebug` green.
+  Slice review PASS. Six of the seven known consumers passed **unedited**; the seventh,
+  `a labeled button press raises the same offer as a swipe`, was reported first and then *strengthened* —
+  `MARK_READ` moved from asserting no offer to asserting `undoAvailable` plus the specific `MARKED_READ`
+  message, with `OPEN`'s branch untouched. All three rewrites carry their Amendment 8 reason in the commit
+  message. `assertPreferencesEqualEntryForEntryById` was checked for vacuity and is not: it asserts
+  whole-map equality plus five named-id equalities over a fixture with non-trivial weights and counts.
 
 ### Known consumers — the list `design.md` D5 said was not knowable
 
