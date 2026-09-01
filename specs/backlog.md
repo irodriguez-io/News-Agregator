@@ -12,7 +12,7 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-31, at wave D designed.
+Last reviewed: 2026-08-31, with wave D three-quarters shipped — 015, 012 and 014 merged, 016 remaining.
 
 ---
 
@@ -31,6 +31,9 @@ Last reviewed: 2026-08-31, at wave D designed.
 | 009 | Import and export | Android | PR #13, 2026-08-26 |
 | 013 | Undo gesture reset — a card accepts a swipe as soon as it is on screen | Android | 2026-08-28 |
 | 006 | Deck diversity sequencing | Android | 2026-08-31 |
+| 015 | A swipe must be attributed to the article the reader saw | Android | PR #20, 2026-08-31 |
+| 012 | The Discover card leads the viewport | Android | PR #21, 2026-08-31 |
+| 014 | The undo offer follows the reversible action, not the gesture | Android | PR #22, 2026-08-31 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -51,6 +54,12 @@ four passes.
 **014 and 016 were re-scoped in place on 2026-08-31**, on the reversibility line rather than by pane.
 Their numbers and every citation to them still resolve; `waves/wave-d.md` has the reasoning and the
 table.
+
+**Wave D is three-quarters shipped as of 2026-08-31.** `main` is at `cc2a6084` with 286 tests passing.
+Items 015 (`88e71b7c`), 012 (`05657ed6`) and 014 (`cc2a6084`) are merged with hosted CI green on each merge
+commit. **Item 016 is the only one left**, and `waves/wave-d.md`'s *Where this wave stands* section is
+written so a fresh session can dispatch it without this session's history — including the resolution of the
+one assumption that changes its slice plan's shape.
 
 **Wave D's four items were designed on 2026-08-31**, in one session and in implementation order, per
 `execution-model.md` §4.1. Each now has `spec.md`, `design.md` and `slices.md`; the two amendments they
@@ -79,7 +88,7 @@ valuable defects were found by the owner using the app — none by reading diffs
 | ~~A~~ | ~~007 Undo · 010 Launch theme · 011 Validator parity~~ | **merged 2026-08-25** | `waves/wave-a.md`, `waves/wave-a-note.md` |
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
 | ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
-| D | 015 Undo race · 012 Card first · 014 Raise the offer · 016 Widen what is reversible | **designed 2026-08-31; awaiting plan gate, then Amendments 7 and 8** | `waves/wave-d.md`, `waves/wave-d-amendments.md` |
+| D | ~~015 Undo race~~ · ~~012 Card first~~ · ~~014 Raise the offer~~ · **016 Widen what is reversible** | **in flight — three merged, 016 remains**; see `waves/wave-d.md` *Where this wave stands* | `waves/wave-d.md`, `waves/wave-d-amendments.md` |
 | E | 017 Tokens · 018 Components · 019 Discover · 020 Read Later + History · 021 Motion | wave D merged | `waves/wave-e.md` |
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
@@ -189,7 +198,7 @@ gesture, and `waves/wave-d.md`'s open `?` cell closes with 015 ∥ 012 intact
 
 *Raised by `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md` §2, 2026-08-28.*
 
-### 016 — Widen what is reversible  ·  *wave D*
+### 016 — Widen what is reversible  ·  *wave D, the last item, ready to dispatch*
 
 **Re-scoped 2026-08-31 on the reversibility line** (was: "Undo in Read Later and History"). The number
 and its citations still resolve. `waves/wave-d.md` has the table.
