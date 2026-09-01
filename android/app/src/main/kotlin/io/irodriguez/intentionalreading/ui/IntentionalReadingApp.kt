@@ -299,7 +299,6 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                                     viewModel.launchArticleAction(
                                         article = article,
                                         action = action,
-                                        undoable = true,
                                         expectDiscoverHead = true,
                                     ) { result ->
                                         onComplete(result.persisted)

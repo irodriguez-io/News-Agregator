@@ -75,7 +75,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.SAVE,
                 now = actionTime,
-                undoable = true,
             ),
         )
 
@@ -106,7 +105,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.DISMISS,
                 now = actionTime,
-                undoable = true,
             ),
         )
 
@@ -115,20 +113,6 @@ class ArticleStateMachineUndoTest {
         assertEquals(article().id, result.undoRecord?.articleId)
         assertEquals(ArticleAction.DISMISS, result.undoRecord?.action)
         assertSame(opened, result.undoRecord?.previousRecord)
-    }
-
-    @Test
-    fun `a commit that is not marked undo-eligible offers nothing`() {
-        // Given an article with no stored record
-        listOf(ArticleAction.SAVE, ArticleAction.DISMISS).forEach { action ->
-            // When it is committed without undo eligibility
-            val result = assertIs<ArticleTransition.Applied>(
-                ArticleStateMachine.transition(emptyMap(), noPreferences, article(), action, actionTime),
-            )
-
-            // Then no undo record is offered
-            assertNull(result.undoRecord, action.name)
-        }
     }
 
     @Test
@@ -150,7 +134,6 @@ class ArticleStateMachineUndoTest {
                     article(),
                     action,
                     actionTime,
-                    undoable = true,
                 ),
             )
 
@@ -171,7 +154,6 @@ class ArticleStateMachineUndoTest {
             article(),
             ArticleAction.SAVE,
             actionTime,
-            undoable = true,
         )
 
         // Then the unchanged transition has no undo record
@@ -189,7 +171,6 @@ class ArticleStateMachineUndoTest {
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
-                undoable = true,
             ),
         )
 
@@ -226,7 +207,6 @@ class ArticleStateMachineUndoTest {
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
-                undoable = true,
             ),
         )
 
@@ -249,7 +229,6 @@ class ArticleStateMachineUndoTest {
                 article(),
                 ArticleAction.SAVE,
                 actionTime,
-                undoable = true,
             ),
         )
 
@@ -275,7 +254,6 @@ class ArticleStateMachineUndoTest {
                 article(),
                 ArticleAction.DISMISS,
                 actionTime,
-                undoable = true,
             ),
         )
 
@@ -364,7 +342,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.DISMISS,
                 now = actionTime,
-                undoable = true,
             ),
         )
 
@@ -394,7 +371,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.SAVE,
                 now = actionTime,
-                undoable = true,
             ),
         )
         val undone = assertIs<ArticleTransition.Reverted>(
@@ -408,7 +384,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.SAVE,
                 now = actionTime.plusSeconds(60),
-                undoable = true,
             ),
         )
 
@@ -431,7 +406,6 @@ class ArticleStateMachineUndoTest {
                 article = article(),
                 action = ArticleAction.SAVE,
                 now = actionTime,
-                undoable = true,
             ),
         )
 

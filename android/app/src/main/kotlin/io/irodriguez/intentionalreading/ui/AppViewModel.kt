@@ -179,12 +179,11 @@ class AppViewModel(
     fun launchArticleAction(
         article: Article,
         action: ArticleAction,
-        undoable: Boolean = false,
         expectDiscoverHead: Boolean = false,
         onComplete: (ArticleActionResult) -> Unit = {},
     ) {
         viewModelScope.launch(loadDispatcher) {
-            onComplete(onArticleAction(article, action, undoable, expectDiscoverHead))
+            onComplete(onArticleAction(article, action, expectDiscoverHead))
         }
     }
 
@@ -373,7 +372,6 @@ class AppViewModel(
     suspend fun onArticleAction(
         article: Article,
         action: ArticleAction,
-        undoable: Boolean = false,
         expectDiscoverHead: Boolean = false,
     ): ArticleActionResult =
         stateMutex.withLock {
@@ -396,7 +394,6 @@ class AppViewModel(
                 article = article,
                 action = action,
                 now = nowProvider(),
-                undoable = undoable,
             )
             when (transition) {
                 is ArticleTransition.Invalid -> ArticleActionResult(
@@ -409,7 +406,6 @@ class AppViewModel(
                     article = article,
                     action = action,
                     transition = transition,
-                    undoable = undoable,
                 )
                 is ArticleTransition.Reverted -> error("A forward article action cannot return Reverted")
             }
@@ -482,7 +478,6 @@ class AppViewModel(
         article: Article,
         action: ArticleAction,
         transition: ArticleTransition.Applied,
-        undoable: Boolean,
     ): ArticleActionResult {
         val candidate = localState.copy(
             articles = transition.records,
@@ -509,11 +504,9 @@ class AppViewModel(
                     undoRecord = transition.undoRecord,
                     preferences = localState.preferences,
                 )
-                if (undoable) {
-                    transition.undoRecord?.let { record ->
-                        undoRecord = record
-                        raiseUndoOffer(record.action)
-                    }
+                transition.undoRecord?.let { record ->
+                    undoRecord = record
+                    raiseUndoOffer(record.action)
                 }
                 if (action == ArticleAction.OPEN && persistedRecord.status == ArticleStatus.OPENED) {
                     _heldArticleId.value = article.id

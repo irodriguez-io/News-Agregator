@@ -632,7 +632,6 @@ class AppViewModelTest {
             viewModel.launchArticleAction(
                 target,
                 ArticleAction.SAVE,
-                undoable = false,
                 onComplete = completed::complete,
             )
             enteredSave.await()
@@ -965,7 +964,7 @@ class AppViewModelTest {
         val viewModel = viewModel()
 
         // When a swipe commits Save
-        val result = viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        val result = viewModel.onArticleAction(target, ArticleAction.SAVE)
 
         // Then the state changes, the slot holds the action, and Undo is available
         assertTrue(result.persisted)
@@ -975,7 +974,7 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `a labeled button press is still not undo-eligible`() = runBlocking {
+    fun `a labeled button press raises the same offer as a swipe`() = runBlocking {
         // Given the four labeled article actions
         val actions = listOf(
             ArticleAction.DISMISS,
@@ -984,15 +983,36 @@ class AppViewModelTest {
             ArticleAction.MARK_READ,
         )
 
-        // When each action is committed through the non-undoable button path
+        // When each action is committed through the labeled button path
         actions.forEachIndexed { index, action ->
             val viewModel = viewModel()
-            val result = viewModel.onArticleAction(article(index + 1), action, undoable = false)
+            val result = viewModel.onArticleAction(article(index + 1), action)
 
-            // Then the slot is unchanged and no offer is raised
+            // Then reversible actions raise the same offer while Open and Mark Read still raise none
             assertTrue(result.persisted)
-            assertFalse(viewModel.uiState.value.undoAvailable)
-            assertNull(viewModel.uiState.value.pendingUndoOffer)
+            when (action) {
+                ArticleAction.DISMISS -> {
+                    assertTrue(viewModel.uiState.value.undoAvailable)
+                    assertEquals(
+                        PendingUndoMessage.DISMISSED,
+                        viewModel.uiState.value.pendingUndoOffer?.message,
+                    )
+                }
+                ArticleAction.SAVE -> {
+                    assertTrue(viewModel.uiState.value.undoAvailable)
+                    assertEquals(
+                        PendingUndoMessage.SAVED,
+                        viewModel.uiState.value.pendingUndoOffer?.message,
+                    )
+                }
+                ArticleAction.OPEN,
+                ArticleAction.MARK_READ,
+                -> {
+                    assertFalse(viewModel.uiState.value.undoAvailable)
+                    assertNull(viewModel.uiState.value.pendingUndoOffer)
+                }
+                else -> error("Unexpected action in labeled-button coverage: $action")
+            }
         }
     }
 
@@ -1009,13 +1029,11 @@ class AppViewModelTest {
         viewModel.onArticleAction(
             dismissedArticle,
             ArticleAction.DISMISS,
-            undoable = true,
         )
         assertEquals(PendingUndoMessage.DISMISSED, viewModel.uiState.value.pendingUndoOffer?.message)
         viewModel.onArticleAction(
             savedArticle,
             ArticleAction.SAVE,
-            undoable = true,
         )
 
         // When Undo is performed
@@ -1049,7 +1067,6 @@ class AppViewModelTest {
         viewModel.onArticleAction(
             dismissedArticle,
             ArticleAction.DISMISS,
-            undoable = true,
         )
         val firstOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
 
@@ -1057,7 +1074,6 @@ class AppViewModelTest {
         viewModel.onArticleAction(
             savedArticle,
             ArticleAction.SAVE,
-            undoable = true,
         )
         val secondOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
 
@@ -1080,7 +1096,6 @@ class AppViewModelTest {
         viewModel.launchArticleAction(
             article = target,
             action = ArticleAction.SAVE,
-            undoable = true,
             onComplete = completed::complete,
         )
 
@@ -1099,7 +1114,7 @@ class AppViewModelTest {
         val completed = CompletableDeferred<ArticleActionResult>()
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        assertTrue(viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true).persisted)
+        assertTrue(viewModel.onArticleAction(target, ArticleAction.SAVE).persisted)
         store.saveBehavior = { state ->
             enteredUndoWrite.complete(Unit)
             releaseUndoWrite.await()
@@ -1133,9 +1148,9 @@ class AppViewModelTest {
         val viewModel = viewModel()
 
         // When Save and Dismiss are committed as undoable actions
-        viewModel.onArticleAction(savedArticle, ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(savedArticle, ArticleAction.SAVE)
         val savedOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
-        viewModel.onArticleAction(dismissedArticle, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(dismissedArticle, ArticleAction.DISMISS)
         val dismissedOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
 
         // Then each offer names its committed action
@@ -1148,7 +1163,7 @@ class AppViewModelTest {
         // Given a raised Undo offer
         val target = article(1)
         val viewModel = viewModel()
-        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS)
         val offer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
 
         // When the offer is acknowledged by id
@@ -1175,7 +1190,7 @@ class AppViewModelTest {
         )
         val store = FakeLocalStateStore(success(initial))
         val viewModel = viewModel(store = store)
-        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS)
         assertTrue(viewModel.uiState.value.undoAvailable)
         val preferencesAfterDismiss = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
 
@@ -1201,10 +1216,10 @@ class AppViewModelTest {
         val other = article(2)
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS)
         val offer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
         store.saveBehavior = { candidate -> success(candidate.copy(articles = candidate.articles - target.id)) }
-        viewModel.onArticleAction(other, ArticleAction.SAVE, undoable = false)
+        viewModel.onArticleAction(other, ArticleAction.OPEN)
         val writesBeforeUndo = store.saveRequests.size
 
         // When Undo is refused as stale
@@ -1233,7 +1248,7 @@ class AppViewModelTest {
         val viewModel = viewModel(store = store)
 
         // When a swipe commits an undoable Save
-        val result = viewModel.onArticleAction(article(1), ArticleAction.SAVE, undoable = true)
+        val result = viewModel.onArticleAction(article(1), ArticleAction.SAVE)
 
         // Then persistence fails and neither an offer nor an Undo slot is published
         assertFalse(result.persisted)
@@ -1267,7 +1282,7 @@ class AppViewModelTest {
         val target = article(1)
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        viewModel.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.SAVE)
         val committed = assertIs<LocalStateResult.Success>(store.loadResult).state
         store.saveBehavior = {
             LocalStateResult.Failure(
@@ -1299,7 +1314,7 @@ class AppViewModelTest {
         // Given a populated undo slot
         val store = FakeLocalStateStore()
         val viewModel = viewModel(store = store)
-        viewModel.onArticleAction(article(1), ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(article(1), ArticleAction.DISMISS)
         assertTrue(viewModel.uiState.value.undoAvailable)
 
         // When local data is reset
@@ -1320,7 +1335,7 @@ class AppViewModelTest {
         val target = article(1)
         val store = FakeLocalStateStore()
         val firstProcess = viewModel(store = store)
-        firstProcess.onArticleAction(target, ArticleAction.SAVE, undoable = true)
+        firstProcess.onArticleAction(target, ArticleAction.SAVE)
         assertTrue(firstProcess.uiState.value.undoAvailable)
         assertEquals(ArticleStatus.SAVED, assertIs<LocalStateResult.Success>(store.loadResult).state.articles[target.id]?.status)
 
@@ -1353,7 +1368,7 @@ class AppViewModelTest {
         viewModel.onArticleAction(target, ArticleAction.OPEN)
         assertEquals(target.id, viewModel.heldArticleId.value)
         val preferencesAfterOpen = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
-        viewModel.onArticleAction(target, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(target, ArticleAction.DISMISS)
         assertNull(viewModel.heldArticleId.value)
         assertEquals(next.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
         val preferencesBeforeUndo = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
@@ -1389,7 +1404,7 @@ class AppViewModelTest {
             refreshResult = updated(dataset(listOf(restored, displaced))),
             store = store,
         )
-        viewModel.onArticleAction(restored, ArticleAction.DISMISS, undoable = true)
+        viewModel.onArticleAction(restored, ArticleAction.DISMISS)
         assertEquals(displaced.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
         assertTrue(viewModel.performUndo().persisted)
         assertEquals(restored.id, assertIs<DiscoverUiState.Card>(viewModel.uiState.value.discover).article.id)
@@ -1402,7 +1417,6 @@ class AppViewModelTest {
         viewModel.launchArticleAction(
             article = displaced,
             action = ArticleAction.SAVE,
-            undoable = true,
             expectDiscoverHead = true,
             onComplete = completed::complete,
         )
@@ -1448,7 +1462,6 @@ class AppViewModelTest {
         val result = viewModel.onArticleAction(
             article = currentHead,
             action = ArticleAction.SAVE,
-            undoable = true,
             expectDiscoverHead = true,
         )
 
@@ -1495,7 +1508,6 @@ class AppViewModelTest {
         val result = viewModel.onArticleAction(
             article = previousHead,
             action = ArticleAction.DISMISS,
-            undoable = true,
             expectDiscoverHead = true,
         )
 
@@ -1571,7 +1583,7 @@ class AppViewModelTest {
             refreshResult = updated(dataset(listOf(currentHead, displaced))),
             store = store,
         )
-        viewModel.onArticleAction(pendingArticle, ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(pendingArticle, ArticleAction.SAVE)
         val pendingBefore = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
         val stateBefore = assertIs<LocalStateResult.Success>(store.loadResult).state
         val writesBefore = store.saveRequests.size
@@ -1580,7 +1592,6 @@ class AppViewModelTest {
         val result = viewModel.onArticleAction(
             article = displaced,
             action = ArticleAction.DISMISS,
-            undoable = true,
             expectDiscoverHead = true,
         )
 
@@ -1694,7 +1705,7 @@ class AppViewModelTest {
         val viewModel = viewModel(store = store)
         val held = article(50)
         viewModel.onArticleAction(held, ArticleAction.OPEN)
-        viewModel.onArticleAction(article(51), ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(article(51), ArticleAction.SAVE)
         assertEquals(held.id, viewModel.heldArticleId.value)
         assertTrue(viewModel.uiState.value.undoAvailable)
         store.importBehavior = { success(LocalState.default()) }
@@ -1895,7 +1906,7 @@ class AppViewModelTest {
             store = store,
         )
         viewModel.onArticleAction(heldArticle, ArticleAction.OPEN)
-        viewModel.onArticleAction(undoableArticle, ArticleAction.SAVE, undoable = true)
+        viewModel.onArticleAction(undoableArticle, ArticleAction.SAVE)
         assertEquals(heldArticle.id, viewModel.heldArticleId.value)
         assertTrue(viewModel.uiState.value.undoAvailable)
         assertTrue(viewModel.uiState.value.pendingUndoOffer != null)

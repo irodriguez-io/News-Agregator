@@ -52,7 +52,6 @@ object ArticleStateMachine {
         article: Article,
         action: ArticleAction,
         now: Instant,
-        undoable: Boolean = false,
     ): ArticleTransition {
         val existing = records[article.id]
         val status = existing?.status ?: ArticleStatus.UNSEEN
@@ -141,7 +140,7 @@ object ArticleStateMachine {
             putAll(records)
             put(article.id, next)
         }
-        val undoRecord = if (undoable && action in reversibleActions) {
+        val undoRecord = if (action in reversibleActions) {
             UndoRecord(
                 articleId = article.id,
                 action = action,
