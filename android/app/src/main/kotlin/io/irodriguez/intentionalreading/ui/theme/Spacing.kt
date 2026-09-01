@@ -16,15 +16,14 @@ data class IntentionalReadingSpacingScale(
     val contentMaxWidth: Dp,
 )
 
-// Deliberately wrong RED values. The failing test commit proves the complete rhythm by value.
 val IntentionalReadingSpacing = IntentionalReadingSpacingScale(
-    baseUnit = 2.dp,
-    stackGap = 8.dp,
-    gutter = 12.dp,
-    mobileMargin = 16.dp,
-    tabletMargin = 20.dp,
-    sectionGap = 24.dp,
-    contentMaxWidth = 640.dp,
+    baseUnit = 4.dp,
+    stackGap = 12.dp,
+    gutter = 16.dp,
+    mobileMargin = 18.dp,
+    tabletMargin = 24.dp,
+    sectionGap = 32.dp,
+    contentMaxWidth = 680.dp,
 )
 
 val LocalIntentionalReadingSpacing = staticCompositionLocalOf<IntentionalReadingSpacingScale> {

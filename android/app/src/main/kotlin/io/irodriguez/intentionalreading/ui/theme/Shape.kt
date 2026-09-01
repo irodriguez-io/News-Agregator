@@ -23,20 +23,19 @@ data class IntentionalReadingShapeScale(
     val mediaSlot: RoundedCornerShape,
 )
 
-// Deliberately wrong RED values. The failing test commit proves every authored role by value.
 val IntentionalReadingShapes = IntentionalReadingShapeScale(
-    primaryCard = RoundedCornerShape(20.dp),
-    queueRow = RoundedCornerShape(12.dp),
-    statBand = RoundedCornerShape(12.dp),
-    smallContainer = RoundedCornerShape(12.dp),
-    modalSheet = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-    bottomBar = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-    filledPrimaryButton = RoundedCornerShape(12.dp),
-    chip = RoundedCornerShape(12.dp),
-    badge = RoundedCornerShape(12.dp),
-    pill = RoundedCornerShape(12.dp),
-    iconButton = RoundedCornerShape(12.dp),
-    mediaSlot = RoundedCornerShape(16.dp),
+    primaryCard = RoundedCornerShape(24.dp),
+    queueRow = RoundedCornerShape(16.dp),
+    statBand = RoundedCornerShape(16.dp),
+    smallContainer = RoundedCornerShape(16.dp),
+    modalSheet = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    bottomBar = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    filledPrimaryButton = RoundedCornerShape(16.dp),
+    chip = CircleShape,
+    badge = CircleShape,
+    pill = CircleShape,
+    iconButton = CircleShape,
+    mediaSlot = RoundedCornerShape(20.dp),
 )
 
 val LocalIntentionalReadingShapes = staticCompositionLocalOf<IntentionalReadingShapeScale> {
