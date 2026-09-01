@@ -37,6 +37,20 @@ rm -rf app/build/test-results/testDebugUnitTest
 
 ---
 
+> **Corrected 2026-08-31, at dispatch, and the correction is the supervisor's error to own.** Slice 1
+> originally excluded `AppViewModelTest.kt`. But removing the `undoable` parameter from
+> `AppViewModel.onArticleAction` and `launchArticleAction` breaks **33 call sites across roughly 20 cases**
+> in that file, so slice 1 could not compile its own test sources, let alone reach a green gate. **The
+> implementer found it and stopped rather than either widening its own scope or editing tests it was not
+> authorized to touch.**
+>
+> This is item 006's failure in a different costume, and it has the same root that `waves/wave-c-note.md`
+> §7 names: the plan was drawn by **who writes a file**, never by **who asserts against it**. A signature
+> change is not confined to the layer that declares it.
+>
+> Slice 1 now carries the mechanical argument removal in `AppViewModelTest.kt`; slice 2 keeps every
+> assertion change. The item's scenarios, definition of done and shipped behaviour are unchanged.
+
 ## Slice 1: the state machine builds an undo record for any reversible action
 
 - **Scenarios:** *a swipe behaves exactly as it does today*, *Read article still offers nothing*, *Mark read
@@ -50,6 +64,8 @@ rm -rf app/build/test-results/testDebugUnitTest
     left it.**
   - `«pkg»/ui/IntentionalReadingApp.kt` — remove `undoable = true` at `:290` only.
   - `…/test/…/domain/state/ArticleStateMachineUndoTest.kt` — per `design.md` D5.
+  - `…/test/…/ui/AppViewModelTest.kt` — **mechanical only**: drop the `undoable` argument from every call
+    that passes it. No assertion, expected value or test name changes here; those are slice 2's.
 - **Failing-first commit:** a new `ArticleStateMachineUndoTest` case asserting that a `SAVE` committed
   **without** any eligibility argument carries an undo record naming the previous state, and that `OPEN` and
   `MARK_READ` still carry none. RED today because `undoable` defaults to `false`.
@@ -59,8 +75,11 @@ rm -rf app/build/test-results/testDebugUnitTest
   - An idempotent no-op still carries no record (`:127`).
   - `a commit that is not marked undo-eligible offers nothing` (`:85`) is deleted, with `design.md` D5's
     reason in the commit message.
+  - **`AppViewModelTest.kt` compiles and passes with the argument removed and nothing else changed.** Report
+    the number of call sites touched. Any case that needs more than the argument dropped belongs to slice 2
+    — name it and leave it.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** done — `fa96b67` (RED) + `8fa59c5` (GREEN), slice review PASS 2026-08-31
 
 ## Slice 2: every Discover surface raises the offer
 
@@ -84,7 +103,7 @@ rm -rf app/build/test-results/testDebugUnitTest
     eligibility to the slot` (`:1073`) are replaced per `design.md` D5, each with its reason in the commit
     message.
   - Both gates green; count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** done — `86ec7f4` + `d97ec2d`, slice review PASS 2026-08-31
 
 ---
 
