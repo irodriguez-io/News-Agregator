@@ -107,7 +107,15 @@ replaces while only `SAVE` and `DISMISS` can produce a record.
   - **The whole suite is green at 286 tests plus whatever this slice adds, with zero failures**, and
     `:app:assembleDebug` is green. This slice changes no behaviour that any existing test observes.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** **done** — `4e7e51f` (RED, three `UiStateMapperTest` cases) then `bebe0b6` (implementation).
+  Gate re-run independently at `bebe0b6`: **289 tests, 0 failures, 0 errors**, `:app:assembleDebug` green.
+  Slice review PASS. Test diff against `main` is +36 lines with zero deletions; the four existing
+  assertions at `:543-549` are untouched. `undoAvailable = undoAction != null` was verified safe against
+  the code, not only against D2: `undoAction` is `undoRecord?.action` (`AppViewModel.kt:710`) and
+  `undoRecord` is assigned in exactly one place (`:508`) from `transition.undoRecord`, which the state
+  machine builds only for `action in reversibleActions`. Dropping the `else` also makes the `when`
+  exhaustive over all six `ArticleAction` cases, so a future action fails to compile rather than being
+  swallowed.
 
 ## Slice B: the source — the reversal arithmetic
 
