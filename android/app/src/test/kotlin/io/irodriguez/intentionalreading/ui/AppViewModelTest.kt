@@ -1017,6 +1017,104 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `a button save followed by a swipe leaves the button save standing after Undo`() = runBlocking {
+        // Given a button-saved article with an offer showing and a distinct article ready to swipe
+        val buttonSavedArticle = article(1).copy(
+            tags = listOf(
+                ArticleTag("button_topic_one", "Button topic one"),
+                ArticleTag("button_topic_two", "Button topic two"),
+            ),
+        )
+        val swipedArticle = article(2).copy(
+            tags = listOf(
+                ArticleTag("swipe_topic_one", "Swipe topic one"),
+                ArticleTag("swipe_topic_two", "Swipe topic two"),
+            ),
+        )
+        val store = FakeLocalStateStore()
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(buttonSavedArticle, swipedArticle))),
+            store = store,
+        )
+        assertTrue(viewModel.onArticleAction(buttonSavedArticle, ArticleAction.SAVE).persisted)
+        val buttonOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        assertEquals(PendingUndoMessage.SAVED, buttonOffer.message)
+        val preferencesAfterButton = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
+
+        // When the next article is dismissed by swipe and Undo is performed
+        assertTrue(viewModel.onArticleAction(swipedArticle, ArticleAction.DISMISS).persisted)
+        val swipeOffer = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(swipeOffer.id > buttonOffer.id)
+        assertEquals(PendingUndoMessage.DISMISSED, swipeOffer.message)
+        val preferencesAfterSwipe = assertIs<LocalStateResult.Success>(store.loadResult).state.preferences
+        assertEquals(
+            preferencesAfterButton.sources[buttonSavedArticle.source.id],
+            preferencesAfterSwipe.sources[buttonSavedArticle.source.id],
+            "source ${buttonSavedArticle.source.id} must retain the button Save signal",
+        )
+        buttonSavedArticle.tags.forEach { topic ->
+            assertEquals(
+                preferencesAfterButton.topics[topic.id],
+                preferencesAfterSwipe.topics[topic.id],
+                "topic ${topic.id} must retain the button Save signal",
+            )
+        }
+        assertNotEquals(
+            preferencesAfterButton.sources[swipedArticle.source.id],
+            preferencesAfterSwipe.sources[swipedArticle.source.id],
+            "source ${swipedArticle.source.id} must receive the swipe Dismiss signal",
+        )
+        swipedArticle.tags.forEach { topic ->
+            assertNotEquals(
+                preferencesAfterButton.topics[topic.id],
+                preferencesAfterSwipe.topics[topic.id],
+                "topic ${topic.id} must receive the swipe Dismiss signal",
+            )
+        }
+        val undone = viewModel.performUndo()
+
+        // Then only the swiped article is reversed and the earlier button Save still stands
+        assertTrue(undone.persisted)
+        assertIs<ArticleTransition.Reverted>(undone.transition)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            ArticleStatus.SAVED,
+            persisted.articles.getValue(buttonSavedArticle.id).status,
+            "article ${buttonSavedArticle.id} must remain saved",
+        )
+        assertFalse(
+            swipedArticle.id in persisted.articles,
+            "article ${swipedArticle.id} must be removed by Undo",
+        )
+        assertEquals(
+            preferencesAfterButton.sources[buttonSavedArticle.source.id],
+            persisted.preferences.sources[buttonSavedArticle.source.id],
+            "source ${buttonSavedArticle.source.id} must keep the button Save signal",
+        )
+        buttonSavedArticle.tags.forEach { topic ->
+            assertEquals(
+                preferencesAfterButton.topics[topic.id],
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must keep the button Save signal",
+            )
+        }
+        assertEquals(
+            preferencesAfterButton.sources[swipedArticle.source.id],
+            persisted.preferences.sources[swipedArticle.source.id],
+            "source ${swipedArticle.source.id} must reverse the swipe Dismiss signal",
+        )
+        swipedArticle.tags.forEach { topic ->
+            assertEquals(
+                preferencesAfterButton.topics[topic.id],
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must reverse the swipe Dismiss signal",
+            )
+        }
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+    }
+
+    @Test
     fun `the slot holds one action, and the newest wins`() = runBlocking {
         // Given an undo-eligible dismiss followed by an undo-eligible save of a different article
         val dismissedArticle = article(1)
@@ -1255,6 +1353,53 @@ class AppViewModelTest {
         assertNull(viewModel.uiState.value.pendingUndoOffer)
         assertFalse(viewModel.uiState.value.undoAvailable)
         assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
+    fun `a second save on an already saved article raises no offer`() = runBlocking {
+        // Given an already-saved article with source and topic preferences that must not move
+        val target = article(1).copy(
+            tags = listOf(
+                ArticleTag("saved_topic_one", "Saved topic one"),
+                ArticleTag("saved_topic_two", "Saved topic two"),
+            ),
+        )
+        val store = FakeLocalStateStore()
+        val firstProcess = viewModel(store = store)
+        assertTrue(firstProcess.onArticleAction(target, ArticleAction.SAVE).persisted)
+        val savedState = assertIs<LocalStateResult.Success>(store.loadResult).state
+        val previousRecord = savedState.articles.getValue(target.id)
+        val preferences = savedState.preferences
+        val viewModel = viewModel(store = store)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+
+        // When Save is committed again
+        val result = viewModel.onArticleAction(target, ArticleAction.SAVE)
+
+        // Then it is unchanged, applies no signal, and raises no offer
+        assertTrue(result.persisted)
+        assertIs<ArticleTransition.Unchanged>(result.transition)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            previousRecord,
+            persisted.articles[target.id],
+            "article ${target.id} must remain exactly as stored",
+        )
+        assertEquals(
+            preferences.sources[target.source.id],
+            persisted.preferences.sources[target.source.id],
+            "source ${target.source.id} must not receive another Save signal",
+        )
+        target.tags.forEach { topic ->
+            assertEquals(
+                preferences.topics[topic.id],
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id} must not receive another Save signal",
+            )
+        }
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
     }
 
     @Test
