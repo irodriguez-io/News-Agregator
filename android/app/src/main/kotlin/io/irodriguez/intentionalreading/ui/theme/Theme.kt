@@ -28,7 +28,10 @@ fun IntentionalReadingTheme(
     }
 }
 
-private fun intentionalReadingColorScheme(tokens: IntentionalReadingTokens): ColorScheme =
+internal fun intentionalReadingColorScheme(
+    tokens: IntentionalReadingTokens,
+    darkTheme: Boolean = false,
+): ColorScheme =
     // Every role is supplied below, so this factory contributes no default Material palette values.
     lightColorScheme(
         primary = tokens.accent,
