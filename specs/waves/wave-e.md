@@ -81,13 +81,33 @@ gave: so two concurrent design sessions in this wave cannot both reach for 019.
 
 ## Collisions and order
 
+**Corrected at the design sweep, 2026-09-01.** The first version of this table had two faults, both found
+by asking *who calls each composable* rather than *which directory is it in*. It is superseded by the table
+below; `execution-model.md` §2.1 is the general warning this is an instance of.
+
 | Hub file | 017 | 018 | 019 | 020 | 021 |
 |---|---|---|---|---|---|
 | `ui/theme/**`, `res/values/**`, `res/font/**` | ● | | | | |
-| `ui/components/**` (shared: app bar, nav bar, chips, buttons) | | ● | | | |
+| `ui/components/BottomNavigationBar.kt`, `CategoryChipRow.kt`, `LocalStateMessages.kt`, + new shared controls | | ● | | | |
 | `ui/components/ArticleCard.kt`, `ui/screens/discover/**` | | | ● | | |
+| `ui/components/ArticleRow.kt`, `EditorialHeader.kt`, `EmptyStatePanel.kt`, `StatBand.kt` | | | | ● | |
 | `ui/screens/readlater/**`, `ui/screens/history/**` | | | | ● | |
-| `ui/IntentionalReadingApp.kt` (navigation, sheet, transitions) | | ● | | | ● |
+| `ui/screens/settings/**` | | | | | ● |
+| `ui/IntentionalReadingApp.kt` (app bar and bar hosting) | | ● | | | |
+| `ui/IntentionalReadingApp.kt` (transitions, sheet hosting) | | | | | ● |
+
+**Fault 1 — `ui/components/**` was too wide for 018.** Four of that directory's eleven files are called
+**only** from Read Later and History and are therefore item 020's: `ArticleRow.kt` (the Queue Row),
+`EditorialHeader.kt`, `EmptyStatePanel.kt` and `StatBand.kt`. Leaving them with 018 would have had 018
+restyling four components it cannot see in context, and 020 re-laying out two screens around components it
+was forbidden to touch. The old row's parenthetical — *"shared: app bar, nav bar, chips, buttons"* — was
+carrying the real allocation and the path glob contradicted it.
+
+**Fault 2 — `ui/screens/settings/**` appeared in no row at all**, so §76.7's sheet chrome had no owner. It
+goes to 021, whose §79.2 reveal is inseparable from it, and which runs last.
+
+`UndoToast.kt`, `ImportConfirmation.kt` and `ResetConfirmation.kt` belong to **no item in this wave** and are
+not to be restyled by any of them.
 
 **017 blocks everything.** Every other item consumes its tokens. Nothing in this wave may hardcode a
 colour, a radius, or a font — if an item needs a token 017 did not define, that is a report to the
@@ -178,9 +198,18 @@ behaviour is the failure mode.
 
 ## Gates
 
-Per `execution-model.md` §8. `android.yml` only — unless 020 introduces shared copy, which pulls in
-`js/**` and its validators and makes that item a two-gate item. Decide that at 020's design pass, not at
-its PR.
+Per `execution-model.md` §8 — **with one correction to §8 itself, found on PR #27.** §8 states that
+`test.yml` fires on the web and pipeline paths. It does not: `android.yml` is path-filtered on `android/**`,
+but `test.yml`'s trigger is a bare `pull_request:` with no `paths` key, so **it runs on every PR in this
+repository regardless of what changed.** Expect it on every wave-E PR and do not read it as a signal that
+web paths were touched.
+
+**020's two-gate question is settled, and the answer is one gate** (`020/spec.md` §1.3). Every string §63's
+high-fidelity empty state needs already exists — `history_empty_title`, `history_empty_copy`,
+`go_to_discover`, and the Read Later pair — so §63 is a visual upgrade to existing copy. `android.yml` only.
+
+**The condition is load-bearing:** §75.2 makes any new user-facing string shared copy, which would pull in
+`js/**` and its validators. `res/values/strings.xml` appearing in 020's diff is a stop, not a decision.
 
 ---
 
