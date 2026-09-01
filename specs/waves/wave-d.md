@@ -105,32 +105,34 @@ Tests went 284 → 297 across the wave.
 | `backlog.md` updated | ✅ `138b5b6` — the backlog now holds only wave E |
 | `wave-d-note.md` written (`execution-model.md` §4.6) | ✅ `e50798f` |
 | The `execution-model.md` §2 amendment owed at wave close | ✅ `550816f` — §2.1, the three dependency edges |
-| Walkthroughs recorded | ⬜ **the one thing outstanding** — see below |
+| Walkthroughs recorded | ✅ `269506b` — `specs/016-android-reversible-actions/walkthrough/` |
 
-### The one thing outstanding
+### The walkthrough — driven 2026-08-31, all steps pass
 
-**The batched walkthrough for 015, 014 and 016**, against merged `main` at `d249bc0`
-(`execution-model.md` §4.5, §6; `016/spec.md` §6.3). 012's was driven at its slice 2 and is recorded in
-`specs/012-android-discover-card-first/walkthrough/`; it is not repeated.
+`specs/016-android-reversible-actions/walkthrough/`, batched for 015, 014 and 016 against merged `main` at
+`d249bc0`, **against real accumulated history** (35 articles and 31 preference entries carried over; app
+data preserved through `adb install -r`) per owner checkpoint 3.
 
-**Three owner checkpoints ride on it and are the only ones still open:**
+All eight of `016/spec.md` §6.3's steps pass, plus item 014's *Save for later* offer and item 015's race.
+**Step 3, the re-application, is correct on the device** — undoing `MARK_UNREAD` sent `openid_specs` back
+from −0.15/4 to 0.10/5 and both topics back up, entry for entry, with the record byte-identical. Item 015
+was driven seven times at ~40–50 ms and produced **zero misattributions**, scored by article id.
 
-1. **The three new toast strings** — *Marked as read*, *Returned to Read Later*, *Removed from Read Later*
-   (`016/spec.md` §5) — judged on screen. `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so new
-   copy needs no amendment; it needs the owner's eye.
-2. **The widened Undo against real accumulated history, not fresh state.** Every wave so far has found its
-   most valuable defects this way and none of them by a gate.
-3. **Wave sign-off** against merged `main`.
+**Two owner checkpoints remain, and they are judgement, not verification:**
 
-**Method, and it is not optional** (`wave-c-note.md` §6): `uiautomator dump` cannot see the Undo toast at
-all — `screencap` at 0.35 s shows it plainly, so drive the whole sequence inside **one on-device `adb
-shell`**. Card and row action controls sit roughly **150 px above** their text labels; read the clickable
-node's bounds, not the label's. The category chip row scrolls, so re-locate chips before every tap.
+1. **The three toast strings** — all confirmed rendering, screencaps in the walkthrough directory. The
+   wording is the owner's call; `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so no amendment is
+   needed either way.
+2. **Wave sign-off** against merged `main` at `d249bc0`.
 
-**`016/spec.md` §6.3 step 3 is the step most likely to fail on screen** — undoing `MARK_UNREAD` must send
-the source weight back **up**, because it re-applies rather than reverses. It is the only place in V1 where
-undoing an action applies a signal, and it is where the arithmetic would be wrong if it were wrong
-anywhere.
+**One observation worth carrying to wave E**, visible only from the device and not a defect against any
+specification: the Undo toast **overlaps the bottom row's action rail** on Read Later and History while it
+is showing. It clears in 4.5 s and no action is lost, but a reader aiming at the bottom row during the
+window hits the toast. Wave E item 020 re-lays out both panes.
+
+The walkthrough's *Method notes* section adds three findings to `wave-c-note.md` §6, including that the
+toast's Undo target moves with the message width — **a fixed coordinate silently misses, and a missed Undo
+looks exactly like a passing run unless you score by article id.**
 
 ### What the wave cost
 
