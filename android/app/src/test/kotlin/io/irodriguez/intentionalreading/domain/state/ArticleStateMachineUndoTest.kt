@@ -27,6 +27,42 @@ import kotlin.test.assertSame
 
 class ArticleStateMachineUndoTest {
     @Test
+    fun `reversible actions carry undo state without caller eligibility`() {
+        // Given an article with an exact prior record
+        val previousRecord = openedRecord()
+
+        // When Save is committed without an eligibility argument
+        val save = assertIs<ArticleTransition.Applied>(
+            ArticleStateMachine.transition(
+                records = mapOf(article().id to previousRecord),
+                preferences = noPreferences,
+                article = article(),
+                action = ArticleAction.SAVE,
+                now = actionTime,
+            ),
+        )
+
+        // Then Save names the exact state it replaced
+        assertEquals(article().id, save.undoRecord?.articleId)
+        assertSame(previousRecord, save.undoRecord?.previousRecord)
+
+        // And Open and Mark Read remain outside the reversible action set
+        listOf(ArticleAction.OPEN, ArticleAction.MARK_READ).forEach { action ->
+            val result = assertIs<ArticleTransition.Applied>(
+                ArticleStateMachine.transition(
+                    records = emptyMap(),
+                    preferences = noPreferences,
+                    article = article(),
+                    action = action,
+                    now = actionTime,
+                ),
+            )
+
+            assertNull(result.undoRecord, action.name)
+        }
+    }
+
+    @Test
     fun `an undo-eligible save records what it replaced`() {
         // Given an article with no stored record
         val records = emptyMap<String, ArticleRecord>()
