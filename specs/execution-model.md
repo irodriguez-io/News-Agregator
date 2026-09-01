@@ -53,6 +53,61 @@ hardest item in the backlog. Order is not a preference here.
 **Corollary: three concurrent wave managers would not work.** Two of the three would sit blocked on a
 merge. The dependency graph is what it is.
 
+### 2.1 The matrix orders files by who writes them, and that is not enough
+
+**Amended at wave D's close, 2026-08-31, after the same gap failed three items across three waves.**
+
+The matrix above answers one question: *which items write this file.* That is sufficient for deciding
+which **waves** can run concurrently, which is what it was built for. It is **not** sufficient for drawing
+a **slice plan**, and slice plans have been borrowing its shape and inheriting its blind spot.
+
+A file has three kinds of dependent, and the matrix models only the first:
+
+| Edge | The question | What breaks when it is missed |
+|---|---|---|
+| **Writes** | Who edits this file? | Two implementers produce an unmergeable diff. **Modelled.** |
+| **Asserts** | Which test files make claims about this file's behaviour? | A plan freezes an assertion its predecessor made unfreezable, or splits a signature change away from the 28 call sites that pass it. |
+| **Receives** | What consumes this file's output at runtime? | Widening what a producer emits sends values into a consumer that rejects them — in another file, in another slice. |
+
+**The three failures, one root each costume:**
+
+1. **Item 006 — an assertion edge.** Item 005 asserted `contracts.md` §58's ordering *through*
+   `DiscoverDeck.build()`. Item 006 exists to reorder that list, and its plan then froze every existing
+   assertion. Unsatisfiable, and it surfaced at dispatch — weeks after plan-mode approval.
+   (`waves/wave-c-note.md` §2, §7.)
+2. **Item 014 — a compile edge.** Slice 1 removed a parameter from `AppViewModel` while excluding
+   `AppViewModelTest.kt` and its 28 calls. The slice could not have built its own test sources.
+   (`014/evidence.md` §7.)
+3. **Item 016 — a runtime edge.** Slice 1 widened `reversibleActions`, so the domain began producing undo
+   records for three more actions. Those records reached `AppViewModel.raiseUndoOffer`'s
+   `error("Only Save and Dismiss can raise an Undo offer")` — a different file, owned by slice 2. Measured:
+   **292 tests, 7 failures**, every one that exception. The same item also carried a slice 2 → slice 3
+   compile edge that the plan **documented and mislabelled as slice 3's failing-first evidence**.
+   (`016/evidence.md` §5.1.)
+
+**None of the three was caught by a gate or by reading a diff. All three were caught by an implementer
+refusing to build a contradiction**, two of them only after the work was done and measured.
+
+#### The rules that follow
+
+1. **Every hub-file row in a slice plan carries three lists, not one:** who writes it, which test files
+   assert against it, and what receives its output at runtime. A signature or type change must be assumed
+   to reach every file on lists two and three.
+2. **A slice boundary is valid only if the slice can reach a green gate on its own.** State how, in one
+   sentence, when the plan is written. If you cannot state it, the boundary is wrong — that single check
+   would have caught items 014 and 016 at design time rather than at dispatch.
+3. **A slice's failing-first evidence must be its own tests failing for the intended reason — never the
+   next slice's compile error.** "This slice breaks the build until the next one lands" is a report that
+   the cut is wrong, not a description of RED.
+4. **When a change widens what a producer emits, land the consumers first.** Extending an enum, a set, or a
+   returned type is safe while nothing produces the new values, so the consumer slice is green on the old
+   tree and the producer slice turns the whole thing on. This is what unblocked item 016, and it is the
+   general shape.
+5. **An assertion enumeration expires when the item beneath it merges.** `design.md` D5 lists are accurate
+   when written and stale when used; no gate distinguishes the two. Name cases with reasons, never freeze
+   them, and require the implementer to report an unlisted failure before editing it. That protocol caught
+   item 016's stale row at preflight, before a single file was edited.
+
 ---
 
 ## 3. Numbers, branches, directories
