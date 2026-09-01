@@ -35,6 +35,7 @@ Recorded at the moment of each run, `test-results` deleted first (`execution-mod
 |---|---|---|---|
 | 2026-08-31, base `05657ed` | — (baseline) | 284 tests, 0 failures, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
 | 2026-08-31, head `8fa59c5` | 1 | **284 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+| 2026-08-31, head `d97ec2d` | 2 | **286 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
 
 The count is unchanged because slice 1 adds one case and deletes one. Head row is the supervisor's own run,
 `test-results` deleted first.
@@ -44,12 +45,20 @@ The count is unchanged because slice 1 adds one case and deletes one. Head row i
 | Slice | RED reproduced | Test commit | Implementation commit |
 |---|---|---|---|
 | 1 | **yes, independently** | `fa96b67` | `8fa59c5` |
+| 2 | **yes, against the item base** — see below | `86ec7f4` | `d97ec2d` (rename only) |
 
 Reproduced in a throwaway detached worktree at `fa96b67`, with `undoable` confirmed still present in
 `ArticleStateMachine.kt` (fix absent): **285 tests completed, 1 failed** —
 `reversible actions carry undo state without caller eligibility`. Behavioural, and **no temporary
 scaffolding was needed**: the new case simply calls `transition` without an eligibility argument, which
 defaults to `false` on the old tree and so produces no undo record.
+
+**Slice 2 is test-only and its cases pass on the post-slice-1 tree. That is correct, not a missing RED**,
+and the brief anticipated it: slice 1 shipped the production change, so slice 2 adds the coverage that
+change earns. The meaningful question is whether the cases are red against **the item's base**, and they
+are — dropped onto a throwaway worktree at `05657ed`, `a button save followed by a swipe leaves the button
+save standing after Undo` fails behaviourally, because before this item a button `SAVE` raised no offer at
+all. They assert behaviour 014 introduces; they are not tautologies.
 
 ## 4. Existing assertions changed
 
@@ -62,11 +71,28 @@ defaults to `false` on the old tree and so produces no undo record.
 | `AppViewModelTest` `a labeled button press is still not undo-eligible` | replace (D5 assigned it to slice 2) | **rewritten in slice 1** as `a labeled button press raises the same offer as a swipe`, keeping the `OPEN` and `MARK_READ` no-offer cases intact. Moved forward because its assertion is falsified *by slice 1*; leaving it for slice 2 would have ended slice 1 with a red gate. |
 | `AppViewModelTest` `a refused Undo announces its failure and keeps the offer` | **not anticipated** | **setup repaired**: its second action changed from `SAVE` to `OPEN`. Name and all six assertions byte-identical. See §7. |
 | `AppViewModelTest` — 28 further call sites | drop the argument, change nothing else | **done, 28 sites.** The design's figure of 33 counted comments and variable names; the implementer's count is the correct one. |
-| `AppViewModelTest` `launchArticleAction threads undo eligibility to the slot` | rewrite | **untouched** — its assertions remain true, only its name is stale. Slice 2's. |
+| `AppViewModelTest` `launchArticleAction threads undo eligibility to the slot` | rewrite | **renamed in slice 2** to `a launched save raises the offer`; every assertion byte-identical. There was no eligibility left to thread. |
 
 ## 5. Slice reviews
 
 `/feature-review` in slice mode, per slice, in arrival order.
+
+**Slice 2 — PASS, 2026-08-31.** Checked: `AppViewModelTest.kt` is the only file that changed — no
+production code, as the slice required. Two new cases, both asserting **by article id, source id and each
+topic id**, and both overriding the `article()` helper's shared `oauth` tag with distinct topic ids so the
+topic assertions cannot be vacuously true — item 015's lesson applied without a second reminder. The
+competing-slot case proves the harder half of the scenario: the button-saved article's weights are
+unchanged through the swipe **and** through the Undo, while the swiped article's move and then reverse.
+One existing test renamed, assertions untouched.
+
+Two coverage findings reported rather than papered over: the failed-write scenario was **already covered**
+by `a swipe whose write fails is not visually finalized`, which now exercises the action-owned path; and
+domain-level idempotency was already covered by `an idempotent no-op produces no undo record`, so the new
+case adds the ViewModel-layer no-offer proof rather than duplicating it.
+
+One fixture note: the already-saved case originally hand-built its saved state, which
+`PreferenceReconciliation` normalized on load and made the test lie. The implementer arranged the state
+through a real first `SAVE` on a first view model over the same store instead. No assertion was weakened.
 
 **Slice 1 — PASS, 2026-08-31.** Checked: the implementation matches `design.md` D1 exactly — `transition`
 builds the undo record on `action in reversibleActions` alone, `persistArticleTransition` raises the offer

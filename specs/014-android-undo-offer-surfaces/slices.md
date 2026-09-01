@@ -103,7 +103,7 @@ rm -rf app/build/test-results/testDebugUnitTest
     eligibility to the slot` (`:1073`) are replaced per `design.md` D5, each with its reason in the commit
     message.
   - Both gates green; count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** done — `86ec7f4` + `d97ec2d`, slice review PASS 2026-08-31
 
 ---
 
