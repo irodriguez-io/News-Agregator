@@ -123,7 +123,33 @@ the chip row into 40 dp pills with compliant targets and a compliant outline.
 - **Definition of done:** both gates green; the masthead is centred and editorial; exactly one settings
   control, target ≥ 48 dp, not a destination; chips 40 dp visible with ≥ 48 dp targets; the outline's
   contrast ratio asserted in both schemes.
-- **Status:** pending
+- **Status:** **done** — RED `d347185`, GREEN `eb4f375`. Gate reproduced independently with
+  `--rerun-tasks`: **343 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful (baseline 330).
+  Slice review PASS.
+
+**Every test landed in RED**, satisfying the requirement added after slice 2. Reproduced as
+`343 tests completed, 7 failed`, with expected/found pairs: `CenterAlignedTopAppBar` vs `TopAppBar`;
+`headlineSmall` vs `labelMedium`; `(primary, onPrimary, primary)` vs `(fg, surface, fg)`;
+`(surface, muted, outlineControl)` vs `(surface, fg, border)`; and the named 48 dp target, chip shape and
+40 dp visible height each against `null`.
+
+**`IntentionalReadingApp.kt` is wave D's ground and the diff is six lines, all app-bar** — the
+`CenterAlignedTopAppBar` swap, `labelMedium` → `headlineSmall` for §76.4's editorial register, and the named
+§72.2 constant. The undo offer, live-status region, recovery notice, back handler, destination branch and
+sheet hosting are all untouched, and **no wave-D undo test was edited.**
+
+Chip contrast is asserted as a **ratio** — `contrastRatio(outlineControl, surface) >= 3.0` — in both schemes,
+not as a hex.
+
+**D4's risk was checked empirically rather than argued.** An instrumented test on a 360 dp Pixel 10 confirmed
+the row stays 48 dp high and horizontally scrollable with a 40 dp visible pill accepting taps through the
+expanded target. The stop condition did not trigger.
+
+**But that evidence is not gate-protected, and this is worth knowing.** `android.yml` runs only
+`:app:testDebugUnitTest :app:assembleDebug` — **no instrumented tests, and `androidTest` sources are never
+compiled in CI at all.** So `CategoryChipRowLayoutTest.kt` proves the 360 dp claim at the moment it was run
+and will not fail a future regression. That is a pre-existing project gap rather than this slice's defect,
+and item 018 is simply the first item to have a stake in it.
 
 **Two things in this slice are grouped because they are both small and both presentational**, not because
 they are related. If either grows, split it rather than letting the slice outgrow one context window.
