@@ -1184,13 +1184,13 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `launchArticleAction threads undo eligibility to the slot`() = runBlocking {
-        // Given a launch entry point and an eligible Save action
+    fun `a launched save raises the offer`() = runBlocking {
+        // Given a launch entry point and a Save action
         val target = article(1)
         val completed = CompletableDeferred<ArticleActionResult>()
         val viewModel = viewModel()
 
-        // When the launched commit is explicitly marked undo-eligible
+        // When Save is committed through the launcher
         viewModel.launchArticleAction(
             article = target,
             action = ArticleAction.SAVE,
