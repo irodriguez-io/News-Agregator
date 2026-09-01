@@ -67,7 +67,7 @@ object UiStateMapper {
             } ?: Labels.CONTENT_GENERATION_UNAVAILABLE,
             lastRefreshOutcome = refreshOutcome(refresh),
             refresh = refresh,
-            undoAvailable = undoAction == ArticleAction.SAVE || undoAction == ArticleAction.DISMISS,
+            undoAvailable = undoAction != null,
             pendingUndoOffer = pendingUndoOffer,
         )
     }

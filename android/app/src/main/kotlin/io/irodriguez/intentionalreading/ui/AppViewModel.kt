@@ -684,7 +684,10 @@ class AppViewModel(
         val message = when (action) {
             ArticleAction.SAVE -> PendingUndoMessage.SAVED
             ArticleAction.DISMISS -> PendingUndoMessage.DISMISSED
-            else -> error("Only Save and Dismiss can raise an Undo offer")
+            ArticleAction.MARK_READ -> PendingUndoMessage.MARKED_READ
+            ArticleAction.MARK_UNREAD -> PendingUndoMessage.MARKED_UNREAD
+            ArticleAction.REMOVE -> PendingUndoMessage.REMOVED
+            ArticleAction.OPEN -> error("Open cannot raise an Undo offer")
         }
         nextUndoOfferId += 1
         pendingUndoOffer = PendingUndoOffer(nextUndoOfferId, message)
