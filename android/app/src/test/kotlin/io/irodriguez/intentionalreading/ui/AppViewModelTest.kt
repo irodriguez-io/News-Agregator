@@ -988,7 +988,7 @@ class AppViewModelTest {
             val viewModel = viewModel()
             val result = viewModel.onArticleAction(article(index + 1), action)
 
-            // Then reversible actions raise the same offer while Open and Mark Read still raise none
+            // Then every reversible action raises the same offer while Open raises none
             assertTrue(result.persisted)
             when (action) {
                 ArticleAction.DISMISS -> {
@@ -1005,9 +1005,14 @@ class AppViewModelTest {
                         viewModel.uiState.value.pendingUndoOffer?.message,
                     )
                 }
-                ArticleAction.OPEN,
-                ArticleAction.MARK_READ,
-                -> {
+                ArticleAction.MARK_READ -> {
+                    assertTrue(viewModel.uiState.value.undoAvailable)
+                    assertEquals(
+                        PendingUndoMessage.MARKED_READ,
+                        viewModel.uiState.value.pendingUndoOffer?.message,
+                    )
+                }
+                ArticleAction.OPEN -> {
                     assertFalse(viewModel.uiState.value.undoAvailable)
                     assertNull(viewModel.uiState.value.pendingUndoOffer)
                 }
