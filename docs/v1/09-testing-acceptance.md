@@ -1515,36 +1515,62 @@ Every interactive control shows visible focus in light and dark themes. Opening/
 
 # 72. Touch-Target Acceptance
 
-Verify design-specified target sizes, including at least `44px` usable compact actions, `48px` primary/card controls where specified, and `54px` mobile-navigation targets.
+Verify the design-specified target sizes for **the surface under test**. The two surfaces have different
+floors and the browser's is the lower of the two, so a single set of numbers cannot accept both
+(`06-ui-ux.md` §72).
+
+**Browser:** at least `44px` usable compact actions, `48px` primary/card controls where specified, and
+`54px` mobile-navigation targets.
+
+**Android:** at least `48×48dp` for **every** interactive element, without exception — including a compact
+row action whose visible treatment is smaller, and including the `40dp` category chip, which must carry a
+`48dp` target around its shorter visible pill.
+
+On both surfaces, verify that **hover is never required to discover or operate an action**, and that a
+control's visible treatment being compact has not made its target compact.
+
+## 72.1 Control-boundary contrast
+
+Where a control's boundary is the only thing identifying it as a control — an unfilled triage button, an
+unselected category chip, an outlined row action — **verify that boundary reaches at least `3:1` against
+the surface behind it, in both schemes** (`06-ui-ux.md` §73.1).
+
+This is measured, not judged. Three candidate values in the Android palette failed this floor and looked
+acceptable on screen.
 
 ---
 
 # 73. Responsive Matrix
 
-Manually verify at:
+Verify the range the surface under test actually ships (`06-ui-ux.md` §71).
+
+**Browser** — ten widths, in pixels:
 
 ```text
-360
-390
-430
-600
-768
-820
-1024
-1366
-1440
-1920
+360  390  430  600  768  820  1024  1366  1440  1920
 ```
 
-pixels wide.
+**Android** — five widths, in dp; the client ships no desktop width:
 
-At every width verify no horizontal scrolling, readable long titles, reachable actions, stable fixed/sticky navigation, usable dialogs, and no clipped focus indicators.
+```text
+360  390  430  600  768
+```
+
+`360` is the narrowest supported width on both surfaces and is **not optional on Android**: it is the width
+at which the deck card's title-height problem was measured
+(`specs/012-android-discover-card-first/spec.md` §1.4).
+
+At every width verify no horizontal scrolling, readable long titles, reachable actions, stable
+fixed/sticky navigation, usable dialogs and sheets, and no clipped focus indicators.
 
 ---
 
 # 74. Theme Acceptance
 
 Verify Light, Dark, and System; persistence across reload; reaction to system preference while `system` is selected; and sufficient contrast for text, borders, focus, selected states, and controls.
+
+Both surfaces offer all three appearance options, so **both schemes are mandatory on both surfaces** and
+contrast is verified in each. A surface whose palette works only in light has not met this criterion.
 
 ---
 
