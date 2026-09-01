@@ -77,7 +77,29 @@ destinations, order and counts untouched.
   `onDestinationSelected` — so its single caller compiles untouched.
 - **Definition of done:** both gates green; the indicator reads from the `tonal` role; targets ≥ 48 dp and
   the bar ≥ 54 dp; the counts still come from local state.
-- **Status:** pending
+- **Status:** **done** — RED `5cafab2`, GREEN `852f950`. Gate reproduced independently with
+  `--rerun-tasks`: **330 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful (baseline 322).
+  Slice review PASS.
+
+**Both required colour lines changed together**, which was this slice's trap: `indicatorColor` → `tonal` and
+`selectedIconColor` → `onTonal`. RED reproduced as `325 tests completed, 3 failed`, including the **pair**
+assertion — *"navigation indicator and selected icon expected:<(tonal, onTonal)>"*. Fixing the indicator
+alone would have passed a colour assertion and left a near-invisible icon on a pale pill.
+
+**The Android bar did carry the browser's 7 dp Discover lift** — `Modifier.offset(y = (-7).dp)` behind an
+`elevated` flag on a private per-item helper. §18.2 drops it and this slice removed it. The public
+composable's signature is **unchanged**; only the private helper lost a parameter, so
+`IntentionalReadingApp.kt` compiles untouched for slice 3.
+
+Named constants with citations, following slice 1's lesson: `BottomNavigationMinimumHeight` (§18) and
+`BottomNavigationMinimumTarget` (§72.2, commented *"Never derived"*).
+
+**A discipline gap, resolved by evidence rather than a round trip.** Five tests landed in the GREEN commit
+and three of them could have failed on the old code — the shape-and-size-floors test, the one-baseline test,
+and the literal scan. They were never observed to fail. Perturbation confirmed all three discriminate:
+dropping `.clip(shapes.bottomBar)` fails 1; re-introducing a vertical offset fails 1; introducing a
+`Color(...)` literal fails 4. *A first perturbation attempt was ill-chosen — a raw `dp` literal, which that
+test correctly does not forbid, since it scans for `Color(`, `RoundedCornerShape(` and `Font*(` only.*
 
 **Do not change the composable's parameters.** Its one caller is `IntentionalReadingApp.kt`, which slice 3
 edits — a signature change here would put this slice's compile failure inside the next slice, which
