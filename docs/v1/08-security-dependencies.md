@@ -220,18 +220,16 @@ V1 must not make background runtime requests to:
 - Anthropic;
 - Google Analytics;
 - advertising networks;
-- third-party fonts;
+- third-party fonts (see §7 — the prohibition is on the request, not on a bundled asset);
 - CDNs for JavaScript libraries;
 - recommendation APIs;
 - telemetry services.
 
 ---
 
-# 7. System Fonts Only
+# 7. No Remote Fonts
 
-The approved design system uses system/fallback font stacks.
-
-V1 must not introduce remote web-font services.
+**V1 must not introduce remote web-font services, on either delivery surface.**
 
 This avoids:
 
@@ -239,6 +237,44 @@ This avoids:
 - privacy leakage;
 - render-blocking third-party requests;
 - CSP complexity.
+
+Every one of those four costs is a cost of *fetching* a font at runtime. The prohibition is therefore on
+the remote service, not on the typeface.
+
+## 7.1 What each surface uses
+
+**Browser — system stacks.** The browser runtime uses system and fallback font stacks and downloads
+nothing (`06-ui-ux.md` §11.1). This is unchanged.
+
+**Android — bundled assets are permitted.** Under Amendment 9 the Android client uses two typefaces that
+are not system faces, shipped as `res/font/` resources inside the APK (`06-ui-ux.md` §11.2).
+
+Bundling incurs none of the four costs above: nothing is fetched at build time or at runtime, so there is
+no runtime dependency, no privacy leakage, no render-blocking request, and no CSP surface. It is also not
+a Gradle dependency, so the approval rules in §4 Boundary D do not apply.
+
+**`androidx.compose.ui.text.googlefonts` is prohibited.** It is a Gradle dependency *and* it resolves fonts
+through a provider at runtime, so it fails both this section and Boundary D. Requesting it is a supervisor
+decision, not an implementer's.
+
+This section previously read *"System Fonts Only"* and opened by asserting that the design system uses
+system stacks. That was accurate when V1 had one delivery surface and became misleading when Amendment 6
+added a second; the binding rule never changed.
+
+## 7.2 Vendored binary assets
+
+A font file committed to this repository is **Boundary A** content — repository-controlled, trusted only
+after normal code review — and is subject to three requirements:
+
+1. **Unmodified upstream, with a recorded provenance.** The upstream source, byte size and a SHA-256 hash
+   of every bundled font are recorded in `android/THIRD-PARTY-FONTS.md`, and a file that no longer matches
+   its hash is a modified font.
+2. **A libre licence, verified rather than assumed**, with its full text distributed in the same artifact
+   as the font whenever the licence requires it.
+3. **No network fetch introduced anywhere** — not in Gradle, not in CI, not at runtime.
+
+Bundling any further binary asset class — imagery, audio, video — is **not** authorised by this section.
+Article imagery in particular remains prohibited (`06-ui-ux.md` §74).
 
 ---
 
