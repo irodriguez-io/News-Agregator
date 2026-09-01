@@ -43,7 +43,20 @@ every role from them, and prove the control-boundary floor by measurement.
   slice** — splitting them would fail that test between slices.
 - **Definition of done:** both gates green; the contrast test asserts ratios in both schemes; `Color.kt`
   carries the achromatic-hue rule; the diff touches no file outside the boundary above.
-- **Status:** pending
+- **Status:** **done** — RED `48c22f0`, GREEN `86acd5b`. Gate reproduced independently with
+  `--rerun-tasks` in a throwaway worktree: **305 tests, 0 failures, 0 errors**, `assembleDebug` successful
+  (baseline 297). Slice review PASS.
+
+**Verified beyond the gate, because the RED was weak.** The RED commit failed at Kotlin compilation rather
+than as a value failure — unavoidable for a purely additive data-class change unless the fields are stubbed
+first, which the brief did not require. Discrimination was obtained by perturbation instead: reseeding
+`secondary` to the design's own `#7692FF` (2.9:1) fails 3 tests; disabling the achromatic-hue rule fails 2;
+a one-step shift in the `bg` seed fails 5. **All 10 dark seeds and all 16 derived roles match an
+independent computation.** Slices 2 and 3 require stub-first RED so this is not repeated.
+
+**Carry-forward to slice 3, not a slice-1 defect:** `strongBorder` now resolves to `outlineControl`, and
+`Theme.kt:61` maps M3's `outlineVariant` from `strongBorder`. So M3's **decorative** outline role currently
+receives the **control-grade** value. Slice 3 must re-point it, or decorative dividers ship over-contrasted.
 
 **Why `colors.xml` is here and not in a slice of its own.** `LaunchBackgroundTest` asserts
 `argbHex(lightTokens().bg)` equals the `launch_background` resource. The seed and the resource are one
@@ -55,6 +68,11 @@ atomic change; any boundary between them is a red gate by construction.
 
 **Objective.** Load Playfair Display and Roboto Flex from `res/font/`, author the nine styles of §76.1, and
 close the twelve consumed Material 3 slots.
+
+**RED must be a value failure, not a compile failure.** Slice 1's RED could only fail to compile, because
+its assertions referenced fields that did not exist yet. Where this slice's tests reference something new,
+introduce it in the RED commit with a deliberately wrong value so the test **runs and fails on the value**.
+A compile error proves a thing is missing; it does not prove the test can catch a thing being wrong.
 
 - **Scenarios:** every typography slot the application consumes is authored; the authored type styles carry
   their specified metrics; both bundled families load and resolve their weight axis.
@@ -77,6 +95,17 @@ walkthrough as the real check (`spec.md` §5.2).
 
 **Objective.** Map the new roles onto the full `ColorScheme`, and add the shape and spacing scales that
 items 018–020 will consume.
+
+**Two things slice 1 left for this slice, both confirmed still open:**
+
+1. **`Theme.kt:61` maps M3 `outlineVariant` from `strongBorder`, which slice 1 re-pointed to
+   `outlineControl`.** M3's decorative outline role is therefore receiving the control-grade contrast value.
+   Re-point `outlineVariant` at the `outlineVariant` token and `outline` at `outlineControl`, per §78.3's
+   two roles.
+2. **`surfaceTint` is still `tokens.surface.copy(alpha = 0f)`** — the transparent placeholder. §16.2
+   requires a real value.
+
+**RED must be a value failure, not a compile failure** — same requirement as slice 2, same reason.
 
 - **Scenarios:** no colour is named outside the theme package. (This slice also completes the derived-role
   scenarios end to end, through `MaterialTheme`.)
