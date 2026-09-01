@@ -89,7 +89,15 @@ they are related. If either grows, split it rather than letting the slice outgro
 1. **017 has merged**, and `outlineControl`, `tonal`, `primary`, `onPrimary`, `secondary`, the shape scale
    and the spacing rhythm all exist in the theme. If any is missing, stop and report.
 2. **`BottomNavigationBar` still takes `destination`, `counts`, `onDestinationSelected`** and still uses
-   M3's `NavigationBar`/`NavigationBarItem`. If it has been rewritten, re-read before planning slice 2.
+   M3's `NavigationBar`/`NavigationBarItem`. Verified at dispatch on `main` at `98d4d4e`.
+
+   **Reconciled after item 017 merged — a discovery from 017's walkthrough that post-dates this design.**
+   `BottomNavigationBar.kt:111` sets **`indicatorColor = tokens.fg` explicitly**, inside
+   `NavigationBarItemDefaults.colors(...)`. It therefore *overrides* the scheme, and item 017 mapping
+   `secondaryContainer = tokens.tonal` does **not** reach the pill on its own — on device the indicator
+   renders as solid ink. Slice 2's DoD is unchanged and still correct; **that line is where it is delivered.**
+   The same block also sets `selectedIconColor = tokens.surface`, which will need to become the on-tonal ink
+   once the indicator is tonal, or the selected icon will be near-invisible against a pale pill.
 3. **The top app bar is still hosted in `IntentionalReadingApp.kt`'s `Scaffold(topBar = …)`** and still
    renders `R.string.app_name` with a trailing settings `IconButton`.
 4. **`CategoryChipRow` is still called only from `screens/discover/DiscoverHeader.kt`.** A second caller
