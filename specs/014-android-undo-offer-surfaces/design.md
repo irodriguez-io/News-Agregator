@@ -92,8 +92,18 @@ needed here — `SAVE` and `DISMISS` already have their strings.
 ## D5 — Existing assertions this item changes, named, with why
 
 `waves/wave-d.md`'s rule 1: state what should still be proved, never write "no existing assertion may be
-edited", and say why each change is necessary. This is the complete list as the tree stands today; the
-implementer reports any case not on it before touching it.
+edited", and say why each change is necessary.
+
+> **Corrected 2026-08-31, at dispatch.** This table called itself "the complete list" and was not. It named
+> eleven `AppViewModelTest` line numbers; the file actually carries **33 `undoable` call sites across about
+> twenty cases**, every one of which must lose the argument once the parameter is gone. The rule below
+> replaces the enumeration, because line numbers in a 2 100-line test file go stale between design and
+> dispatch and an incomplete list reads as an exhaustive one.
+
+**The rule, which is what the implementer should follow:** *every* call passing `undoable` loses the
+argument — that is mechanical and belongs to slice 1. *Only* the cases named below change what they
+**assert**, and those belong to slice 2. Any case needing more than the argument dropped is reported before
+it is touched.
 
 | Test | What happens | Why |
 |---|---|---|
@@ -102,7 +112,7 @@ implementer reports any case not on it before touching it.
 | `ArticleStateMachineUndoTest.kt:30`, `:61`, `:127`, `:147`, `:184`, `:207`, `:232`, `:314`, `:352`, `:385` | **kept**; drop the `undoable = true` argument where present | Mechanical. Every assertion keeps its subject and its expected values. |
 | `AppViewModelTest.kt:978` `a labeled button press is still not undo-eligible` | **replaced** by `a labeled button press raises the same offer as a swipe` | It encodes 007 §1.1 and 008 D8 — the rule Amendment 8 overturns. Its `MARK_READ` and `OPEN` cases survive in the replacement, because those two still raise nothing. |
 | `AppViewModelTest.kt:1073` `launchArticleAction threads undo eligibility to the slot` | **rewritten** as `a launched save raises the offer` | There is no eligibility left to thread. What must still be proved is that the launcher's asynchronous path publishes the offer. |
-| `AppViewModelTest.kt:962`, `:1040`, `:1094`, `:1147`, `:1164`, `:1198`, `:1223`, `:1246`, `:1318`, `:1340`, `:1459` | **kept**; drop the `undoable = true` argument | Mechanical. |
+| every remaining `AppViewModelTest` call passing `undoable` — 33 sites, ~20 cases | **kept**; drop the argument, change nothing else | Mechanical, and it is slice 1's, because the file will not compile without it. |
 | `UiStateMapperTest.kt:543-549` | **unchanged** | `undoAvailable` still derives from the action, and the action set is unchanged. |
 | `specs/008-android-swipe-gestures/spec.md` §5 step 6 (walkthrough: *absence* of a toast on the button path) | **superseded by Amendment 8** — recorded in this item's `evidence.md`, not edited | A shipped item's evidence is history. The amendment is the record of the reversal. |
 
