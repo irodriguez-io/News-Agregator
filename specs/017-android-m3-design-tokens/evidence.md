@@ -152,12 +152,60 @@ dispatched.
 
 ## 10. Walkthrough
 
-**Outstanding.** Batched at wave close per `execution-model.md` §6, plus the owner look this item's merge
-requires (`wave-e.md` checkpoint 4). `spec.md` §5.4 states the steps.
+**Driven by the orchestrator over `adb` on 2026-09-01**, per `execution-model.md` §6 — the orchestrator
+drives, the owner rules on what `adb` cannot settle. AVD `Pixel_10`, 1080×2424 at density 420 ≈ **411 dp**
+native, installed with `adb install -r`. Screenshots in `walkthrough/`.
 
-**The one thing tests cannot catch is a silent font fallback** — a misnamed or unloadable font resource does
-not fail a JVM test, because Compose falls back and the text still renders. The walkthrough is the only real
-check that Playfair Display is actually on screen.
+### 10.1 The check that mattered: the fonts are real
+
+**Playfair Display and Roboto Flex are both genuinely rendering, in both schemes.** The screen title and
+article headlines show Playfair's high-contrast hairlines and ball terminals — not the low-contrast Noto/Droid
+serif a fallback would produce. `logcat` shows no font-load failure and no crash.
+
+This was the one thing no JVM test could establish (§5.2): a misnamed or unloadable resource makes Compose
+substitute a platform face and render normally, and all 315 assertions would still pass.
+
+### 10.2 What else the walkthrough confirmed
+
+| Check | Result |
+|---|---|
+| Light scheme, Discover at 411 dp | palette correct; `primary` reads as electric rather than navy; badge is `primarySoft` with `primary` text per §28.2 |
+| Dark scheme, all destinations | **genuinely pleasant, not merely compliant.** `bg` near-black with a blue cast; the card lifted by tonal difference; `Read article` correctly inverted to `#6C9DFF` with dark `onPrimary` |
+| Appearance Light / Dark / System | all three switch correctly; no flash of the old palette on cold launch |
+| Amendment 7's ordering | intact — masthead, then card, then the operational block |
+| Counts | truthful — Read Later 3, History 4, badges correct in both schemes |
+| §54's null rule | intact and visible: the band reads *"KNOWN READING TIME ~13 min"*, summing known values only |
+| `stat-num` | **already paying off** — Read Later's numerals render in Playfair, including the distinctive ampersand in *"AI & Machine Learning"*, before item 020 builds the StatBand container |
+| Crash / ANR | none |
+
+### 10.3 Two things that look wrong on screen and are not this item's
+
+**The bottom-bar indicator is a solid ink pill, not the tonal `#ABD2FA`.** Not a theme defect:
+`BottomNavigationBar.kt:111` sets `indicatorColor = tokens.fg` **explicitly**, overriding the scheme. This
+item's job was to make `secondaryContainer = tokens.tonal` available in `MaterialTheme`, which it did and
+asserted. **Item 018 owns that file and its spec already requires the indicator to read the tonal role** — and
+this observation confirms that scenario is necessary rather than cosmetic, because the component overrides
+the theme.
+
+The app bar's title is also still left-aligned with a bordered circular gear — §76.4 and §20.2 are item 018's.
+
+### 10.4 One real temporary regression, and it is worse than item 012 measured
+
+**At 360 dp the Discover card's action rail is clipped mid-word by the bottom bar**
+(`walkthrough/item017-discover-dark-360dp-fold.png`). A real dataset headline — *"How we could save petabytes
+of cache storage with Zstandard and Pingora"* — wraps to **five lines** in Playfair at 30 sp, and `Read
+article` is cut in half with the triage labels below the fold.
+
+This is item 012 §1.4's finding, and **this item makes it worse**: the new Playfair headline is taller than
+the outgoing serif, so the card grows. `spec.md` §6 anticipated the app looking half-redesigned between this
+merge and item 019's — it did not specifically anticipate the fold regressing.
+
+It is within the letter of the approved scope and it is **exactly what §13.2's three-line clamp exists to
+fix**, which item 019 applies. Recorded here so the regression is on the record rather than discovered later,
+and **handed to item 019 as confirmation that its clamp is necessary rather than theoretical.**
+
+*If the owner judges this unacceptable to ship even temporarily, the remedy is to hold 017 until 019 is ready
+and merge them together — not to add a clamp here, which would put item 019's work inside a token item.*
 
 ## 11. Hosted CI
 
