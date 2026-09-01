@@ -10,7 +10,10 @@ written and committed before the item branch is cut** — the implementer does n
 `docs/v1/06-ui-ux.md` §§43/45/70, `docs/v1/01-product.md` §14, `docs/v1/README.md` Amendment 6 and
 **Amendment 8**\
 **Wave:** D (`specs/waves/wave-d.md`), after 015 merges · **Branch:** `feat/014-android-undo-offer-surfaces` → `main`\
-**Cut from:** merged `main`, after item 015's PR merges and its hosted CI is green on the merge commit.
+**Cut from:** `main` at `05657ed` — carrying item 015 (`88e71b7`, PR #20) and item 012 (`05657ed`, PR #21),
+hosted CI green on both merge commits. **All six §6 assumptions were re-checked against this exact head
+before dispatch and all six hold**, at the line numbers §6 cites; item 012 touched none of this item's
+files.
 
 > **Re-scoped 2026-08-31** on the reversibility line (was: "The Discover card's buttons in the Undo
 > window"). Every citation to 014 — including `specs/013-android-undo-gesture-reset/spec.md` §1.8 — still
