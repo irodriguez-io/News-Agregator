@@ -62,14 +62,26 @@ internal val SharedControlState = SharedControlStateValues(
     disabledOpacity = 0.38f,
 )
 
+/** §32.2 — the filled primary control's specified height. */
+private val FilledPrimaryHeight = Dp(52f)
+
+/** §72.2 — the accessibility floor for every interactive element. Never derived. */
+private val MinimumTouchTarget = Dp(48f)
+
+/** §35.2 — the circular triage control's specified diameter. */
+private val TriageSize = Dp(56f)
+
+/** §35.2 — the triage control's outline width. */
+private val TriageOutlineWidth = Dp(1.5f)
+
 internal fun sharedControlLayout(
     spacing: IntentionalReadingSpacingScale,
     shapes: IntentionalReadingShapeScale,
 ): SharedControlLayout = SharedControlLayout(
-    filledPrimaryHeight = spacing.sectionGap + spacing.gutter + spacing.baseUnit,
-    minimumTouchTarget = spacing.sectionGap + spacing.gutter,
-    triageSize = spacing.sectionGap + spacing.tabletMargin,
-    triageOutlineWidth = spacing.baseUnit * 3f / 8f,
+    filledPrimaryHeight = FilledPrimaryHeight,
+    minimumTouchTarget = MinimumTouchTarget,
+    triageSize = TriageSize,
+    triageOutlineWidth = TriageOutlineWidth,
     filledPrimaryShape = shapes.filledPrimaryButton,
     triageShape = shapes.iconButton,
 )
