@@ -98,18 +98,17 @@ rail. It clears itself in 4.5 s and no action is lost, but a reader aiming at th
 window will hit the toast instead. Not a defect against any specification; noted because it is only visible
 from the device.
 
-## Open for the owner
+## Owner checkpoints — both settled 2026-08-31
 
-1. **The three toast strings**, all confirmed rendering (screencaps in this directory):
+1. **The three toast strings: approved as written.** All three confirmed rendering (screencaps in this
+   directory):
    - `Marked as read` — `09-step2-toast.png`
    - `Returned to Read Later` — `13-step3-toast.png`
    - `Removed from Read Later` — `03-remove-035.png`
 
-   `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so new copy needs no amendment. **The wording is
-   your call.** One note in their favour: *Returned to Read Later* describes what actually happened —
-   `MARK_UNREAD` moves the article to `SAVED` (`contracts.md` §23) — rather than restating the button label.
+   `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so no amendment is needed and none was made.
 
-2. **Wave sign-off** against merged `main` at `d249bc0`.
+2. **Wave D signed off** by the owner against merged `main` at `d249bc0`.
 
 ## Method notes, for the next wave
 

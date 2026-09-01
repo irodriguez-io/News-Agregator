@@ -4,7 +4,7 @@
 **Prerequisite:** wave C merged (`5dd2753`); Amendments 7 and 8 committed on `main`
 **Cut from:** `main`
 **Design pass:** 2026-08-31 — see *Design pass outcome*, which corrects this brief in four places
-**Status:** **CLOSED 2026-08-31.** All four items merged. See *Where this wave stands* for the final record and `wave-d-note.md` for what it cost.
+**Status:** **CLOSED AND SIGNED OFF, 2026-08-31.** All four items merged, walkthrough driven, owner sign-off given. See *Where this wave stands* for the final record and `wave-d-note.md` for what it cost.
 
 Self-contained brief. Read `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`,
 `specs/execution-model.md`, then this file. Read `specs/waves/wave-c-note.md` §5 before designing 014 or
@@ -106,6 +106,7 @@ Tests went 284 → 297 across the wave.
 | `wave-d-note.md` written (`execution-model.md` §4.6) | ✅ `e50798f` |
 | The `execution-model.md` §2 amendment owed at wave close | ✅ `550816f` — §2.1, the three dependency edges |
 | Walkthroughs recorded | ✅ `269506b` — `specs/016-android-reversible-actions/walkthrough/` |
+| Owner checkpoints closed | ✅ toast copy approved, **wave signed off** 2026-08-31 |
 
 ### The walkthrough — driven 2026-08-31, all steps pass
 
@@ -118,12 +119,14 @@ All eight of `016/spec.md` §6.3's steps pass, plus item 014's *Save for later* 
 from −0.15/4 to 0.10/5 and both topics back up, entry for entry, with the record byte-identical. Item 015
 was driven seven times at ~40–50 ms and produced **zero misattributions**, scored by article id.
 
-**Two owner checkpoints remain, and they are judgement, not verification:**
+**Both remaining owner checkpoints are settled, 2026-08-31:**
 
-1. **The three toast strings** — all confirmed rendering, screencaps in the walkthrough directory. The
-   wording is the owner's call; `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so no amendment is
-   needed either way.
-2. **Wave sign-off** against merged `main` at `d249bc0`.
+1. **The three toast strings — approved as written.** No amendment made or needed; `06-ui-ux.md` §45 labels
+   its toast strings *"Examples"*.
+2. **Wave D signed off** against merged `main` at `d249bc0`.
+
+**Every owner checkpoint this wave opened is now closed.** Amendment 8, 012's placement rule, the toast
+copy, the accumulated-history walkthrough, and sign-off.
 
 **One observation worth carrying to wave E**, visible only from the device and not a defect against any
 specification: the Undo toast **overlaps the bottom row's action rail** on Read Later and History while it

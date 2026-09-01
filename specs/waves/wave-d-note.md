@@ -172,17 +172,46 @@ build it** — so the cheapest possible dispatch of a doubtful plan beats anothe
 - **Every rewrite in this wave carries its reason in the commit message**, so a reviewer reading the diff
   alone can see that an amendment overturned the assertion rather than that it was inconvenient.
 
-## 9. Still owed at the time of writing
+## 9. Closed out
 
-1. **The batched walkthrough** for 015, 014 and 016 against merged `main` (`execution-model.md` §4.5, §6).
-   012's was driven at its slice 2 and is recorded in `012/walkthrough/`; it is not repeated.
-2. **Three owner checkpoints** ride on that walkthrough: the three new toast strings judged on screen
-   (`016/spec.md` §5); **the widened Undo exercised against real accumulated history, not fresh state**
-   (`wave-d.md` checkpoint 3); and wave sign-off.
-3. `016/spec.md` §6.3 **step 3 is the one most likely to be wrong on screen** — undoing `MARK_UNREAD` must
-   send the source weight back *up*, because it re-applies rather than reverses. It is the only place in V1
-   where undoing an action applies a signal.
+Written before the walkthrough ran; this section records how it finished.
 
-**Every wave so far has found its most valuable defects in a walkthrough against real state, and none of
-them by a gate.** This wave's own record — four implementer catches, zero gate catches — says the same thing
-from the other direction. The walkthrough is not a formality.
+**The batched walkthrough for 015, 014 and 016 was driven on 2026-08-31** against merged `main` at
+`d249bc0`, **against real accumulated history** — 35 articles and 31 preference entries carried over, app
+data preserved through `adb install -r`, ending at 51 articles.
+`specs/016-android-reversible-actions/walkthrough/` has it. 012's was driven at its slice 2 and was not
+repeated.
+
+**All eight of `016/spec.md` §6.3's steps passed**, plus item 014's *Save for later* offer and item 015's
+race. **Step 3 — the re-application, the step this wave repeatedly named as the one most likely to be
+wrong — is correct on the device.** Undoing `MARK_UNREAD` sent `openid_specs` from −0.15/4 back to 0.10/5
+and both topics back up, entry for entry, with the record byte-identical.
+
+**Item 015 was driven seven times at ~40–50 ms and produced zero misattributions**, scored by article id
+every time.
+
+**Both remaining owner checkpoints are settled:** the three toast strings were approved as written, and the
+wave was signed off against `d249bc0`.
+
+### The one thing the walkthrough found that no gate could
+
+Not a defect against any specification, and visible only from the device: **the Undo toast overlaps the
+bottom row's action rail** on Read Later and History while it is showing. It clears in 4.5 s and no action
+is lost, but a reader aiming at the bottom row during the window hits the toast instead. Carried to wave E
+item 020, which re-lays out both panes.
+
+That is a modest finding by this programme's standards — and it is the point. **Every prior wave's
+walkthrough found something substantial.** This one found almost nothing, because the defects had already
+been caught earlier: four of them by implementers refusing to build a contradiction, one of those before a
+single file was edited. §7's trend held all the way to the end of the wave.
+
+### A method finding worth more than it looks
+
+The walkthrough's *Method notes* add three items to `wave-c-note.md` §6. The one that matters:
+
+> **The Undo toast's tap target moves with the message width** — measured at x≈692 for `Not interested`
+> through x≈802 for `Removed from Read Later`. A fixed coordinate silently misses, **and a missed Undo
+> looks exactly like a passing run unless you score by article id.**
+
+That is item 015's trap wearing a third costume, now in the driver rather than in the code. It cost three
+retries in this run and would have produced a false pass in a walkthrough scored by counts.
