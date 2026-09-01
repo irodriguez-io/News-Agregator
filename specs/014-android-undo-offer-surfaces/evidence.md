@@ -33,13 +33,23 @@ Recorded at the moment of each run, `test-results` deleted first (`execution-mod
 
 | When | Slice | `:app:testDebugUnitTest` | `:app:assembleDebug` |
 |---|---|---|---|
-| _pending_ | | | |
+| 2026-08-31, base `05657ed` | — (baseline) | 284 tests, 0 failures, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+| 2026-08-31, head `8fa59c5` | 1 | **284 tests, 0 failures**, `BUILD SUCCESSFUL` | `BUILD SUCCESSFUL` |
+
+The count is unchanged because slice 1 adds one case and deletes one. Head row is the supervisor's own run,
+`test-results` deleted first.
 
 ## 3. Failing-first evidence
 
 | Slice | RED reproduced | Test commit | Implementation commit |
 |---|---|---|---|
-| _pending_ | | | |
+| 1 | **yes, independently** | `fa96b67` | `8fa59c5` |
+
+Reproduced in a throwaway detached worktree at `fa96b67`, with `undoable` confirmed still present in
+`ArticleStateMachine.kt` (fix absent): **285 tests completed, 1 failed** —
+`reversible actions carry undo state without caller eligibility`. Behavioural, and **no temporary
+scaffolding was needed**: the new case simply calls `transition` without an eligibility argument, which
+defaults to `false` on the old tree and so produces no undo record.
 
 ## 4. Existing assertions changed
 
@@ -47,11 +57,24 @@ Recorded at the moment of each run, `test-results` deleted first (`execution-mod
 
 | Test | Planned | Actual |
 |---|---|---|
-| _pending_ | | |
+| `ArticleStateMachineUndoTest` `a commit that is not marked undo-eligible offers nothing` | delete | **deleted** — its subject, the `undoable` flag, no longer exists |
+| `ArticleStateMachineUndoTest` `only save and dismiss are reversible` | keep, must pass | **kept and passing** — slice 1 does not widen the action set |
+| `AppViewModelTest` `a labeled button press is still not undo-eligible` | replace (D5 assigned it to slice 2) | **rewritten in slice 1** as `a labeled button press raises the same offer as a swipe`, keeping the `OPEN` and `MARK_READ` no-offer cases intact. Moved forward because its assertion is falsified *by slice 1*; leaving it for slice 2 would have ended slice 1 with a red gate. |
+| `AppViewModelTest` `a refused Undo announces its failure and keeps the offer` | **not anticipated** | **setup repaired**: its second action changed from `SAVE` to `OPEN`. Name and all six assertions byte-identical. See §7. |
+| `AppViewModelTest` — 28 further call sites | drop the argument, change nothing else | **done, 28 sites.** The design's figure of 33 counted comments and variable names; the implementer's count is the correct one. |
+| `AppViewModelTest` `launchArticleAction threads undo eligibility to the slot` | rewrite | **untouched** — its assertions remain true, only its name is stale. Slice 2's. |
 
 ## 5. Slice reviews
 
 `/feature-review` in slice mode, per slice, in arrival order.
+
+**Slice 1 — PASS, 2026-08-31.** Checked: the implementation matches `design.md` D1 exactly — `transition`
+builds the undo record on `action in reversibleActions` alone, `persistArticleTransition` raises the offer
+from `transition.undoRecord` unconditionally, and the `undoable` parameter is gone from all four
+signatures. **Item 015's `expectDiscoverHead` survives on both public signatures and at all four
+`= true` call sites** (verified by count, not by report). `reversibleActions` is still exactly
+`setOf(SAVE, DISMISS)` at `:253` — this slice widens nothing. Scope is the five authorized files. The five
+remaining `undoable` strings in `AppViewModelTest.kt` are two comments and a variable name.
 
 ## 6. Walkthrough
 
@@ -60,4 +83,38 @@ Per `spec.md` §5.3. Batched with item 016's at the end of the wave, against mer
 
 ## 7. Departures from the plan
 
-_None recorded yet._
+**Three, all found by the implementer stopping rather than proceeding, and all supervisor errors.** None
+reached shipped code. This is the same pattern as item 006 in wave C, now at three occurrences across two
+waves.
+
+**1. The slice split could not compile.** Slice 1 removed the `undoable` parameter from `AppViewModel` but
+excluded `AppViewModelTest.kt`, which carried 28 calls passing it. Slice 1 could not have built its own
+test sources, let alone reached a green gate. Fixed at `991ea60`: slice 1 now carries the mechanical
+argument removal, slice 2 keeps every assertion change.
+
+> **The root is the one `waves/wave-c-note.md` §7 already named and `execution-model.md` §2 still does not
+> model: the plan was drawn by *who writes a file*, never by *who asserts against it*. A signature change
+> is not confined to the layer that declares it.** Item 006 froze an assertion its predecessor had made
+> unfreezable; this item split a slice across a compile boundary. Same root, different costume.
+
+**2. `design.md` D5 claimed a complete assertion list and did not have one.** It enumerated eleven
+`AppViewModelTest` line numbers against roughly twenty affected cases. Replaced by a rule — *every* call
+loses the argument (mechanical, slice 1); *only* the named cases change what they assert (slice 2) —
+because line numbers in a 2 100-line test file go stale between design and dispatch, and an incomplete list
+reads as an exhaustive one.
+
+**3. A test whose *premise*, not whose assertion, the change destroys.** `a refused Undo announces its
+failure and keeps the offer` needed an action that persists — firing a rigged `saveBehavior` that drops the
+target's record — **without** replacing the undo slot. It used `SAVE` with `undoable = false`. Removing the
+flag makes every `SAVE` claim the slot, so Undo succeeded where the test expected `UNDO_STALE`. The
+implementer diagnosed it and proposed the repair: use `OPEN`, which persists but is not reversible. Name
+and all six assertions unchanged.
+
+> **D5 reasoned about which tests *assert* the old rule. It never considered tests that *depend on the
+> flag to construct a state*.** That class is invisible to a line-number enumeration and is worth carrying
+> into `wave-d-note.md`: when a design pass removes a capability, ask not only which assertions claim it
+> but which fixtures *use* it.
+
+**A fourth error was the supervisor's alone and was self-corrected before it landed:** the first slice-1
+dispatch told the implementer that ending the slice with two known failures was acceptable. A slice closes
+green. Corrected in the same exchange.

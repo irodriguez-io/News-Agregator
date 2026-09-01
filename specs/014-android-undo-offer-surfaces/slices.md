@@ -79,7 +79,7 @@ rm -rf app/build/test-results/testDebugUnitTest
     the number of call sites touched. Any case that needs more than the argument dropped belongs to slice 2
     — name it and leave it.
   - Both gates green, `test-results` deleted first, count recorded at the moment of the run.
-- **Status:** pending
+- **Status:** done — `fa96b67` (RED) + `8fa59c5` (GREEN), slice review PASS 2026-08-31
 
 ## Slice 2: every Discover surface raises the offer
 
