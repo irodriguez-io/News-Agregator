@@ -40,6 +40,9 @@ data class PendingUndoOffer(
 enum class PendingUndoMessage {
     SAVED,
     DISMISSED,
+    MARKED_READ,
+    MARKED_UNREAD,
+    REMOVED,
 }
 
 data class NavigationCounts(

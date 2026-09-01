@@ -550,6 +550,42 @@ class UiStateMapperTest {
         assertNull(acknowledged.pendingUndoOffer)
     }
 
+    @Test
+    fun `each new action's undo record makes Undo available for Mark Read`() {
+        // Given a Mark Read undo record exists
+        val action = ArticleAction.MARK_READ
+
+        // When the mapper receives the record's action
+        val mapped = mapWithUndoState(action, null)
+
+        // Then Undo is available
+        assertTrue(mapped.undoAvailable)
+    }
+
+    @Test
+    fun `each new action's undo record makes Undo available for Mark Unread`() {
+        // Given a Mark Unread undo record exists
+        val action = ArticleAction.MARK_UNREAD
+
+        // When the mapper receives the record's action
+        val mapped = mapWithUndoState(action, null)
+
+        // Then Undo is available
+        assertTrue(mapped.undoAvailable)
+    }
+
+    @Test
+    fun `each new action's undo record makes Undo available for Remove`() {
+        // Given a Remove undo record exists
+        val action = ArticleAction.REMOVE
+
+        // When the mapper receives the record's action
+        val mapped = mapWithUndoState(action, null)
+
+        // Then Undo is available
+        assertTrue(mapped.undoAvailable)
+    }
+
     private fun mapWithUndoState(
         action: ArticleAction?,
         offer: PendingUndoOffer?,

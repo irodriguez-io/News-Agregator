@@ -17,4 +17,11 @@ data class UndoRecord(
     val action: ArticleAction,
     val previousRecord: ArticleRecord?,
     val preferenceReversal: PreferenceReversal? = null,
-)
+    val preferenceReapplication: PreferenceEvent? = null,
+) {
+    init {
+        require(preferenceReversal == null || preferenceReapplication == null) {
+            "An undo record reverses a signal or re-applies one, never both"
+        }
+    }
+}

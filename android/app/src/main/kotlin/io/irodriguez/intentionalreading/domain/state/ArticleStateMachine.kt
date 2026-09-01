@@ -117,6 +117,7 @@ object ArticleStateMachine {
         var next = transitioned
         var nextPreferences = preferences
         var preferenceSignalApplied = false
+        var preferenceSignalReversed = false
         if (action == ArticleAction.MARK_UNREAD && current.signalsApplied.read) {
             nextPreferences = PreferenceLearning.reverse(
                 preferences = preferences,
@@ -124,6 +125,7 @@ object ArticleStateMachine {
                 event = PreferenceEvent.MARK_READ,
             )
             next = transitioned.copy(signalsApplied = current.signalsApplied.copy(read = false))
+            preferenceSignalReversed = true
         } else {
             val preferenceEvent = preferenceEvents[action]
             if (preferenceEvent != null && !current.signalsApplied.isAppliedFor(action)) {
@@ -146,7 +148,12 @@ object ArticleStateMachine {
                 action = action,
                 previousRecord = existing,
                 preferenceReversal = if (preferenceSignalApplied) {
-                    preferenceReversals.getValue(action)
+                    preferenceReversals[action]
+                } else {
+                    null
+                },
+                preferenceReapplication = if (preferenceSignalReversed) {
+                    PreferenceEvent.MARK_READ
                 } else {
                     null
                 },
@@ -187,13 +194,21 @@ object ArticleStateMachine {
                 preferences = preferences,
             )
         }
-        val nextPreferences = undoRecord.preferenceReversal?.let { reversal ->
-            PreferenceLearning.reverse(
-                preferences = preferences,
-                article = current.article,
-                event = reversal.event,
-            )
-        } ?: preferences
+        val nextPreferences = when {
+            undoRecord.preferenceReversal != null ->
+                PreferenceLearning.reverse(
+                    preferences = preferences,
+                    article = current.article,
+                    event = undoRecord.preferenceReversal.event,
+                )
+            undoRecord.preferenceReapplication != null ->
+                PreferenceLearning.apply(
+                    preferences = preferences,
+                    article = current.article,
+                    event = undoRecord.preferenceReapplication,
+                )
+            else -> preferences
+        }
         val nextRecords = buildMap {
             putAll(records)
             if (undoRecord.previousRecord == null) {
@@ -250,7 +265,13 @@ object ArticleStateMachine {
         ArticleAction.REMOVE to setOf(ArticleStatus.SAVED),
     )
 
-    private val reversibleActions = setOf(ArticleAction.SAVE, ArticleAction.DISMISS)
+    private val reversibleActions = setOf(
+        ArticleAction.SAVE,
+        ArticleAction.DISMISS,
+        ArticleAction.MARK_READ,
+        ArticleAction.MARK_UNREAD,
+        ArticleAction.REMOVE,
+    )
 
     private val preferenceEvents = mapOf(
         ArticleAction.OPEN to PreferenceEvent.FIRST_OPEN,
@@ -262,6 +283,7 @@ object ArticleStateMachine {
     private val preferenceReversals = mapOf(
         ArticleAction.SAVE to PreferenceReversal.SAVE_FOR_LATER,
         ArticleAction.DISMISS to PreferenceReversal.NOT_INTERESTED,
+        ArticleAction.MARK_READ to PreferenceReversal.MARK_READ,
     )
 }
 

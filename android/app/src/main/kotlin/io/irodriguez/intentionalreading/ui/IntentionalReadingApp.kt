@@ -187,6 +187,9 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 when (offer.message) {
                     PendingUndoMessage.SAVED -> R.string.undo_toast_saved
                     PendingUndoMessage.DISMISSED -> R.string.undo_toast_dismissed
+                    PendingUndoMessage.MARKED_READ -> R.string.undo_toast_marked_read
+                    PendingUndoMessage.MARKED_UNREAD -> R.string.undo_toast_marked_unread
+                    PendingUndoMessage.REMOVED -> R.string.undo_toast_removed
                 },
             )
         }
