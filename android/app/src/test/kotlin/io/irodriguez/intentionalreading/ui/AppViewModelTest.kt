@@ -1017,6 +1017,256 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `Scenario - acting in a second pane does not double-apply or double-reverse`() = runBlocking {
+        // Given A is Saved in Read Later and B is Read in History, with distinct source and topic ids
+        val articleA = article(16).copy(
+            source = ArticleSource("cross-pane-source-a", "Cross-pane source A"),
+            tags = listOf(
+                ArticleTag("cross-pane-topic-a-one", "Cross-pane topic A one"),
+                ArticleTag("cross-pane-topic-a-two", "Cross-pane topic A two"),
+            ),
+        )
+        val articleB = article(17).copy(
+            source = ArticleSource("cross-pane-source-b", "Cross-pane source B"),
+            tags = listOf(
+                ArticleTag("cross-pane-topic-b-one", "Cross-pane topic B one"),
+                ArticleTag("cross-pane-topic-b-two", "Cross-pane topic B two"),
+            ),
+        )
+        val unrelatedSourceId = "cross-pane-source-unrelated"
+        val unrelatedTopicId = "cross-pane-topic-unrelated"
+        val preferencesBeforeA = LocalState.Preferences(
+            sources = mapOf(
+                articleA.source.id to PreferenceEntry(weight = 1.00, interactions = 0),
+                articleB.source.id to PreferenceEntry(weight = 1.25, interactions = 1),
+                unrelatedSourceId to PreferenceEntry(weight = -0.45, interactions = 0),
+            ),
+            topics = mapOf(
+                articleA.tags[0].id to PreferenceEntry(weight = 0.50, interactions = 0),
+                articleA.tags[1].id to PreferenceEntry(weight = -0.30, interactions = 0),
+                articleB.tags[0].id to PreferenceEntry(weight = 0.60, interactions = 1),
+                articleB.tags[1].id to PreferenceEntry(weight = -0.10, interactions = 1),
+                unrelatedTopicId to PreferenceEntry(weight = 0.70, interactions = 0),
+            ),
+        )
+        val initial = LocalState.default().copy(
+            articles = mapOf(
+                articleA.id to record(articleA, ArticleStatus.SAVED),
+                articleB.id to record(articleB, ArticleStatus.READ),
+            ),
+            preferences = preferencesBeforeA,
+        )
+        val store = FakeLocalStateStore(success(initial))
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(articleA, articleB))),
+            store = store,
+        )
+        viewModel.selectDestination(Destination.READ_LATER)
+
+        // When A is marked Read in Read Later
+        assertTrue(viewModel.onArticleAction(articleA, ArticleAction.MARK_READ).persisted)
+        val afterA = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            ArticleStatus.READ,
+            afterA.articles.getValue(articleA.id).status,
+            "article ${articleA.id}",
+        )
+        assertTrue(afterA.articles.getValue(articleA.id).signalsApplied.read)
+        assertEquals(
+            PreferenceEntry(weight = 1.25, interactions = 1),
+            afterA.preferences.sources[articleA.source.id],
+            "source ${articleA.source.id}",
+        )
+        assertEquals(
+            PreferenceEntry(weight = 0.70, interactions = 1),
+            afterA.preferences.topics[articleA.tags[0].id],
+            "topic ${articleA.tags[0].id}",
+        )
+        assertEquals(
+            PreferenceEntry(weight = -0.10, interactions = 1),
+            afterA.preferences.topics[articleA.tags[1].id],
+            "topic ${articleA.tags[1].id}",
+        )
+        val offerForA = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        assertEquals(PendingUndoMessage.MARKED_READ, offerForA.message)
+
+        // Scenario: the offer survives the reader changing destination
+        viewModel.selectDestination(Destination.HISTORY)
+        assertEquals(Destination.HISTORY, viewModel.destination.value)
+        assertEquals(offerForA, viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(viewModel.uiState.value.undoAvailable)
+
+        // When B is marked Unread in History, replacing A's offer
+        assertTrue(viewModel.onArticleAction(articleB, ArticleAction.MARK_UNREAD).persisted)
+        val afterBMarkUnread = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            ArticleStatus.SAVED,
+            afterBMarkUnread.articles.getValue(articleB.id).status,
+            "article ${articleB.id}",
+        )
+        assertFalse(afterBMarkUnread.articles.getValue(articleB.id).signalsApplied.read)
+        assertEquals(
+            PreferenceEntry(weight = 1.00, interactions = 0),
+            afterBMarkUnread.preferences.sources[articleB.source.id],
+            "source ${articleB.source.id}",
+        )
+        assertEquals(
+            PreferenceEntry(weight = 0.40, interactions = 0),
+            afterBMarkUnread.preferences.topics[articleB.tags[0].id],
+            "topic ${articleB.tags[0].id}",
+        )
+        assertEquals(
+            PreferenceEntry(weight = -0.30, interactions = 0),
+            afterBMarkUnread.preferences.topics[articleB.tags[1].id],
+            "topic ${articleB.tags[1].id}",
+        )
+        assertEquals(
+            afterA.articles.getValue(articleA.id),
+            afterBMarkUnread.articles.getValue(articleA.id),
+            "article ${articleA.id} must remain untouched",
+        )
+        assertEquals(
+            afterA.preferences.sources[articleA.source.id],
+            afterBMarkUnread.preferences.sources[articleA.source.id],
+            "source ${articleA.source.id} must move exactly once",
+        )
+        articleA.tags.forEach { topic ->
+            assertEquals(
+                afterA.preferences.topics[topic.id],
+                afterBMarkUnread.preferences.topics[topic.id],
+                "topic ${topic.id} must move exactly once",
+            )
+        }
+        assertEquals(
+            afterA.preferences.sources[unrelatedSourceId],
+            afterBMarkUnread.preferences.sources[unrelatedSourceId],
+            "source $unrelatedSourceId must not move",
+        )
+        assertEquals(
+            afterA.preferences.topics[unrelatedTopicId],
+            afterBMarkUnread.preferences.topics[unrelatedTopicId],
+            "topic $unrelatedTopicId must not move",
+        )
+        val offerForB = requireNotNull(viewModel.uiState.value.pendingUndoOffer)
+        assertTrue(offerForB.id > offerForA.id)
+        assertEquals(PendingUndoMessage.MARKED_UNREAD, offerForB.message)
+
+        // And then Undo is performed from History
+        val undone = viewModel.performUndo()
+
+        // Then B is Read again by id with its Read signal and exact keyed weights restored
+        assertTrue(undone.persisted)
+        assertIs<ArticleTransition.Reverted>(undone.transition)
+        val final = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            afterA.articles.getValue(articleB.id),
+            final.articles.getValue(articleB.id),
+            "article ${articleB.id} must be restored exactly",
+        )
+        assertEquals(ArticleStatus.READ, final.articles.getValue(articleB.id).status)
+        assertTrue(final.articles.getValue(articleB.id).signalsApplied.read)
+        assertEquals(
+            afterA.preferences.sources[articleB.source.id],
+            final.preferences.sources[articleB.source.id],
+            "source ${articleB.source.id} must be restored",
+        )
+        articleB.tags.forEach { topic ->
+            assertEquals(
+                afterA.preferences.topics[topic.id],
+                final.preferences.topics[topic.id],
+                "topic ${topic.id} must be restored",
+            )
+        }
+
+        // And A remains exactly as it was after one Mark Read signal, by article/source/topic id
+        assertEquals(
+            afterA.articles.getValue(articleA.id),
+            final.articles.getValue(articleA.id),
+            "article ${articleA.id} must remain untouched",
+        )
+        assertEquals(
+            PreferenceEntry(weight = 1.25, interactions = 1),
+            final.preferences.sources[articleA.source.id],
+            "source ${articleA.source.id} must move exactly once in total",
+        )
+        assertEquals(
+            PreferenceEntry(weight = 0.70, interactions = 1),
+            final.preferences.topics[articleA.tags[0].id],
+            "topic ${articleA.tags[0].id} must move exactly once in total",
+        )
+        assertEquals(
+            PreferenceEntry(weight = -0.10, interactions = 1),
+            final.preferences.topics[articleA.tags[1].id],
+            "topic ${articleA.tags[1].id} must move exactly once in total",
+        )
+        assertEquals(afterA.preferences.sources, final.preferences.sources)
+        assertEquals(afterA.preferences.topics, final.preferences.topics)
+    }
+
+    @Test
+    fun `Scenario - an action whose write fails offers nothing`() = runBlocking {
+        // Given a Saved article and preferences named by its distinct source and topic ids
+        val target = article(18).copy(
+            source = ArticleSource("failed-remove-source", "Failed Remove Source"),
+            tags = listOf(
+                ArticleTag("failed-remove-topic-one", "Failed Remove topic one"),
+                ArticleTag("failed-remove-topic-two", "Failed Remove topic two"),
+            ),
+        )
+        val preferences = LocalState.Preferences(
+            sources = mapOf(target.source.id to PreferenceEntry(weight = 0.85, interactions = 0)),
+            topics = mapOf(
+                target.tags[0].id to PreferenceEntry(weight = 0.35, interactions = 0),
+                target.tags[1].id to PreferenceEntry(weight = -0.25, interactions = 0),
+            ),
+        )
+        val initial = LocalState.default().copy(
+            articles = mapOf(target.id to record(target, ArticleStatus.SAVED)),
+            preferences = preferences,
+        )
+        val store = FakeLocalStateStore(success(initial))
+        val viewModel = viewModel(
+            refreshResult = updated(dataset(listOf(target))),
+            store = store,
+        )
+        store.saveBehavior = {
+            LocalStateResult.Failure(
+                code = LocalStateErrorCode.WRITE_FAILED,
+                message = "disk full",
+            )
+        }
+
+        // When Remove is derived but its write fails
+        val result = viewModel.onArticleAction(target, ArticleAction.REMOVE)
+
+        // Then the committed state remains Saved by id, its keyed preferences do not move, and no offer exists
+        assertFalse(result.persisted)
+        val persisted = assertIs<LocalStateResult.Success>(store.loadResult).state
+        assertEquals(
+            ArticleStatus.SAVED,
+            persisted.articles.getValue(target.id).status,
+            "article ${target.id}",
+        )
+        assertEquals(
+            preferences.sources[target.source.id],
+            persisted.preferences.sources[target.source.id],
+            "source ${target.source.id}",
+        )
+        target.tags.forEach { topic ->
+            assertEquals(
+                preferences.topics[topic.id],
+                persisted.preferences.topics[topic.id],
+                "topic ${topic.id}",
+            )
+        }
+        assertEquals(preferences.sources, persisted.preferences.sources)
+        assertEquals(preferences.topics, persisted.preferences.topics)
+        assertNull(viewModel.uiState.value.pendingUndoOffer)
+        assertFalse(viewModel.uiState.value.undoAvailable)
+        assertEquals(AppAnnouncementKind.PERSISTENCE_FAILED, viewModel.announcement.value?.kind)
+    }
+
+    @Test
     fun `a button save followed by a swipe leaves the button save standing after Undo`() = runBlocking {
         // Given a button-saved article with an offer showing and a distinct article ready to swipe
         val buttonSavedArticle = article(1).copy(
