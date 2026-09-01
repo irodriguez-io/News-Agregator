@@ -4,7 +4,7 @@
 **Prerequisite:** wave C merged (`5dd2753`); Amendments 7 and 8 committed on `main`
 **Cut from:** `main`
 **Design pass:** 2026-08-31 — see *Design pass outcome*, which corrects this brief in four places
-**Status:** 015, 012 and 014 merged; **016 remains** — see *Where this wave stands*, written for a fresh session
+**Status:** **CLOSED 2026-08-31.** All four items merged. See *Where this wave stands* for the final record and `wave-d-note.md` for what it cost.
 
 Self-contained brief. Read `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`,
 `specs/execution-model.md`, then this file. Read `specs/waves/wave-c-note.md` §5 before designing 014 or
@@ -78,10 +78,9 @@ still subtracted. Silently. That is the exact place this brief predicted the ari
 
 ---
 
-## Where this wave stands — handoff, 2026-08-31
+## Where this wave stands — CLOSED, 2026-08-31
 
-**Read this section first.** It is written so a fresh session can resume without this session's history, per
-`execution-model.md` §7. If it turns out to be insufficient, fix it rather than reconstructing from git.
+**Wave D is done.** This section replaces the handoff that stood here while 016 was outstanding.
 
 ### Merged
 
@@ -91,113 +90,54 @@ still subtracted. Silently. That is the exact place this brief predicted the ari
 | **015** undo swipe attribution | `88e71b7c` | #20 | Android `33424850723`, Test `33424850747`, Pages `33424850705` |
 | **012** Discover card first | `05657ed6` | #21 | Android `33442192566`, Test `33442192352`, Pages `33442192215` |
 | **014** undo offer surfaces | `cc2a6084` | #22 | Android `33456164733`, Test `33456164726`, Pages `33456164705` |
+| handoff docs | `eb4742a` | #23 | — |
+| **016** widen what is reversible | **`d249bc0`** | **#24** | **Android `33462547085`, Test `33462547211`, Pages `33462546918`** |
 
-`main` is at `cc2a6084`, clean, **286 tests, 0 failures**, `:app:assembleDebug` green. One worktree, no
-branches outstanding, no implementer sessions running.
+**297 tests, 0 failures**, both Gradle gates green. No worktrees, no branches, no implementer sessions.
+Tests went 284 → 297 across the wave.
 
-### What is left
+### Definition of wave done — scored
 
-1. **Item 016** — the only unshipped item. See *Dispatching 016* below.
-2. **The wave-end walkthrough** (`execution-model.md` §4.5, §6), batched for 015, 014 and 016 against
-   merged `main`. **012's was already driven at its slice 2 and is recorded** in
-   `specs/012-android-discover-card-first/walkthrough/` — it is not repeated, because that item's only
-   evidence *is* the walkthrough and deferring it would have meant merging with none.
-3. **`wave-d-note.md`** per `execution-model.md` §4.6. Its content is largely written already — see
-   *Lessons* below.
-4. **`backlog.md`** — 015, 012 and 014 are already moved to Shipped. 016 remains under Queued.
-5. **One amendment to `execution-model.md` §2** — see *Lessons*, item 1. This is a governance change and is
-   deliberately left for wave close rather than made mid-wave.
+| Obligation | State |
+|---|---|
+| All four merged | ✅ |
+| `evidence.md` per item | ✅ 015, 012, 014, 016 |
+| `backlog.md` updated | ✅ `138b5b6` — the backlog now holds only wave E |
+| `wave-d-note.md` written (`execution-model.md` §4.6) | ✅ `e50798f` |
+| The `execution-model.md` §2 amendment owed at wave close | ✅ `550816f` — §2.1, the three dependency edges |
+| Walkthroughs recorded | ⬜ **the one thing outstanding** — see below |
 
-### Dispatching 016
+### The one thing outstanding
 
-Everything it needs is written. `specs/016-android-reversible-actions/` has `spec.md` (§2 is the settled
-arithmetic table), `design.md` (D1 is the `UndoRecord` change) and `slices.md` (three slices).
+**The batched walkthrough for 015, 014 and 016**, against merged `main` at `d249bc0`
+(`execution-model.md` §4.5, §6; `016/spec.md` §6.3). 012's was driven at its slice 2 and is recorded in
+`specs/012-android-discover-card-first/walkthrough/`; it is not repeated.
 
-**Do this in order:**
+**Three owner checkpoints ride on it and are the only ones still open:**
 
-```sh
-cd "/Users/isidro.rodriguez/Documents/VS Code/news-agregator"
-git worktree add -b feat/016-android-reversible-actions ../news-agregator-016 main
-```
-
-Then re-check **all eight of `spec.md` §7's assumptions** against `cc2a6084` before briefing slice 1.
-`/feature-implementation` Step 0.4 is not a formality on this item — it is the step that would have caught
-item 006's failure, and it caught 014's.
-
-**Assumption 2 is already resolved and it is the one that changes the plan's shape.** Item 014 **deleted**
-the `undoable` parameter rather than adding more `undoable = true` arguments, so:
-
-- `ArticleStateMachine.transition` builds an undo record on `action in reversibleActions` alone;
-- `AppViewModel.persistArticleTransition` raises the offer from `transition.undoRecord` unconditionally;
-- therefore **016's slice 2 stays small and needs no call-site audit** — widening `reversibleActions` makes
-  Read Later's *Mark read* and *Remove*, History's *Mark unread* and Discover's *Mark read* all raise the
-  offer with no changes at their call sites. `slices.md`'s *If assumption 2 is false* section does **not**
-  apply and can be ignored.
-
-**The two things most likely to go wrong**, both stated in `spec.md` §2 and worth restating to the
-implementer:
-
-- **Undoing `MARK_UNREAD` must *re-apply* the Read signal, not reverse anything.** `transition`'s
-  `MARK_UNREAD` branch reverses the Read signal and leaves `preferenceSignalApplied` false, so
-  `UndoRecord.preferenceReversal` cannot express what undoing it has to do. Widening `reversibleActions`
-  alone would restore a record claiming `signalsApplied.read = true` while the weight stays subtracted —
-  **silently, with nothing in the app noticing.** `design.md` D1 adds `preferenceReapplication` for exactly
-  this, with an `init` require that the two fields are never both set.
-- **`REMOVE` moves no weight in either direction** (`contracts.md` §24) and its previous record is always
-  `SAVED` (`allowedFrom[REMOVE] = {SAVED}`), so restoring `previousRecord` is sufficient. Do not add a
-  `preferenceReversals` entry for it.
-
-`design.md` D5 lists the assertions that change. **Treat that list the way 014's had to be treated** — as
-named cases with reasons, not as a complete enumeration, and see *Lessons* item 3 for the class it is most
-likely to miss.
-
-### Lessons, for `wave-d-note.md`
-
-Three, and the wave has not finished paying for them yet. **All three were found by an implementer
-stopping rather than proceeding — none by a gate, none by reading a diff.** That is now the fourth
-consecutive wave in which the most valuable findings came from somewhere other than the review gate
-(`wave-b-note.md`, `wave-c-note.md` §5).
-
-**1. `execution-model.md` §2's collision matrix has no axis for who *asserts against* a file, and that gap
-has now failed two items at dispatch.** Item 006 froze an assertion its predecessor had made unfreezable.
-Item 014 split a slice across a compile boundary: slice 1 removed a parameter from `AppViewModel` while
-excluding `AppViewModelTest.kt` and its 28 calls, so the slice could not have built its own test sources.
-Same root, different costume — *the plan was drawn by who writes a file, never by who asserts against it.*
-`wave-c-note.md` §7 already named this and nothing changed. **Amend §2 at wave close: every hub-file row
-needs a second axis listing the test files that assert against it, and a signature change must be assumed
-to reach every one of them.**
-
-**2. A scenario must assert what the item controls.** Item 012's first scenario required the Discover
-card's full action rail to be visible at 360 dp. Card height is unbounded in the article's *title* —
-`ArticleCard` sets `maxLines` on the excerpt and none on the title, and `06-ui-ux.md` §25 forbids clamping
-it — so no header arrangement could deliver it. The scenario also over-reached past its own Amendment 7,
-which binds ordering only, and past §71, which requires actions be **reachable**, not visible. The
-implementer built the item, drove the emulator, and refused to commit. Corrected in place; the 360 dp case
-is handed to wave E item 019 with its measurements in `specs/012-android-discover-card-first/spec.md` §1.4.
-
-**3. When a design pass removes a capability, ask which *fixtures use* it — not only which assertions claim
-it.** Item 014's `design.md` D5 reasoned carefully about every test that asserted the old rule and missed
-`a refused Undo announces its failure and keeps the offer`, which used `SAVE` with `undoable = false` as a
-way to persist *without* claiming the undo slot. That is a fixture, not an assertion, and it is invisible
-to a line-number enumeration. Repaired by switching the setup action to `OPEN`; name and all six assertions
-unchanged.
-
-**Also worth banking, on the credit side.** Both implementers independently applied item 015's lesson about
-the `article()` helper's shared `oauth` tag — overriding `tags` with distinct ids so that "this topic must
-not move" cannot be vacuously true when another article moves the same topic. And 014's slice 2 reported
-two scenarios as *already covered* rather than manufacturing duplicate tests for them.
-
-### Owner checkpoints still outstanding
-
-1. **The three new toast strings** in `specs/016-android-reversible-actions/spec.md` §5 — *Marked as read*,
-   *Returned to Read Later*, *Removed from Read Later* — judged on screen at 016's walkthrough. `06-ui-ux.md`
-   §45 labels its toast strings *"Examples"*, so no amendment is needed for new copy.
-2. **A walkthrough of the widened Undo against real accumulated history, not fresh state** (checkpoint 3
-   below). Every wave so far has found its most valuable defects this way and none of them by a gate.
+1. **The three new toast strings** — *Marked as read*, *Returned to Read Later*, *Removed from Read Later*
+   (`016/spec.md` §5) — judged on screen. `06-ui-ux.md` §45 labels its toast strings *"Examples"*, so new
+   copy needs no amendment; it needs the owner's eye.
+2. **The widened Undo against real accumulated history, not fresh state.** Every wave so far has found its
+   most valuable defects this way and none of them by a gate.
 3. **Wave sign-off** against merged `main`.
 
-Checkpoints 1 and 2 from the original list are **settled**: Amendment 8 was approved and committed, and
-012's placement rule was approved along with the §1.4 limitation.
+**Method, and it is not optional** (`wave-c-note.md` §6): `uiautomator dump` cannot see the Undo toast at
+all — `screencap` at 0.35 s shows it plainly, so drive the whole sequence inside **one on-device `adb
+shell`**. Card and row action controls sit roughly **150 px above** their text labels; read the clickable
+node's bounds, not the label's. The category chip row scrolls, so re-locate chips before every tap.
+
+**`016/spec.md` §6.3 step 3 is the step most likely to fail on screen** — undoing `MARK_UNREAD` must send
+the source weight back **up**, because it re-applies rather than reverses. It is the only place in V1 where
+undoing an action applies a signal, and it is where the arithmetic would be wrong if it were wrong
+anywhere.
+
+### What the wave cost
+
+`wave-d-note.md`. The headline: every specification in this wave survived contact, and two of the four
+slice plans did not. Every significant defect was found by an implementer refusing to build a
+contradiction — none by a gate, none by reading a diff — which is now the fourth consecutive wave with
+that shape. The catches got earlier as the wave went on, and the last one cost nothing at all.
 
 ---
 
