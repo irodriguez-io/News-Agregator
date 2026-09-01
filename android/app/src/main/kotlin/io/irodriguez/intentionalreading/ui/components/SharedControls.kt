@@ -58,7 +58,7 @@ internal data class SharedControlStateValues(
 
 internal val SharedControlState = SharedControlStateValues(
     pressedOverlayAlpha = 0.12f,
-    pressedScale = 0.8f,
+    pressedScale = 0.95f,
     disabledOpacity = 0.38f,
 )
 
@@ -66,10 +66,10 @@ internal fun sharedControlLayout(
     spacing: IntentionalReadingSpacingScale,
     shapes: IntentionalReadingShapeScale,
 ): SharedControlLayout = SharedControlLayout(
-    filledPrimaryHeight = spacing.sectionGap + (spacing.baseUnit * 2f),
+    filledPrimaryHeight = spacing.sectionGap + spacing.gutter + spacing.baseUnit,
     minimumTouchTarget = spacing.sectionGap + spacing.gutter,
     triageSize = spacing.sectionGap + spacing.tabletMargin,
-    triageOutlineWidth = spacing.baseUnit / 4f,
+    triageOutlineWidth = spacing.baseUnit * 3f / 8f,
     filledPrimaryShape = shapes.filledPrimaryButton,
     triageShape = shapes.iconButton,
 )
