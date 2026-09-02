@@ -66,10 +66,32 @@ spacing and shape, with Amendment 7 intact.
   outside the theme names a value.
 - **Files:** `ui/screens/discover/DiscoverScreen.kt`, `DiscoverHeader.kt`, and tests.
 - **Must not touch:** `components/CategoryChipRow.kt` (018's — this slice calls it), `ArticleCard.kt`.
-- **Reaches green alone because:** item 012's composition-order tests are the acceptance criteria for this
-  slice and already exist; the slice is done when they are still green against the new layout.
-- **Definition of done:** both gates green; 012's ordering and scroll-target tests green; empty, loading and
-  failed-dataset states each still truthful with a route onward; the 360 dp walkthrough screenshot captured.
+- **Reaches green alone because:** the screen's inputs and callbacks are unchanged; this is a re-layout
+  within existing signatures, and `DiscoverScrollTargetsTest` continues to cover the scroll arithmetic.
+- **Definition of done:** both gates green; `DiscoverScrollTargetsTest` green **and unedited**; empty, loading
+  and failed-dataset states each still truthful with a route onward; **plus the two instrumented tests
+  below.**
+
+### Amended at dispatch — this slice now writes the guard, rather than inheriting it
+
+Assumption 3 was wrong: **no composition-order test exists.** Item 012 deliberately did not write one because
+composition order is unobservable in JVM tests and the instrumented source set was out of CI. **PR #32 removed
+that second constraint**, so this slice must close the gap it was designed to lean on:
+
+1. **An instrumented test asserting Amendment 7's ordering** — the masthead precedes the card, and the card
+   precedes the operational block, by their `boundsInRoot.top`. This is the first automated guard Amendment 7
+   has ever had, and it is being written by the item most likely to break it.
+2. **An instrumented test asserting the whole card fits above the fold at 360 dp** — headline, excerpt, tags
+   and all three action controls, with the longest real dataset title. `spec.md` §5.2 called this
+   *"assertable only by measurement on a device"* and assigned it to the walkthrough. **It is now gateable**,
+   and it is the scenario that closes item 012 §1.4.
+
+**Both must establish their own width, not inherit it** — `DeviceConfigurationOverride.ForcedSize`, with
+every `dp.toPx()` baseline computed **inside** the override. `execution-model.md` §8.3 records why, and what
+it costs to get wrong.
+
+The walkthrough screenshot is still captured — it is evidence a reader would recognise, and §9's *"is what
+the reader needs next actually on screen?"* is not a question a test answers.
 - **Status:** pending
 
 ---
@@ -79,8 +101,16 @@ spacing and shape, with Amendment 7 intact.
 1. **017 and 018 have both merged.** This item consumes 017's tokens and 018's controls.
 2. **`ArticleCard.kt:210` still clamps the excerpt at 4 and the title still has no clamp.** If the title is
    already clamped, report before changing it — something else moved.
-3. **Item 012's composition-order and scroll-target tests still exist and still pass.** They are this
-   item's guard rail; if they are gone, stop and report.
+3. **CORRECTED AT DISPATCH — item 012 has a scroll-target test and *no* composition-order test.**
+   `DiscoverScrollTargetsTest` covers the scroll arithmetic and must stay green. **There is no ordering
+   assertion anywhere**, and item 012 says why in its `spec.md` §5.2: *"Composition order is not observable
+   in `testDebugUnitTest`. There is no composition, and the instrumented source set is out of CI."*
+
+   **Both halves of that reason still held when this item was designed. The second no longer does.** PR #32
+   put the instrumented source set into CI — it now compiles **and runs** on a pinned 411 dp emulator.
+
+   So Amendment 7's ordering has never had an automated guard, and this item — the one most able to break it
+   — is the first that can build one. See the amended slice 3.
 4. **No dataset article requires a sixth tag or a longer badge label** than the card can carry at 360 dp.
 5. **018's shared controls expose the callbacks this rail needs.** If not, report — do not edit 018's files.
 
