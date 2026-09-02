@@ -95,7 +95,40 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
   place; this slice changes its shape, scrim and animation only.
 - **Definition of done:** both gates green; focus trapped while open and restored on close, asserted; the
   scrim present under reduced motion; no change to appearance, import, export or reset behaviour.
-- **Status:** pending
+- **Status:** **done** — RED `3fefd05`, GREEN `660adc7`. Gate reproduced independently: **385 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 382). **Instrumented
+  suite run by the reviewer: 17 tests, 0 failed** (14 existing plus 3 new). Slice review PASS.
+
+RED reproduced as `385 tests completed, 2 failed` with value failures on `shapes.modalSheet` and
+`tokens.card`. The **instrumented** RED was stronger still: *"reduced motion moved the title from top=2545 to
+top=442"* and *"dismissal removed the sheet before reverse tuck"* — real geometry and sequencing failures.
+
+**The named trap is guarded, both halves.** The reduced-motion test asserts **no translation and no fade**,
+the latter by a pixel fingerprint of the scrim — so the scrim demonstrably still dims when animation is
+suppressed. It runs at **two widths** (360 and 411 dp) via `DeviceConfigurationOverride.ForcedSize` per §8.3,
+and it sets `animator_duration_scale 0` while restoring the original in a `finally`.
+
+### The implementer hit the "test looks wrong" branch and stopped
+
+With a working implementation uncommitted and one assertion between it and a green gate, it **refused to
+edit the test and asked for authority** — the first time in this wave that branch was reached.
+
+Its claim was verified before anything was granted. The RED showed a **~2100 px** slide (2545 → 442); the
+implementation reduced it to **0.1–0.2 px**. The animation was genuinely suppressed and the residue was
+layout rounding, so **exact `Rect` float equality was the wrong instrument for "did it move"** — the same
+over-precision that caused item 018's `ForcedSize` bug.
+
+Authority was granted **narrowly**: that one translation assertion, tolerance ≤ 1 px, message preserved, and
+the fade assertion explicitly **not** to be touched. Delivered at **0.5f**, tighter than the ceiling, with
+the fade check still exact.
+
+*One narrowing recorded honestly:* the assertion now compares `.top` rather than the whole `Rect`. JUnit has
+no delta overload for `Rect`, so a tolerance requires a scalar, and vertical translation is the axis a bottom
+sheet moves on — but it checks less than the original did. It still catches the 2100 px failure with four
+thousand times the headroom, and the exact whole-image fade check would catch gross layout change anyway.
+
+**None of the five bounds-locating instrumented tests was edited**, nor any wave-D undo test. Emulator
+density and animator scale were both restored.
 
 ---
 
