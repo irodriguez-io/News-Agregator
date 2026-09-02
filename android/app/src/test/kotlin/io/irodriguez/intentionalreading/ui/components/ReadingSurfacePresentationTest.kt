@@ -34,6 +34,29 @@ class ReadingSurfacePresentationTest {
     }
 
     @Test
+    fun `the empty state has full expressive visual weight without changing its copy inputs`() {
+        assertEquals("primaryCard", emptyStateSurfaceRole("shape"), "Empty-state shape role")
+        assertEquals("container", emptyStateSurfaceRole("color"), "Empty-state fill role")
+        assertTrue(emptyStateSource().contains("FilledPrimaryControl("))
+        listOf(
+            "text = title",
+            "text = copy",
+            "Text(actionLabel)",
+        ).forEach { binding ->
+            assertTrue(emptyStateSource().contains(binding), "Missing unchanged empty-state binding: $binding")
+        }
+    }
+
+    @Test
+    fun `the reading screens use the authored spacing scale and separate rows by the stack rhythm`() {
+        listOf(readLaterScreenSource(), historyScreenSource()).forEach { source ->
+            assertTrue(source.contains("horizontal = spacing.mobileMargin"))
+            assertTrue(source.contains("top = spacing.tabletMargin"))
+            assertTrue(source.contains("Arrangement.spacedBy(spacing.stackGap)"))
+        }
+    }
+
+    @Test
     fun `the two composable contracts and displayed inputs stay unchanged`() {
         assertEquals(
             "fun StatBand(stats: List<StatItem>, modifier: Modifier = Modifier) {",
@@ -88,11 +111,15 @@ class ReadingSurfacePresentationTest {
 
         forbidden.forEach { pattern ->
             assertFalse(
-                pattern.containsMatchIn(combinedSource()),
+                pattern.containsMatchIn(allPresentationSource()),
                 "Forbidden literal matched ${pattern.pattern}",
             )
         }
     }
+
+    private fun emptyStateSurfaceRole(property: String): String? = Regex(
+        """Surface\(\s*modifier\s*=\s*modifier\.fillMaxWidth\(\),[\s\S]*?\b$property\s*=\s*(?:shapes|tokens)\.(\w+)""",
+    ).find(emptyStateSource())?.groupValues?.get(1)
 
     private fun statBandSurfaceRole(property: String): String? = Regex(
         """Surface\(\s*modifier\s*=\s*modifier\.fillMaxWidth\(\),[\s\S]*?\b$property\s*=\s*(?:shapes|tokens)\.(\w+)""",
@@ -114,12 +141,29 @@ class ReadingSurfacePresentationTest {
 
     private fun combinedSource(): String = statBandSource() + editorialHeaderSource()
 
+    private fun allPresentationSource(): String = combinedSource() +
+        emptyStateSource() +
+        readLaterScreenSource() +
+        historyScreenSource()
+
     private fun statBandSource(): String = sourceFile(
         "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/StatBand.kt",
     )
 
     private fun editorialHeaderSource(): String = sourceFile(
         "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/EditorialHeader.kt",
+    )
+
+    private fun emptyStateSource(): String = sourceFile(
+        "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/EmptyStatePanel.kt",
+    )
+
+    private fun readLaterScreenSource(): String = sourceFile(
+        "src/main/kotlin/io/irodriguez/intentionalreading/ui/screens/readlater/ReadLaterScreen.kt",
+    )
+
+    private fun historyScreenSource(): String = sourceFile(
+        "src/main/kotlin/io/irodriguez/intentionalreading/ui/screens/history/HistoryScreen.kt",
     )
 
     private fun sourceFile(relativePath: String): String = Path.of(relativePath).readText()
