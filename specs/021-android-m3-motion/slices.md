@@ -39,7 +39,40 @@ with the outgoing screen scaling down and fading — and immediately, with no an
 - **Definition of done:** both gates green; the direction function unit-tested over all six ordered pairs;
   the reduced-motion branch asserted; **items 012, 013, 014 and 016's tests in this file's ground still
   green**; the back-handler test still green.
-- **Status:** pending
+- **Status:** **done** — RED `1d160a3`, GREEN `48c4483`. Gate reproduced independently: **382 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 381). **Instrumented
+  suite run by the reviewer: 14 tests, 0 failed** (the 12 that existed plus 2 new). Slice review PASS.
+
+**RED was a value failure on the direction function**, reproduced as
+`READ_LATER -> DISCOVER expected:<FROM_RIGHT> but was:<FROM_LEFT>` — the function was written in RED
+returning a deliberately wrong direction, and is unit-tested over **all six ordered pairs**. **No vacuous
+duration assertion was written**, per D1.
+
+**Where a RED could not fail, that was reported rather than contrived.** The reduced-motion and undo-offer
+instrumented assertions *passed against the original bare `when`*, because they guard behaviour that already
+held. The implementer said so explicitly instead of manufacturing a failure.
+
+### The predicted casualty happened, and the protocol worked
+
+`spec.md` §5.3 named *"any test asserting screen content by composition structure"* as the likeliest
+casualty, and the dispatch reconciliation named **`MainActivityLaunchSmokeTest`** as the most exposed of the
+five bounds-locating instrumented tests.
+
+**It failed** on the first full post-change run: `AnimatedContent` evaluated its transition during initial
+equal-state composition.
+
+**The implementer reported it before editing anything**, then fixed **production** — a no-op transform when
+the state is unchanged — and left the test untouched. That is §2.1 rule 5's protocol executed exactly as
+written, on the one occasion in this wave where it was actually needed.
+
+**Verified unedited:** `MainActivityLaunchSmokeTest`, item 019's `DiscoverScreenLayoutTest` (Amendment 7's
+ordering guard), item 020's `ReadingListLayoutTest` (the toast-overlap guard), `ArticleRowLayoutTest` and
+`CategoryChipRowLayoutTest`.
+
+**Wave D's ground is intact.** The scaffold diff adds animation imports and wraps the `when (destination)`;
+`UndoToast`, `LiveStatusMessage`, `SettingsSheet`, the back handler and the recovery notice are **all
+untouched**. M3 Emphasized easing is implemented as a real two-segment `PathEasing`, not a guessed
+cubic-bezier.
 
 **The likeliest failure is a UI test that locates a node by composition structure** (D4). Report it before
 editing it.
