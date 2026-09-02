@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -14,13 +14,21 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.ui.Destination
 import io.irodriguez.intentionalreading.ui.NavigationCounts
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
+
+/** §18 — the handset bottom bar's minimum height. */
+internal val BottomNavigationMinimumHeight = Dp(54f)
+
+/** §72.2 — the accessibility floor for every interactive element. Never derived. */
+internal val BottomNavigationMinimumTarget = Dp(48f)
 
 @Composable
 fun BottomNavigationBar(
@@ -30,11 +38,14 @@ fun BottomNavigationBar(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
     NavigationBar(
-        modifier = modifier.heightIn(min = 54.dp),
+        modifier = modifier
+            .heightIn(min = BottomNavigationMinimumHeight)
+            .clip(shapes.bottomBar),
         containerColor = tokens.surface,
         contentColor = tokens.fg,
-        tonalElevation = 0.dp,
+        tonalElevation = Dp(0f),
     ) {
         NavigationDestination(
             destination = Destination.READ_LATER,
@@ -50,7 +61,6 @@ fun BottomNavigationBar(
             icon = R.drawable.ic_discover,
             label = R.string.discover,
             count = null,
-            elevated = true,
             onSelected = onDestinationSelected,
         )
         NavigationDestination(
@@ -72,19 +82,21 @@ private fun RowScope.NavigationDestination(
     @StringRes label: Int,
     count: Int?,
     onSelected: (Destination) -> Unit,
-    elevated: Boolean = false,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
     val labelText = stringResource(label)
     NavigationBarItem(
         selected = destination == selectedDestination,
         onClick = { onSelected(destination) },
+        modifier = Modifier.sizeIn(
+            minWidth = BottomNavigationMinimumTarget,
+            minHeight = BottomNavigationMinimumTarget,
+        ),
         icon = {
             val iconContent: @Composable () -> Unit = {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = labelText,
-                    modifier = if (elevated) Modifier.offset(y = (-7).dp) else Modifier,
                 )
             }
             if (count == null) {
@@ -106,9 +118,9 @@ private fun RowScope.NavigationDestination(
         label = { Text(labelText) },
         alwaysShowLabel = true,
         colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = tokens.surface,
+            selectedIconColor = tokens.onTonal,
             selectedTextColor = tokens.fg,
-            indicatorColor = tokens.fg,
+            indicatorColor = tokens.tonal,
             unselectedIconColor = tokens.muted,
             unselectedTextColor = tokens.muted,
             disabledIconColor = tokens.muted.copy(alpha = 0.38f),

@@ -34,7 +34,31 @@ pressed and disabled treatment.
   the only thing that exercises it.
 - **Definition of done:** both gates green; 52 dp, 56 dp, 1.5 dp, 12%, 0.95 and 38% all asserted; triage
   controls carry accessible names; no literals.
-- **Status:** pending
+- **Status:** **done** — RED `1ec1fbd`, GREEN `779fdaa`, findings fix `7a6a923`. Gate reproduced
+  independently with `--rerun-tasks`: **322 tests, 0 failures, 0 errors**, `assembleDebug` successful
+  (baseline 315). Slice review **FINDINGS, then PASS.**
+
+**Genuine value-failing RED**, reproduced as `322 tests completed, 3 failed` — `expected:<0.95> but was:<0.8>`,
+`expected:<52.0.dp> but was:<40.0.dp>`, `expected:<1.5.dp> but was:<1.0.dp>`.
+
+**One finding, caused by an error in the dispatch brief rather than by the implementation.** The brief said
+*"no colour, radius, dimension or font literal — every value from 017."* The **dimension** half was wrong:
+§77.1 prohibits a component naming a **colour**, and says nothing about dimensions. 52 dp (§32.2), 56 dp and
+1.5 dp (§35.2) and 48 dp (§72.2) are component and accessibility specifications, not entries in a spacing
+rhythm, and item 017 was never asked to define them.
+
+With no correct way to satisfy the instruction, the implementation satisfied its letter by deriving all four
+from the spacing scale — `sectionGap + gutter + baseUnit` for 52, `sectionGap + gutter` for 48,
+`sectionGap + tabletMargin` for 56, `baseUnit * 3f / 8f` for 1.5. Numerically correct, semantically false,
+and a real hazard: **it made §72.2's accessibility floor a function of the spacing rhythm**, so a later
+spacing change could silently drop the app below it.
+
+Fixed at `7a6a923` as four named constants citing their sections. The tell that settled it: the test already
+asserted `52.0.dp` and `1.5.dp` as literals, so there was no principled reason production could not be
+equally direct.
+
+**Non-blocking:** the constants use `Dp(52f)` rather than the more idiomatic `52.dp` — likely residue of the
+brief's ban on `.dp` literals. Functionally identical; not worth a round trip.
 
 ---
 
@@ -53,7 +77,29 @@ destinations, order and counts untouched.
   `onDestinationSelected` — so its single caller compiles untouched.
 - **Definition of done:** both gates green; the indicator reads from the `tonal` role; targets ≥ 48 dp and
   the bar ≥ 54 dp; the counts still come from local state.
-- **Status:** pending
+- **Status:** **done** — RED `5cafab2`, GREEN `852f950`. Gate reproduced independently with
+  `--rerun-tasks`: **330 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful (baseline 322).
+  Slice review PASS.
+
+**Both required colour lines changed together**, which was this slice's trap: `indicatorColor` → `tonal` and
+`selectedIconColor` → `onTonal`. RED reproduced as `325 tests completed, 3 failed`, including the **pair**
+assertion — *"navigation indicator and selected icon expected:<(tonal, onTonal)>"*. Fixing the indicator
+alone would have passed a colour assertion and left a near-invisible icon on a pale pill.
+
+**The Android bar did carry the browser's 7 dp Discover lift** — `Modifier.offset(y = (-7).dp)` behind an
+`elevated` flag on a private per-item helper. §18.2 drops it and this slice removed it. The public
+composable's signature is **unchanged**; only the private helper lost a parameter, so
+`IntentionalReadingApp.kt` compiles untouched for slice 3.
+
+Named constants with citations, following slice 1's lesson: `BottomNavigationMinimumHeight` (§18) and
+`BottomNavigationMinimumTarget` (§72.2, commented *"Never derived"*).
+
+**A discipline gap, resolved by evidence rather than a round trip.** Five tests landed in the GREEN commit
+and three of them could have failed on the old code — the shape-and-size-floors test, the one-baseline test,
+and the literal scan. They were never observed to fail. Perturbation confirmed all three discriminate:
+dropping `.clip(shapes.bottomBar)` fails 1; re-introducing a vertical offset fails 1; introducing a
+`Color(...)` literal fails 4. *A first perturbation attempt was ill-chosen — a raw `dp` literal, which that
+test correctly does not forbid, since it scans for `Color(`, `RoundedCornerShape(` and `Font*(` only.*
 
 **Do not change the composable's parameters.** Its one caller is `IntentionalReadingApp.kt`, which slice 3
 edits — a signature change here would put this slice's compile failure inside the next slice, which
@@ -77,7 +123,33 @@ the chip row into 40 dp pills with compliant targets and a compliant outline.
 - **Definition of done:** both gates green; the masthead is centred and editorial; exactly one settings
   control, target ≥ 48 dp, not a destination; chips 40 dp visible with ≥ 48 dp targets; the outline's
   contrast ratio asserted in both schemes.
-- **Status:** pending
+- **Status:** **done** — RED `d347185`, GREEN `eb4f375`. Gate reproduced independently with
+  `--rerun-tasks`: **343 tests, 0 failures, 0 errors, 0 skipped**, `assembleDebug` successful (baseline 330).
+  Slice review PASS.
+
+**Every test landed in RED**, satisfying the requirement added after slice 2. Reproduced as
+`343 tests completed, 7 failed`, with expected/found pairs: `CenterAlignedTopAppBar` vs `TopAppBar`;
+`headlineSmall` vs `labelMedium`; `(primary, onPrimary, primary)` vs `(fg, surface, fg)`;
+`(surface, muted, outlineControl)` vs `(surface, fg, border)`; and the named 48 dp target, chip shape and
+40 dp visible height each against `null`.
+
+**`IntentionalReadingApp.kt` is wave D's ground and the diff is six lines, all app-bar** — the
+`CenterAlignedTopAppBar` swap, `labelMedium` → `headlineSmall` for §76.4's editorial register, and the named
+§72.2 constant. The undo offer, live-status region, recovery notice, back handler, destination branch and
+sheet hosting are all untouched, and **no wave-D undo test was edited.**
+
+Chip contrast is asserted as a **ratio** — `contrastRatio(outlineControl, surface) >= 3.0` — in both schemes,
+not as a hex.
+
+**D4's risk was checked empirically rather than argued.** An instrumented test on a 360 dp Pixel 10 confirmed
+the row stays 48 dp high and horizontally scrollable with a 40 dp visible pill accepting taps through the
+expanded target. The stop condition did not trigger.
+
+**But that evidence is not gate-protected, and this is worth knowing.** `android.yml` runs only
+`:app:testDebugUnitTest :app:assembleDebug` — **no instrumented tests, and `androidTest` sources are never
+compiled in CI at all.** So `CategoryChipRowLayoutTest.kt` proves the 360 dp claim at the moment it was run
+and will not fail a future regression. That is a pre-existing project gap rather than this slice's defect,
+and item 018 is simply the first item to have a stake in it.
 
 **Two things in this slice are grouped because they are both small and both presentational**, not because
 they are related. If either grows, split it rather than letting the slice outgrow one context window.
@@ -89,7 +161,15 @@ they are related. If either grows, split it rather than letting the slice outgro
 1. **017 has merged**, and `outlineControl`, `tonal`, `primary`, `onPrimary`, `secondary`, the shape scale
    and the spacing rhythm all exist in the theme. If any is missing, stop and report.
 2. **`BottomNavigationBar` still takes `destination`, `counts`, `onDestinationSelected`** and still uses
-   M3's `NavigationBar`/`NavigationBarItem`. If it has been rewritten, re-read before planning slice 2.
+   M3's `NavigationBar`/`NavigationBarItem`. Verified at dispatch on `main` at `98d4d4e`.
+
+   **Reconciled after item 017 merged — a discovery from 017's walkthrough that post-dates this design.**
+   `BottomNavigationBar.kt:111` sets **`indicatorColor = tokens.fg` explicitly**, inside
+   `NavigationBarItemDefaults.colors(...)`. It therefore *overrides* the scheme, and item 017 mapping
+   `secondaryContainer = tokens.tonal` does **not** reach the pill on its own — on device the indicator
+   renders as solid ink. Slice 2's DoD is unchanged and still correct; **that line is where it is delivered.**
+   The same block also sets `selectedIconColor = tokens.surface`, which will need to become the on-tonal ink
+   once the indicator is tonal, or the selected icon will be near-invisible against a pale pill.
 3. **The top app bar is still hosted in `IntentionalReadingApp.kt`'s `Scaffold(topBar = …)`** and still
    renders `R.string.app_name` with a trailing settings `IconButton`.
 4. **`CategoryChipRow` is still called only from `screens/discover/DiscoverHeader.kt`.** A second caller
