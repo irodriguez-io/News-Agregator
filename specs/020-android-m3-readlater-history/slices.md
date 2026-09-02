@@ -71,7 +71,23 @@ type scale — with every displayed value and every omission rule untouched.
   already exist; this slice is done when they are still green against the new presentation.
 - **Definition of done:** both gates green; **the existing null-rule tests green and unedited**; numerals in
   the editorial register; no literals.
-- **Status:** pending
+- **Status:** **done** — RED `daaefb7`, GREEN `8ceda93`. Gate reproduced independently: **358 tests, 0
+  failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 351). Slice
+  review PASS.
+
+RED reproduced as `358 tests completed, 5 failed`. **The two behaviour functions are byte-identical to
+`main`** — `knownReadingTimeValue` and `availableStatValue` both hash to `2b246291a633d1538f7922e5` on each
+side, verified by the reviewer rather than taken from the report. No reading-time test was edited.
+
+The band moved from divider rules in a 2+1 arrangement to a `Surface` with `shapes.statBand` and the
+`container` fill, in **three equal columns** as §76.6 specifies. The numerals moved from an inline
+`headlineLarge.copy(fontSize = 22.sp, lineHeight = 25.sp)` override to `displayMedium`, which is item 017's
+authored `stat-num` — removing two `sp` literals in the process.
+
+*A reviewer false alarm worth recording: an initial signature check reported `StatBand: CHANGED`. The check
+was faulty — `StatBand`'s declaration is a single line ending in `{`, so the `sed` range ran past it into the
+body. Compared properly, both composables' signatures are identical and the implementer's report was
+accurate.*
 
 **If a null-rule test needs editing to pass, the change is wrong.** Report it.
 
