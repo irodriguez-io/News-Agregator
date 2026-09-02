@@ -107,11 +107,60 @@ what a density change disturbs. CI runs a fresh emulator with a fixed profile an
 | `UndoToast.kt`, `IntentionalReadingApp.kt`, `strings.xml` untouched | ✓ |
 | **One gate, not two** (§75.2) | ✓ no new string |
 
-## 9. Walkthrough
+## 9. Walkthrough — and it caught a defect every gate had passed
 
-**Outstanding.** Batched at wave close per §6, plus the owner look this item's merge requires
-(`wave-e.md` checkpoint 4). `spec.md` §5.4 states the steps, against **real accumulated history** preserved
-with `adb install -r`.
+**Driven by the orchestrator over `adb`** on `Pixel_10` at 411 dp, with articles saved on-device so the rows
+and the band were actually populated. Screenshots in `walkthrough/`.
+
+### 9.1 The defect: the StatBand overflowed on non-numeric values
+
+With three saved articles the band rendered:
+
+```
+IN QUEUE          KNOWN READING TIME     NEXT TOPIC
+3                 Unavai                 Biolog
+                  lable                  y &
+                                         Evoluti
+                                         on
+```
+
+**"Unavailable" broke mid-word across two lines; "Biology & Evolution" across four.** Both unreadable.
+`walkthrough/item020-statband-overflow-before.png`.
+
+**Every gate was green and every assertion passed.** The unit tests checked the container, the fill and the
+numeral style; **nothing checked that a text value was legible.**
+
+**The cause is a gap in the specification, not carelessness.** §76.6 says *"Numerals use `stat-num`"* —
+Playfair 28 sp w800 — and the implementation applied it to all three value slots. **Only the queue count is a
+numeral.** §53's other two are the summed reading time, which is `"Unavailable"` when nothing is known
+(§54), and an arbitrary tag label (§55). §76.6 is **silent on what a non-numeric value uses**, and a 28 sp
+display face cannot fit either in a ~137 dp column.
+
+### 9.2 The fix, chosen from existing authored styles
+
+Numeric values keep `stat-num`; non-numeric values use `headlineSmall` — item 017's authored `headline-sm`,
+which keeps the editorial register §76.6 wants and fits. Numeric-vs-text is decided **from the value**, not
+from column position, since `"~13 min"` is not a bare numeral either. `softWrap = false` with ellipsis
+prevents any mid-word break.
+
+**Nothing was invented** — the fix picks among styles item 017 already authored, per `AGENTS.md`'s rule
+against inventing where a specification is silent. `knownReadingTimeValue` and `availableStatValue` remain
+**byte-identical to `main`**, verified by hash on both sides by the reviewer.
+
+A test that would have caught this was added: a value long enough to overflow must not break mid-word.
+
+`walkthrough/item020-readlater-light-411dp.png` is the result — `IN QUEUE 3` in the large numeral,
+`Unavail…` and `Biology …` on single legible lines.
+
+*Accepted tradeoff:* both text values are now truncated rather than wrapped. Wrapping at a word boundary to
+two lines would show more and is an owner option; truncation is unambiguously better than the mid-word
+break, and §54 is satisfied either way.
+
+### 9.3 Still outstanding
+
+The owner look this item's merge requires (`wave-e.md` checkpoint 4). `spec.md` §5.4's remaining steps —
+dark scheme, History's empty state, Mark unread, and the toast at the bottom of a scrolled list — against
+**real accumulated history** preserved with `adb install -r`.
 
 **Two things a test cannot settle.** Whether the toast is *legible* over a row while showing — the assertion
 proves they do not overlap, not that the result reads well. And §74.2's question for this surface: does the
