@@ -234,14 +234,41 @@ Read in this order: `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`, this f
 
 | Surface | Command | Notes |
 |---|---|---|
-| Android | `./gradlew :app:testDebugUnitTest` | from `android/`; 135 tests at 004 |
+| Android | `./gradlew :app:testDebugUnitTest` | from `android/`; 343 tests at 018 |
 | Android | `./gradlew :app:assembleDebug` | |
+| Android | `./gradlew :app:assembleDebugAndroidTest` | **added at 018** — instrumented sources must compile |
+| Android | `./gradlew :app:connectedDebugAndroidTest` | **added at 018** — runs on an emulator in CI |
 | Web | `npm test` | 105/105 at 004 |
 | Web | `python -m pytest`, `python -m pipeline.main --validate-config` | web/pipeline items only |
 
-CI is path-filtered: `android.yml` fires on `android/**`, `test.yml` on the web and pipeline paths. Item
-011 touches both trees and will fire both. Hosted CI must be green on the exact final head before a final
-review merges — that requirement is not waived by any wave arrangement.
+Hosted CI must be green on the exact final head before a final review merges — that requirement is not
+waived by any wave arrangement.
+
+### 8.1 What is actually path-filtered — this section was wrong until 018
+
+**`android.yml` is path-filtered** on `android/**` and its own workflow file. That much was right.
+
+**`test.yml` is not path-filtered at all.** Its trigger is a bare `pull_request:` with no `paths` key, so it
+runs on **every** pull request in this repository regardless of what changed, and on every push to `main`.
+This section previously claimed it fired "on the web and pipeline paths", which is false and was believed
+through waves A to D.
+
+The practical consequence: **seeing `test.yml` green on a documents-only or Android-only PR means nothing
+about whether web paths were touched.** Do not read it as a signal. Item 011 remains the only item that
+genuinely exercises both trees.
+
+### 8.2 Instrumented tests are gated as of item 018
+
+Before item 018, `android.yml` ran only `testDebugUnitTest` and `assembleDebug`. **Instrumented tests were
+neither run nor even compiled**, so an `androidTest` source could rot without any gate noticing, and a
+behavioural claim asserted only there was true on the day it was measured and unprotected afterwards.
+
+Item 018 surfaced this by adding a 360 dp layout test whose evidence had exactly that weakness. Both gaps
+are now closed: `assembleDebugAndroidTest` compiles the sources in the main job, and a separate
+emulator-backed job runs `connectedDebugAndroidTest`.
+
+**This matters most for width claims.** Item 012's 360 dp finding and item 019's §13.2 clamp that closes it
+are the kind of thing a JVM test cannot see, and they now have somewhere durable to live.
 
 ---
 
