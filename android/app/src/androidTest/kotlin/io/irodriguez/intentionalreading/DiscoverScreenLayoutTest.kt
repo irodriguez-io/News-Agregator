@@ -6,6 +6,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -42,14 +43,20 @@ class DiscoverScreenLayoutTest {
 
     @Test
     fun mastheadCardAndOperationalBlockKeepAmendmentSevenOrder() {
-        val viewport = setDiscoverContent(width = 360.dp)
+        val viewport = setDiscoverContent(
+            width = 360.dp,
+            height = ORDERING_VIEWPORT_HEIGHT,
+        )
 
-        val masthead = composeTestRule.onNodeWithTag(DiscoverLayoutTags.MASTHEAD)
-            .fetchSemanticsNode().boundsInRoot
-        val card = composeTestRule.onNodeWithTag(DiscoverLayoutTags.CARD)
-            .fetchSemanticsNode().boundsInRoot
-        val operationalBlock = composeTestRule.onNodeWithTag(DiscoverLayoutTags.OPERATIONAL_BLOCK)
-            .fetchSemanticsNode().boundsInRoot
+        val masthead = fullBounds(
+            composeTestRule.onNodeWithTag(DiscoverLayoutTags.MASTHEAD),
+        )
+        val card = fullBounds(
+            composeTestRule.onNodeWithTag(DiscoverLayoutTags.CARD),
+        )
+        val operationalBlock = fullBounds(
+            composeTestRule.onNodeWithTag(DiscoverLayoutTags.OPERATIONAL_BLOCK),
+        )
 
         assertEquals(viewport.widthPx, rootBounds().width, PIXEL_TOLERANCE)
         assertTrue("Expected the masthead above the card: $masthead then $card", masthead.top < card.top)
@@ -61,30 +68,37 @@ class DiscoverScreenLayoutTest {
 
     @Test
     fun longDatasetCardFitsAboveTheFoldAt360Dp() {
-        assertLongDatasetCardFits(width = 360.dp)
+        assertLongDatasetCardFits(
+            width = 360.dp,
+            height = HANDSET_360_CONTENT_HEIGHT,
+        )
     }
 
     @Test
     fun longDatasetCardFitsAboveTheFoldAt411Dp() {
-        assertLongDatasetCardFits(width = 411.dp)
+        assertLongDatasetCardFits(
+            width = 411.dp,
+            height = HANDSET_411_CONTENT_HEIGHT,
+        )
     }
 
-    private fun assertLongDatasetCardFits(width: Dp) {
-        val viewport = setDiscoverContent(width)
+    private fun assertLongDatasetCardFits(width: Dp, height: Dp) {
+        val viewport = setDiscoverContent(width, height)
         val elements = listOf(
-            "headline" to composeTestRule.onNodeWithText(LONG_DATASET_TITLE)
-                .fetchSemanticsNode().boundsInRoot,
-            "excerpt" to composeTestRule.onNodeWithText(LONG_DATASET_EXCERPT)
-                .fetchSemanticsNode().boundsInRoot,
-            "tags" to composeTestRule.onNodeWithContentDescription(TOPICS_DESCRIPTION)
-                .fetchSemanticsNode().boundsInRoot,
-            "Not interested" to composeTestRule.onNodeWithContentDescription("Not interested")
-                .fetchSemanticsNode().boundsInRoot,
-            "Read article" to composeTestRule
-                .onNodeWithContentDescription("Read article in the system browser")
-                .fetchSemanticsNode().boundsInRoot,
-            "Save for later" to composeTestRule.onNodeWithContentDescription("Save for later")
-                .fetchSemanticsNode().boundsInRoot,
+            "headline" to fullBounds(composeTestRule.onNodeWithText(LONG_DATASET_TITLE)),
+            "excerpt" to fullBounds(composeTestRule.onNodeWithText(LONG_DATASET_EXCERPT)),
+            "tags" to fullBounds(
+                composeTestRule.onNodeWithContentDescription(TOPICS_DESCRIPTION),
+            ),
+            "Not interested" to fullBounds(
+                composeTestRule.onNodeWithContentDescription("Not interested"),
+            ),
+            "Read article" to fullBounds(
+                composeTestRule.onNodeWithContentDescription("Read article in the system browser"),
+            ),
+            "Save for later" to fullBounds(
+                composeTestRule.onNodeWithContentDescription("Save for later"),
+            ),
         )
 
         assertEquals(viewport.widthPx, rootBounds().width, PIXEL_TOLERANCE)
@@ -93,17 +107,17 @@ class DiscoverScreenLayoutTest {
         }
     }
 
-    private fun setDiscoverContent(width: Dp): Viewport {
+    private fun setDiscoverContent(width: Dp, height: Dp): Viewport {
         var widthPx = 0f
         var bottomPx = 0f
         composeTestRule.setContent {
             DeviceConfigurationOverride(
                 DeviceConfigurationOverride.ForcedSize(
-                    DpSize(width = width, height = VIEWPORT_HEIGHT),
+                    DpSize(width = width, height = height),
                 ),
             ) {
                 widthPx = with(LocalDensity.current) { width.toPx() }
-                bottomPx = with(LocalDensity.current) { VIEWPORT_HEIGHT.toPx() }
+                bottomPx = with(LocalDensity.current) { height.toPx() }
                 IntentionalReadingTheme(appearance = Appearance.LIGHT) {
                     DiscoverScreen(
                         state = longDatasetCardState(),
@@ -127,6 +141,17 @@ class DiscoverScreenLayoutTest {
 
     private fun rootBounds(): Rect = composeTestRule.onNodeWithTag(ROOT_TAG)
         .fetchSemanticsNode().boundsInRoot
+
+    private fun fullBounds(interaction: SemanticsNodeInteraction): Rect {
+        val node = interaction.fetchSemanticsNode()
+        val position = node.positionInRoot
+        return Rect(
+            left = position.x,
+            top = position.y,
+            right = position.x + node.size.width,
+            bottom = position.y + node.size.height,
+        )
+    }
 
     private fun assertWithinViewport(name: String, bounds: Rect, viewportBottomPx: Float) {
         assertTrue("Expected $name to start within the viewport, but was $bounds", bounds.top >= 0f)
@@ -179,7 +204,9 @@ class DiscoverScreenLayoutTest {
     )
 
     private companion object {
-        val VIEWPORT_HEIGHT = 640.dp
+        val ORDERING_VIEWPORT_HEIGHT = 640.dp
+        val HANDSET_360_CONTENT_HEIGHT = 444.dp
+        val HANDSET_411_CONTENT_HEIGHT = 693.dp
         const val PIXEL_TOLERANCE = 0.5f
         const val ROOT_TAG = "discover-screen-width-root"
         const val LONG_DATASET_TITLE =
