@@ -33,7 +33,23 @@ thumbnail, two-line title clamp, compliant action targets.
   `ReadLaterScreen.kt` and `HistoryScreen.kt` — compile untouched.
 - **Definition of done:** both gates green; the clamp asserted on the title element; targets ≥ 48 dp; no
   media region; no literals; every value the row displays unchanged.
-- **Status:** pending
+- **Status:** **done** — RED `d484feb`, GREEN `0ea9245`. Gate reproduced independently with
+  `--rerun-tasks`: **351 tests, 0 failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` both
+  successful (baseline 343). Slice review PASS.
+
+**Genuine value-failing RED**, reproduced as `351 tests completed, 5 failed` — `row action target dp
+expected:<48.0>`, `title max lines expected:<2>`, and the literal scan.
+
+**The composable's signature is byte-identical to `main`'s**, verified by diff. Both callers compile
+untouched, which is what slice 3 depends on.
+
+`shapes.queueRow` and the `container` fill, with **no shadow and no elevation** — §56.1's rule satisfied by a
+tonal container rather than a raised card. No thumbnail, nothing reserved (§74.2). No colour, radius or size
+literal.
+
+**`TonalSecondaryControl` adopted for the leading Read/Reopen action**, which §34.2 explicitly permits; the
+remaining compact actions use outlined pills with `quiet` labels and `outlineControl`. Every displayed value
+is unchanged, including the reading-time omission, and no reading-time or StatBand test was touched.
 
 **Do not change the parameters.** Two screens call this row and slice 3 edits both — a signature change here
 would put this slice's compile failure into a later slice, which §2.1 rule 3 forbids as failing-first
