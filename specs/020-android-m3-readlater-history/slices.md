@@ -93,8 +93,23 @@ visual weight, and give both lists a bottom inset that clears a showing Undo off
    report — the allocation correction did not hold.
 5. **Every string the empty states need still exists** in `res/values/strings.xml`. If one is missing, that
    is D2's stop condition, not a licence to add it.
-6. **The Undo toast is still hosted globally** in `IntentionalReadingApp.kt`. If it has been re-parented,
-   the inset fix may no longer be the right one.
+6. **The Undo toast is still hosted globally** in `IntentionalReadingApp.kt` — verified at dispatch, line
+   341. If it has been re-parented, the inset fix may no longer be the right one.
+
+7. **ADDED AT DISPATCH — instrumented tests now run in CI.** PR #32 compiles them with
+   `assembleDebugAndroidTest` and runs them with `connectedDebugAndroidTest` on a pinned 411 dp emulator.
+
+   This matters for **one scenario this plan had assigned to the walkthrough**: *"the last row's actions are
+   reachable while the Undo toast shows."* `spec.md` §5.2 called it *"assertable only on a device"* and
+   pointed at `screencap`. **It is now gateable**, and slice 3 should assert it rather than only photograph
+   it — a screenshot proves it on the day it was taken; a gated test keeps proving it.
+
+   The walkthrough screenshot is still captured. It is evidence a reader recognises, and the toast's
+   *legibility* over a row is a judgment no assertion makes.
+
+   **If a width or size is involved, the test must establish it** — `DeviceConfigurationOverride.ForcedSize`,
+   with every `dp.toPx()` baseline computed **inside** the override. `execution-model.md` §8.3 records why,
+   and what it cost item 018 to get wrong.
 
 ---
 
