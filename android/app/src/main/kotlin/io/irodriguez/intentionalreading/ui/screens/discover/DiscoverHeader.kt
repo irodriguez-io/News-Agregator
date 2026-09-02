@@ -1,6 +1,5 @@
 package io.irodriguez.intentionalreading.ui.screens.discover
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,20 +10,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.CategoryChipRow
 import io.irodriguez.intentionalreading.ui.format.Labels
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 
 @Composable
 fun DiscoverMasthead(modifier: Modifier = Modifier) {
     val tokens = LocalIntentionalReadingTokens.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
     ) {
         Text(
             text = stringResource(R.string.discover_eyebrow).uppercase(Locale.ROOT),
@@ -33,7 +34,7 @@ fun DiscoverMasthead(modifier: Modifier = Modifier) {
         )
         Text(
             text = stringResource(R.string.discover),
-            style = MaterialTheme.typography.displayLarge,
+            style = MaterialTheme.typography.headlineSmall,
             color = tokens.fg,
         )
     }
@@ -52,12 +53,14 @@ fun DiscoverOperationalBar(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     val selectedLabel = selectedCategory?.let { category ->
         Labels.categoryLabel(category.id)
     } ?: Labels.categoryLabel("all")
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
     ) {
         Text(
             text = stringResource(R.string.discover_description),
@@ -68,7 +71,7 @@ fun DiscoverOperationalBar(
             OutlinedButton(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
-                border = BorderStroke(1.dp, tokens.strongBorder),
+                shape = shapes.filledPrimaryButton,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {
                 Text(actionLabel)
