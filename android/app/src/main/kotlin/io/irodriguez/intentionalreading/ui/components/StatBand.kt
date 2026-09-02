@@ -8,14 +8,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 
@@ -28,8 +28,13 @@ data class StatItem(
 fun StatBand(stats: List<StatItem>, modifier: Modifier = Modifier) {
     require(stats.size == 3)
     val tokens = LocalIntentionalReadingTokens.current
-    Column(modifier = modifier.fillMaxWidth()) {
-        HorizontalDivider(thickness = 2.dp, color = tokens.strongBorder)
+    val shapes = LocalIntentionalReadingShapes.current
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shapes.statBand,
+        color = tokens.container,
+        contentColor = tokens.fg,
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -38,33 +43,32 @@ fun StatBand(stats: List<StatItem>, modifier: Modifier = Modifier) {
             StatCell(stats[0], Modifier.weight(1f))
             VerticalDivider(
                 modifier = Modifier.fillMaxHeight(),
-                thickness = 1.dp,
-                color = tokens.border,
+                color = tokens.outlineVariant,
             )
             StatCell(stats[1], Modifier.weight(1f))
+            VerticalDivider(
+                modifier = Modifier.fillMaxHeight(),
+                color = tokens.outlineVariant,
+            )
+            StatCell(stats[2], Modifier.weight(1f))
         }
-        HorizontalDivider(color = tokens.border)
-        StatCell(stats[2], Modifier.fillMaxWidth())
-        HorizontalDivider(color = tokens.border)
     }
 }
 
 @Composable
 private fun StatCell(stat: StatItem, modifier: Modifier = Modifier) {
     val tokens = LocalIntentionalReadingTokens.current
-    Box(modifier = modifier.padding(horizontal = 14.dp, vertical = 16.dp)) {
+    val spacing = LocalIntentionalReadingSpacing.current
+    Box(modifier = modifier.padding(spacing.gutter)) {
         Column {
             Text(
                 text = stat.label.uppercase(Locale.ROOT),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = tokens.muted,
             )
             Text(
                 text = stat.value,
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 22.sp,
-                    lineHeight = 25.sp,
-                ),
+                style = MaterialTheme.typography.displayMedium,
                 color = tokens.fg,
             )
         }

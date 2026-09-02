@@ -11,10 +11,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
+
+/** §73.1 — the existing outlined action boundary width, named instead of inlined. */
+internal val EditorialHeaderOutlineWidth = Dp(1f)
 
 @Composable
 fun EditorialHeader(
@@ -27,9 +30,10 @@ fun EditorialHeader(
     supportingContent: @Composable ColumnScope.() -> Unit = {},
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
     ) {
         Text(
             text = eyebrow.uppercase(Locale.ROOT),
@@ -43,14 +47,14 @@ fun EditorialHeader(
         )
         Text(
             text = description,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = tokens.muted,
         )
         if (actionLabel != null) {
             OutlinedButton(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
-                border = BorderStroke(1.dp, tokens.strongBorder),
+                border = BorderStroke(EditorialHeaderOutlineWidth, tokens.strongBorder),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {
                 Text(actionLabel)
