@@ -27,6 +27,29 @@ class ReadingSurfacePresentationTest {
     }
 
     @Test
+    fun `the StatBand chooses authored value typography from the value itself`() {
+        assertEquals("displayMedium", statStyleForValue("3"))
+        assertEquals("headlineSmall", statStyleForValue("Unavailable"))
+        assertEquals("headlineSmall", statStyleForValue("~13 min"))
+        assertEquals("headlineSmall", statStyleForValue("Biology & Evolution"))
+    }
+
+    @Test
+    fun `an overflowing StatBand text value ellipsises instead of breaking mid word`() {
+        val overflowingValue = "Biology & Evolution"
+        val valueText = statValueTextSource()
+
+        assertTrue(
+            valueText.contains("softWrap = false"),
+            "$overflowingValue must not soft-wrap and break a word",
+        )
+        assertTrue(
+            valueText.contains("overflow = TextOverflow.Ellipsis"),
+            "$overflowingValue must ellipsise when it does not fit",
+        )
+    }
+
+    @Test
     fun `the screen header uses the new type scale`() {
         assertEquals("labelMedium", headerStyleFor("eyebrow.uppercase(Locale.ROOT)"))
         assertEquals("displayLarge", headerStyleFor("title"))
@@ -126,6 +149,24 @@ class ReadingSurfacePresentationTest {
     ).find(statBandSource())?.groupValues?.get(1)
 
     private fun statStyleFor(textBinding: String): String? = textStyleFor(statBandSource(), textBinding)
+
+    private fun statStyleForValue(value: String): String? {
+        val valueStyles = Regex(
+            """style\s*=\s*if\s*\(\s*stat\.value\.isNotEmpty\(\)\s*&&\s*stat\.value\.all\(Char::isDigit\)\s*\)\s*\{\s*MaterialTheme\.typography\.(\w+)\s*}\s*else\s*\{\s*MaterialTheme\.typography\.(\w+)\s*}""",
+        ).find(statBandSource())?.groupValues
+
+        return if (valueStyles == null) {
+            statStyleFor("stat.value")
+        } else if (value.isNotEmpty() && value.all(Char::isDigit)) {
+            valueStyles[1]
+        } else {
+            valueStyles[2]
+        }
+    }
+
+    private fun statValueTextSource(): String = statBandSource()
+        .substringAfter("text = stat.value", missingDelimiterValue = "")
+        .substringBefore("color = tokens.fg", missingDelimiterValue = "")
 
     private fun headerStyleFor(textBinding: String): String? = textStyleFor(editorialHeaderSource(), textBinding)
 
