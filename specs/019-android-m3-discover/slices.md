@@ -35,7 +35,36 @@ the dominant element, and both clamps.
   slice**, alongside the change that breaks it.
 - **Definition of done:** both gates green; both clamps asserted on the text elements that carry them; no
   literals; item 012's tests still green.
-- **Status:** pending
+- **Status:** **done** — RED `6649a19`, GREEN `7d245ff`. Gate reproduced independently with
+  `--rerun-tasks`: **355 tests, 0 failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` both
+  successful (baseline 343). Slice review PASS.
+
+**Genuine value-failing RED**, reproduced as `355 tests completed, 8 failed`, including the two that matter:
+`excerpt maxLines expected:<2> but was:<4>` and `headline maxLines expected:<3>`. Both clamps are applied via
+named constants with ellipsis, asserted on the text elements that carry them.
+
+**The literal scan is scoped to the four composables this slice owns** — `ArticleCard`, `ArticleMetadata`,
+`MetadataText`, `TopicTags` — which is honest scoping rather than a whole-file scan that would have forced
+this slice into a later one's ground.
+
+### A gap in this slice plan, found at review — for slice 2
+
+Four `RoundedCornerShape(10.dp)` literals remain in `ArticleCard.kt`. **10 dp is §15.1's *browser* control
+radius**, not anything Android's scale defines.
+
+| Line | Composable | Owned by |
+|---|---|---|
+| 474, 496 | `ArticleActions` | **slice 2** — the action rail |
+| 305 | `SwipeCue` | **nobody** |
+| 423 | `OpenedAcknowledgment` | **nobody** |
+
+`SwipeCue` and `OpenedAcknowledgment` are named in no slice of this plan. As written, item 019 would ship
+with browser radii on two Android surfaces.
+
+**Slice 2 is extended to cover both.** They live in the file it already edits, they are presentational, and
+neither carries behaviour this item may touch — `SwipeCue` renders §41/§42's directional cue and
+`OpenedAcknowledgment` renders §51's return-state acknowledgement. **Restyle them; do not change what either
+says or when it appears.**
 
 ---
 
