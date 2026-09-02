@@ -75,6 +75,10 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
+          # The runner's default AVD is 320 dp wide. `06-ui-ux.md` §71.2 puts the narrowest
+          # SUPPORTED width at 360 dp, so the default would run every instrumented test at a width
+          # this client does not claim to support. pixel_6 is 411 dp, the width item 012 measured at.
+          profile: pixel_6
           working-directory: android
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
