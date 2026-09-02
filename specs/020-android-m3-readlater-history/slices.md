@@ -109,7 +109,35 @@ visual weight, and give both lists a bottom inset that clears a showing Undo off
 - **Definition of done:** both gates green; the grouping and Mark-unread tests green; the empty state uses
   only existing strings; **the toast-overlap screenshot captured with `screencap`**, at the bottom of a
   scrolled list with an offer showing.
-- **Status:** pending
+- **Status:** **done** — RED `2643559`, GREEN `1d5f529`. Gate reproduced independently: **360 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 358). **Full instrumented
+  suite run by the reviewer three times: 9/9 passing each time.** Slice review PASS.
+
+**The RED for the toast overlap was a genuine geometry failure on a device** — *"Read Later action bounds
+overlapped toast bounds"* and the same for History — not a compile error and not a value stub. That is the
+strongest form this evidence could take.
+
+**Wave D's observation is now a gated test, not a screenshot.** `ReadingListLayoutTest` asserts, for **both**
+screens at a forced 360 dp, that the last row's action bounds do not overlap a showing Undo toast's. Both
+tests force 360×800 dp via `DeviceConfigurationOverride.ForcedSize` with every `dp.toPx()` baseline computed
+inside the override, per `execution-model.md` §8.3, and pass at underlying widths of 411 dp and 320 dp.
+
+`UndoToast.kt` and `IntentionalReadingApp.kt` are **untouched** — the fix is a bottom inset owned by the
+lists, per D4, so the toast's global hosting and its cross-destination guarantee (§70, Amendment 8) are
+intact. `strings.xml` is untouched, so this **remains a one-gate item**.
+
+### A flake the implementer reported honestly, and what it was
+
+The implementer reported that the **full** `connectedDebugAndroidTest` crashed twice at test 1/9 in
+`ArticleCardGestureTest` — a pre-existing test outside this item — while passing when run alone.
+
+**Not reproducible.** The reviewer ran the full 9-test suite three consecutive times on this exact commit:
+9/9 passing every time.
+
+**The likely cause is specific rather than "flaky":** the implementer had just been toggling emulator density
+(`wm density 540` / `reset`) for its own width verification, and `ArticleCardGestureTest` operates on touch
+coordinates — exactly what a density change disturbs. CI runs on a fresh emulator with a fixed profile and no
+toggling, so it is less exposed. **CI on the PR is the arbiter.**
 
 ---
 
