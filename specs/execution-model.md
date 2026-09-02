@@ -270,6 +270,28 @@ emulator-backed job runs `connectedDebugAndroidTest`.
 **This matters most for width claims.** Item 012's 360 dp finding and item 019's §13.2 clamp that closes it
 are the kind of thing a JVM test cannot see, and they now have somewhere durable to live.
 
+### 8.3 A width test must establish its width, not inherit it
+
+**The gate found a defect in merged code on its first run**, and it is the defect every width test in this
+programme is liable to.
+
+Item 018's `CategoryChipRowLayoutTest` set `Modifier.width(360.dp)` and asserted the row was 360 dp wide. A
+Compose root cannot exceed the device, so on the runner's 320 dp default AVD the row was clamped and the
+test failed `expected:<360.0> but was:<320.0>`. **It had been asserting a width it hoped for rather than one
+it established**, and passed locally only because the device happened to be wide enough.
+
+The fix is `DeviceConfigurationOverride.ForcedSize`, which scales density so the composition is laid out at a
+size the test chooses — and it genuinely can present a 360 dp composition on a 320 dp screen.
+
+**The trap inside the fix, which cost a second round:** `ForcedSize` changes the density, so every
+`dp.toPx()` baseline must be computed **inside** the override. Computed outside, the expected and actual
+values sit in different density spaces and the test fails with an inscrutable pixel mismatch — `1215.0`
+against `1080.0`, where `1215 = 360 × 3.375` is the *device* density.
+
+**Verify a width test at more than one width before trusting it.** The corrected test was confirmed passing
+at 320, 411 and 480 dp. A single passing run on the developer's own device proves only that that device is
+wide enough.
+
 ---
 
 ## 9. Verification is wider than review
