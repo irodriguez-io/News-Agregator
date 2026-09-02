@@ -37,13 +37,13 @@ class CategoryChipRowLayoutTest {
         var widthPx = 0f
         var selectionCount = 0
         composeTestRule.setContent {
-            targetPx = with(LocalDensity.current) { 48.dp.toPx() }
-            visibleHeightPx = with(LocalDensity.current) { 40.dp.toPx() }
-            insetTapPx = with(LocalDensity.current) { 1.dp.toPx() }
-            widthPx = with(LocalDensity.current) { 360.dp.toPx() }
             DeviceConfigurationOverride(
                 DeviceConfigurationOverride.ForcedSize(DpSize(width = 360.dp, height = 48.dp)),
             ) {
+                targetPx = with(LocalDensity.current) { 48.dp.toPx() }
+                visibleHeightPx = with(LocalDensity.current) { 40.dp.toPx() }
+                insetTapPx = with(LocalDensity.current) { 1.dp.toPx() }
+                widthPx = with(LocalDensity.current) { 360.dp.toPx() }
                 IntentionalReadingTheme(appearance = Appearance.LIGHT) {
                     CategoryChipRow(
                         selectedCategory = null,
