@@ -134,7 +134,38 @@ it costs to get wrong.
 
 The walkthrough screenshot is still captured — it is evidence a reader would recognise, and §9's *"is what
 the reader needs next actually on screen?"* is not a question a test answers.
-- **Status:** pending
+- **Status:** **done** — RED `657ecdc` + `c276bdb`, GREEN `38b3272`. Gate reproduced independently:
+  **362 unit tests, 0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 359).
+  **Instrumented suite run by the reviewer: 8 tests, 0 failed.** Slice review PASS.
+
+### Item 012 §1.4 is closed, and it is now gated
+
+**Both guards exist and assert what they claim.** Guard 1 asserts `masthead.top < card.top` and
+`card.top < operationalBlock.top` — **the first automated assertion Amendment 7's ordering has ever had.**
+Guard 2 (`longDatasetCardFitsAboveTheFoldAt360Dp`) forces 360 dp, locates all three rail controls by content
+description, and asserts their bounds within the viewport. Verified passing at forced 360 dp, at 411 dp, and
+with the emulator physically narrowed to 320 dp. Every `dp.toPx()` baseline is inside its `ForcedSize`
+override, per `execution-model.md` §8.3.
+
+`walkthrough/item019-fold-closed-360dp.png` is the visual proof: the headline clamped at three lines with
+ellipsis, the excerpt at two, and **all three action controls above the bottom bar** — where item 017's
+walkthrough had a five-line headline and `Read article` cut in half.
+
+### One thing raised for the owner rather than decided here
+
+**The triage controls lost their visible text labels.** They previously carried `Text` labels beneath the
+circles; now *"Not interested"* and *"Save for later"* travel only as `accessibleName` content descriptions,
+so a sighted reader sees bare `←` and `→` arrows.
+
+**This is authorised** — §76.5 says *"icon-only controls carry accessible names (§73)"* — and the accessible
+names are present and asserted. But §35's *"must not replace the labelled semantic understanding of the
+action"* reads against it, and it is a material change to what a sighted reader sees.
+
+It is also **plausibly load-bearing for the fold fix**: the labels cost vertical space at exactly the width
+that was tight. *Whether the rail would still fit at 360 dp with them restored is unmeasured* — worth
+measuring if the owner wants them back.
+
+**An owner visual judgment at the walkthrough, not a review finding.**
 
 ---
 
