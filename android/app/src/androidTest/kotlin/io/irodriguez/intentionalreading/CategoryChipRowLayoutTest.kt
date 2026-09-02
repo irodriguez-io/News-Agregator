@@ -6,10 +6,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.irodriguez.intentionalreading.domain.model.Appearance
@@ -34,18 +37,22 @@ class CategoryChipRowLayoutTest {
         var widthPx = 0f
         var selectionCount = 0
         composeTestRule.setContent {
-            targetPx = with(LocalDensity.current) { 48.dp.toPx() }
-            visibleHeightPx = with(LocalDensity.current) { 40.dp.toPx() }
-            insetTapPx = with(LocalDensity.current) { 1.dp.toPx() }
-            widthPx = with(LocalDensity.current) { 360.dp.toPx() }
-            IntentionalReadingTheme(appearance = Appearance.LIGHT) {
-                CategoryChipRow(
-                    selectedCategory = null,
-                    onCategorySelected = { selectionCount += 1 },
-                    modifier = Modifier
-                        .testTag(ROW_TAG)
-                        .width(360.dp),
-                )
+            DeviceConfigurationOverride(
+                DeviceConfigurationOverride.ForcedSize(DpSize(width = 360.dp, height = 48.dp)),
+            ) {
+                targetPx = with(LocalDensity.current) { 48.dp.toPx() }
+                visibleHeightPx = with(LocalDensity.current) { 40.dp.toPx() }
+                insetTapPx = with(LocalDensity.current) { 1.dp.toPx() }
+                widthPx = with(LocalDensity.current) { 360.dp.toPx() }
+                IntentionalReadingTheme(appearance = Appearance.LIGHT) {
+                    CategoryChipRow(
+                        selectedCategory = null,
+                        onCategorySelected = { selectionCount += 1 },
+                        modifier = Modifier
+                            .testTag(ROW_TAG)
+                            .width(360.dp),
+                    )
+                }
             }
         }
 

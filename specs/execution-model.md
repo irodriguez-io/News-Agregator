@@ -234,14 +234,63 @@ Read in this order: `AGENTS.md`, `docs/v1/README.md`, `specs/backlog.md`, this f
 
 | Surface | Command | Notes |
 |---|---|---|
-| Android | `./gradlew :app:testDebugUnitTest` | from `android/`; 135 tests at 004 |
+| Android | `./gradlew :app:testDebugUnitTest` | from `android/`; 343 tests at 018 |
 | Android | `./gradlew :app:assembleDebug` | |
+| Android | `./gradlew :app:assembleDebugAndroidTest` | **added at 018** — instrumented sources must compile |
+| Android | `./gradlew :app:connectedDebugAndroidTest` | **added at 018** — runs on an emulator in CI |
 | Web | `npm test` | 105/105 at 004 |
 | Web | `python -m pytest`, `python -m pipeline.main --validate-config` | web/pipeline items only |
 
-CI is path-filtered: `android.yml` fires on `android/**`, `test.yml` on the web and pipeline paths. Item
-011 touches both trees and will fire both. Hosted CI must be green on the exact final head before a final
-review merges — that requirement is not waived by any wave arrangement.
+Hosted CI must be green on the exact final head before a final review merges — that requirement is not
+waived by any wave arrangement.
+
+### 8.1 What is actually path-filtered — this section was wrong until 018
+
+**`android.yml` is path-filtered** on `android/**` and its own workflow file. That much was right.
+
+**`test.yml` is not path-filtered at all.** Its trigger is a bare `pull_request:` with no `paths` key, so it
+runs on **every** pull request in this repository regardless of what changed, and on every push to `main`.
+This section previously claimed it fired "on the web and pipeline paths", which is false and was believed
+through waves A to D.
+
+The practical consequence: **seeing `test.yml` green on a documents-only or Android-only PR means nothing
+about whether web paths were touched.** Do not read it as a signal. Item 011 remains the only item that
+genuinely exercises both trees.
+
+### 8.2 Instrumented tests are gated as of item 018
+
+Before item 018, `android.yml` ran only `testDebugUnitTest` and `assembleDebug`. **Instrumented tests were
+neither run nor even compiled**, so an `androidTest` source could rot without any gate noticing, and a
+behavioural claim asserted only there was true on the day it was measured and unprotected afterwards.
+
+Item 018 surfaced this by adding a 360 dp layout test whose evidence had exactly that weakness. Both gaps
+are now closed: `assembleDebugAndroidTest` compiles the sources in the main job, and a separate
+emulator-backed job runs `connectedDebugAndroidTest`.
+
+**This matters most for width claims.** Item 012's 360 dp finding and item 019's §13.2 clamp that closes it
+are the kind of thing a JVM test cannot see, and they now have somewhere durable to live.
+
+### 8.3 A width test must establish its width, not inherit it
+
+**The gate found a defect in merged code on its first run**, and it is the defect every width test in this
+programme is liable to.
+
+Item 018's `CategoryChipRowLayoutTest` set `Modifier.width(360.dp)` and asserted the row was 360 dp wide. A
+Compose root cannot exceed the device, so on the runner's 320 dp default AVD the row was clamped and the
+test failed `expected:<360.0> but was:<320.0>`. **It had been asserting a width it hoped for rather than one
+it established**, and passed locally only because the device happened to be wide enough.
+
+The fix is `DeviceConfigurationOverride.ForcedSize`, which scales density so the composition is laid out at a
+size the test chooses — and it genuinely can present a 360 dp composition on a 320 dp screen.
+
+**The trap inside the fix, which cost a second round:** `ForcedSize` changes the density, so every
+`dp.toPx()` baseline must be computed **inside** the override. Computed outside, the expected and actual
+values sit in different density spaces and the test fails with an inscrutable pixel mismatch — `1215.0`
+against `1080.0`, where `1215 = 360 × 3.375` is the *device* density.
+
+**Verify a width test at more than one width before trusting it.** The corrected test was confirmed passing
+at 320, 411 and 480 dp. A single passing run on the developer's own device proves only that that device is
+wide enough.
 
 ---
 
