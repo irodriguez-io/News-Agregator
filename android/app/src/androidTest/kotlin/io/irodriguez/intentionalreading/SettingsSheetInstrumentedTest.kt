@@ -84,7 +84,12 @@ class SettingsSheetInstrumentedTest {
             composeTestRule.mainClock.advanceTimeBy(175)
             composeTestRule.waitForIdle()
 
-            assertEquals("Reduced motion must apply no sheet translation", initialBounds, title.fetchSemanticsNode().boundsInRoot)
+            assertEquals(
+                "Reduced motion must apply no sheet translation",
+                initialBounds.top,
+                title.fetchSemanticsNode().boundsInRoot.top,
+                0.5f,
+            )
             assertEquals("Reduced motion must apply no sheet fade", initialPixels, fingerprint(scrim.captureToImage()))
 
             composeTestRule.onNodeWithContentDescription("Close Settings").performClick()

@@ -419,6 +419,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                 importInProgress = importInProgress,
                 importTooLarge = importNotice == ImportNotice.TOO_LARGE,
                 importUnreadable = importNotice == ImportNotice.UNREADABLE,
+                reducedMotion = reducedMotion,
                 onAppearanceSelected = { selectedAppearance ->
                     viewModel.launchAppearanceChange(selectedAppearance)
                 },

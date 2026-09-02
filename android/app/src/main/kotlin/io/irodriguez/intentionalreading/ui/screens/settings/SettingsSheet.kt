@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+
 package io.irodriguez.intentionalreading.ui.screens.settings
 
 import androidx.activity.compose.BackHandler
@@ -8,42 +10,57 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
@@ -51,10 +68,15 @@ import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.ui.components.ImportConfirmation
 import io.irodriguez.intentionalreading.ui.components.LiveStatusMessage
 import io.irodriguez.intentionalreading.ui.components.ResetConfirmation
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
+import kotlin.math.roundToInt
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsSheet(
     appearance: Appearance,
@@ -66,6 +88,7 @@ fun SettingsSheet(
     importInProgress: Boolean,
     importTooLarge: Boolean,
     importUnreadable: Boolean,
+    reducedMotion: () -> Boolean = { false },
     onAppearanceSelected: (Appearance) -> Unit,
     onExport: () -> Unit,
     onSelectImport: () -> Unit,
@@ -75,19 +98,77 @@ fun SettingsSheet(
     onDismiss: () -> Unit,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shapes = LocalIntentionalReadingShapes.current
+    val reducedMotionEnabled = reducedMotion()
+    val density = LocalDensity.current
+    val sheetState = remember(density, reducedMotionEnabled) {
+        SheetState(
+            skipPartiallyExpanded = true,
+            positionalThreshold = {
+                with(density) { BottomSheetDefaults.PositionalThreshold.toPx() }
+            },
+            velocityThreshold = {
+                with(density) { BottomSheetDefaults.VelocityThreshold.toPx() }
+            },
+            initialValue = if (reducedMotionEnabled) SheetValue.Expanded else SheetValue.Hidden,
+            confirmValueChange = { true },
+            skipHiddenState = false,
+        )
+    }
     val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
+    val baseMotionScheme = MaterialTheme.motionScheme
+    val sheetMotionScheme = remember(baseMotionScheme, reducedMotionEnabled) {
+        SettingsSheetMotionScheme(baseMotionScheme, reducedMotionEnabled)
+    }
+    sheetState.showMotionSpec = settingsSheetRevealSpec(reducedMotionEnabled)
+    sheetState.hideMotionSpec = settingsSheetRevealSpec(reducedMotionEnabled)
+    val sheetAlpha by animateFloatAsState(
+        targetValue = if (reducedMotionEnabled || sheetState.targetValue != SheetValue.Hidden) 1f else 0f,
+        animationSpec = settingsSheetRevealSpec(reducedMotionEnabled),
+        label = "Settings sheet fade",
+    )
     var resetConfirmationVisible by rememberSaveable { mutableStateOf(false) }
-    BackHandler(onBack = onDismiss)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = tokens.surface,
-        contentColor = tokens.fg,
-        scrimColor = tokens.backdrop,
-        dragHandle = null,
+    val dismissWithAnimation = {
+        coroutineScope.launch {
+            if (reducedMotionEnabled) {
+                sheetState.hide()
+            } else {
+                val hide = async { sheetState.hide() }
+                delay(SettingsSheetRevealDurationMillis.toLong())
+                hide.await()
+            }
+            if (!sheetState.isVisible) onDismiss()
+        }
+        Unit
+    }
+    BackHandler(onBack = dismissWithAnimation)
+    val sheetModifier = if (reducedMotionEnabled) {
+        Modifier.offset {
+            IntOffset(x = 0, y = sheetState.reducedMotionLayoutOffset())
+        }
+    } else {
+        Modifier.graphicsLayer { alpha = sheetAlpha }
+    }
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme,
+        motionScheme = sheetMotionScheme,
+        shapes = MaterialTheme.shapes,
+        typography = MaterialTheme.typography,
     ) {
+        ModalBottomSheet(
+            onDismissRequest = dismissWithAnimation,
+            modifier = sheetModifier,
+            sheetState = sheetState,
+            shape = shapes.modalSheet,
+            containerColor = tokens.surface,
+            contentColor = tokens.fg,
+            scrimColor = tokens.backdrop,
+            dragHandle = null,
+            contentWindowInsets = {
+                if (reducedMotionEnabled) WindowInsets() else BottomSheetDefaults.windowInsets
+            },
+        ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -97,7 +178,7 @@ fun SettingsSheet(
                     .verticalScroll(rememberScrollState())
                     .onPreviewKeyEvent { event ->
                         if (event.key == Key.Escape && event.type == KeyEventType.KeyUp) {
-                            onDismiss()
+                            dismissWithAnimation()
                             true
                         } else {
                             false
@@ -130,7 +211,7 @@ fun SettingsSheet(
                 }
                 val closeDescription = stringResource(R.string.close_settings)
                 IconButton(
-                    onClick = onDismiss,
+                    onClick = dismissWithAnimation,
                     modifier = Modifier
                         .heightIn(min = 48.dp)
                         .semantics { contentDescription = closeDescription },
@@ -179,26 +260,31 @@ fun SettingsSheet(
                             Appearance.SYSTEM -> stringResource(R.string.appearance_system)
                         }
                         val selected = option == appearance
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                                .selectable(
-                                    selected = selected,
-                                    role = Role.RadioButton,
-                                    onClick = { onAppearanceSelected(option) },
-                                ),
-                            verticalAlignment = Alignment.CenterVertically,
+                        Surface(
+                            color = tokens.card,
+                            shape = shapes.smallContainer,
                         ) {
-                            RadioButton(
-                                selected = selected,
-                                onClick = null,
-                            )
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = tokens.fg,
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .selectable(
+                                        selected = selected,
+                                        role = Role.RadioButton,
+                                        onClick = { onAppearanceSelected(option) },
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                RadioButton(
+                                    selected = selected,
+                                    onClick = null,
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = tokens.fg,
+                                )
+                            }
                         }
                     }
                 }
@@ -306,5 +392,53 @@ fun SettingsSheet(
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
         }
+        }
     }
+}
+
+/** §79.2 — the complete sheet reveal and reverse tuck last 350 ms. */
+private const val SettingsSheetRevealDurationMillis = 350
+
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SheetState.reducedMotionLayoutOffset(): Int {
+    val expandedOffset = anchoredDraggableState.anchors.positionOf(SheetValue.Expanded)
+    val currentOffset = offset
+    return if (expandedOffset.isFinite() && currentOffset.isFinite()) {
+        expandedOffset.roundToInt() - currentOffset.roundToInt()
+    } else {
+        0
+    }
+}
+
+private fun <T> settingsSheetRevealSpec(reducedMotion: Boolean): FiniteAnimationSpec<T> =
+    if (reducedMotion) {
+        snap()
+    } else {
+        tween(
+            durationMillis = SettingsSheetRevealDurationMillis,
+            easing = LinearOutSlowInEasing,
+        )
+    }
+
+private class SettingsSheetMotionScheme(
+    private val base: MotionScheme,
+    private val reducedMotion: Boolean,
+) : MotionScheme {
+    override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> =
+        settingsSheetRevealSpec(reducedMotion)
+
+    override fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> =
+        if (reducedMotion) snap() else base.fastSpatialSpec()
+
+    override fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> =
+        if (reducedMotion) snap() else base.slowSpatialSpec()
+
+    override fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> =
+        if (reducedMotion) snap() else base.defaultEffectsSpec()
+
+    override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> =
+        if (reducedMotion) snap() else base.fastEffectsSpec()
+
+    override fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> =
+        if (reducedMotion) snap() else base.slowEffectsSpec()
 }
