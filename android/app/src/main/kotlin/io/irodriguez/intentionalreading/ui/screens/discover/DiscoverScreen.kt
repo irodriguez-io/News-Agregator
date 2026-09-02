@@ -25,6 +25,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
@@ -113,7 +114,7 @@ fun DiscoverScreen(
             .padding(horizontal = 18.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp),
     ) {
-        DiscoverMasthead()
+        DiscoverMasthead(modifier = Modifier.testTag(DiscoverLayoutTags.MASTHEAD))
 
         when (state) {
             is DiscoverUiState.Loading -> LoadingPanel(state)
@@ -139,11 +140,13 @@ fun DiscoverScreen(
                 onMarkRead = onMarkRead,
                 onSwipeCommit = onSwipeCommit,
                 reducedMotion = reducedMotion,
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    cardTopOffset = coordinates.positionInParent().y.roundToInt()
-                    cardBottomOffset =
-                        (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
-                },
+                modifier = Modifier
+                    .testTag(DiscoverLayoutTags.CARD)
+                    .onGloballyPositioned { coordinates ->
+                        cardTopOffset = coordinates.positionInParent().y.roundToInt()
+                        cardBottomOffset =
+                            (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
+                    },
             )
         }
 
@@ -156,8 +159,15 @@ fun DiscoverScreen(
             onCategorySelected = onCategorySelected,
             actionLabel = refreshActionLabel,
             onAction = onRefreshAction,
+            modifier = Modifier.testTag(DiscoverLayoutTags.OPERATIONAL_BLOCK),
         )
     }
+}
+
+internal object DiscoverLayoutTags {
+    const val MASTHEAD = "discover-masthead"
+    const val CARD = "discover-card"
+    const val OPERATIONAL_BLOCK = "discover-operational-block"
 }
 
 @Composable
