@@ -39,7 +39,40 @@ with the outgoing screen scaling down and fading — and immediately, with no an
 - **Definition of done:** both gates green; the direction function unit-tested over all six ordered pairs;
   the reduced-motion branch asserted; **items 012, 013, 014 and 016's tests in this file's ground still
   green**; the back-handler test still green.
-- **Status:** pending
+- **Status:** **done** — RED `1d160a3`, GREEN `48c4483`. Gate reproduced independently: **382 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 381). **Instrumented
+  suite run by the reviewer: 14 tests, 0 failed** (the 12 that existed plus 2 new). Slice review PASS.
+
+**RED was a value failure on the direction function**, reproduced as
+`READ_LATER -> DISCOVER expected:<FROM_RIGHT> but was:<FROM_LEFT>` — the function was written in RED
+returning a deliberately wrong direction, and is unit-tested over **all six ordered pairs**. **No vacuous
+duration assertion was written**, per D1.
+
+**Where a RED could not fail, that was reported rather than contrived.** The reduced-motion and undo-offer
+instrumented assertions *passed against the original bare `when`*, because they guard behaviour that already
+held. The implementer said so explicitly instead of manufacturing a failure.
+
+### The predicted casualty happened, and the protocol worked
+
+`spec.md` §5.3 named *"any test asserting screen content by composition structure"* as the likeliest
+casualty, and the dispatch reconciliation named **`MainActivityLaunchSmokeTest`** as the most exposed of the
+five bounds-locating instrumented tests.
+
+**It failed** on the first full post-change run: `AnimatedContent` evaluated its transition during initial
+equal-state composition.
+
+**The implementer reported it before editing anything**, then fixed **production** — a no-op transform when
+the state is unchanged — and left the test untouched. That is §2.1 rule 5's protocol executed exactly as
+written, on the one occasion in this wave where it was actually needed.
+
+**Verified unedited:** `MainActivityLaunchSmokeTest`, item 019's `DiscoverScreenLayoutTest` (Amendment 7's
+ordering guard), item 020's `ReadingListLayoutTest` (the toast-overlap guard), `ArticleRowLayoutTest` and
+`CategoryChipRowLayoutTest`.
+
+**Wave D's ground is intact.** The scaffold diff adds animation imports and wraps the `when (destination)`;
+`UndoToast`, `LiveStatusMessage`, `SettingsSheet`, the back handler and the recovery notice are **all
+untouched**. M3 Emphasized easing is implemented as a real two-segment `PathEasing`, not a guessed
+cubic-bezier.
 
 **The likeliest failure is a UI test that locates a node by composition structure** (D4). Report it before
 editing it.
@@ -62,7 +95,40 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
   place; this slice changes its shape, scrim and animation only.
 - **Definition of done:** both gates green; focus trapped while open and restored on close, asserted; the
   scrim present under reduced motion; no change to appearance, import, export or reset behaviour.
-- **Status:** pending
+- **Status:** **done** — RED `3fefd05`, GREEN `660adc7`. Gate reproduced independently: **385 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 382). **Instrumented
+  suite run by the reviewer: 17 tests, 0 failed** (14 existing plus 3 new). Slice review PASS.
+
+RED reproduced as `385 tests completed, 2 failed` with value failures on `shapes.modalSheet` and
+`tokens.card`. The **instrumented** RED was stronger still: *"reduced motion moved the title from top=2545 to
+top=442"* and *"dismissal removed the sheet before reverse tuck"* — real geometry and sequencing failures.
+
+**The named trap is guarded, both halves.** The reduced-motion test asserts **no translation and no fade**,
+the latter by a pixel fingerprint of the scrim — so the scrim demonstrably still dims when animation is
+suppressed. It runs at **two widths** (360 and 411 dp) via `DeviceConfigurationOverride.ForcedSize` per §8.3,
+and it sets `animator_duration_scale 0` while restoring the original in a `finally`.
+
+### The implementer hit the "test looks wrong" branch and stopped
+
+With a working implementation uncommitted and one assertion between it and a green gate, it **refused to
+edit the test and asked for authority** — the first time in this wave that branch was reached.
+
+Its claim was verified before anything was granted. The RED showed a **~2100 px** slide (2545 → 442); the
+implementation reduced it to **0.1–0.2 px**. The animation was genuinely suppressed and the residue was
+layout rounding, so **exact `Rect` float equality was the wrong instrument for "did it move"** — the same
+over-precision that caused item 018's `ForcedSize` bug.
+
+Authority was granted **narrowly**: that one translation assertion, tolerance ≤ 1 px, message preserved, and
+the fade assertion explicitly **not** to be touched. Delivered at **0.5f**, tighter than the ceiling, with
+the fade check still exact.
+
+*One narrowing recorded honestly:* the assertion now compares `.top` rather than the whole `Rect`. JUnit has
+no delta overload for `Rect`, so a tolerance requires a scalar, and vertical translation is the axis a bottom
+sheet moves on — but it checks less than the original did. It still catches the 2100 px failure with four
+thousand times the headroom, and the exact whole-image fade check would catch gross layout change anyway.
+
+**None of the five bounds-locating instrumented tests was edited**, nor any wave-D undo test. Emulator
+density and animator scale were both restored.
 
 ---
 
@@ -70,8 +136,13 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
 
 1. **017, 018, 019 and 020 have all merged**, and `main` is green on the last of them.
 2. **`IntentionalReadingApp.kt` still switches destinations with a bare `when (destination)`** and still
-   resolves `reducedMotion` in the same composable. If item 018 restructured the scaffold, re-read before
-   planning slice 1.
+   resolves `reducedMotion` in the same composable. **Verified at dispatch:** the `when` is at line 261 and
+   `reducedMotion` resolves at line 92. Item 018 edited only the app bar, shifting lines by four without
+   restructuring; the file is 509 lines.
+
+   **Also verified:** `UndoToast` (line 341), `LiveStatusMessage` (347) and `SettingsSheet` (354) are all
+   hosted **after** and outside the destination branch, which is what makes Amendment 8's cross-destination
+   offer work and what slice 1 must not disturb.
 3. **`SettingsSheet.kt` still uses `ModalBottomSheet` with `rememberModalBottomSheetState`.** If it has
    become a dialog, slice 2's scope changes.
 4. **The bottom bar's destination order is still Read Later, Discover, History** (§18). The direction
@@ -81,9 +152,34 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
 
 ---
 
+## Reconciled at dispatch — two things changed since this item was designed
+
+**1. Instrumented tests now compile AND run in CI** (PR #32), on a pinned 411 dp emulator. This item's
+`spec.md` §5.2 listed three claims as *"assertable in a Compose UI test"* — that a reduced-motion preference
+produces no animation, that the sheet traps and restores focus, and that a live undo offer survives a
+destination change. **When this item was designed those would have been written and never run.** They are
+now gateable, and this item's two most consequential guarantees — reduced motion honoured, and Amendment 8's
+cross-destination offer surviving — belong there rather than in a walkthrough note.
+
+**2. The "likeliest casualty" is no longer abstract.** §5.3 warned that *"any test asserting screen content
+by composition structure"* could break when `AnimatedContent` adds a layer. There are now **12 instrumented
+tests across 7 files, and five of them locate nodes by `boundsInRoot`:**
+
+| Test | Exposure to an `AnimatedContent` layer |
+|---|---|
+| `MainActivityLaunchSmokeTest` | **high** — launches the real activity through the scaffold |
+| `ReadingListLayoutTest` (020's toast-overlap guard) | **high** — asserts toast-vs-row bounds in the real hosting |
+| `DiscoverScreenLayoutTest` (019's Amendment 7 ordering guard) | medium — composes the screen, but asserts bounds ordering |
+| `CategoryChipRowLayoutTest`, `ArticleRowLayoutTest` | low — component-scoped |
+
+**019's ordering guard and 020's toast guard did not exist when this item was designed.** They are the two
+newest and most valuable assertions in the project, and this item is the one that can break them.
+
+**Four items now merge beneath this one, not three.**
+
 ## On existing assertions
 
-**Three items merge beneath this one, and this file is wave D's ground.** `spec.md` §5.3 names five cases
+**Four items merge beneath this one, and this file is wave D's ground.** `spec.md` §5.3 names five cases
 with reasons and is **not a freeze**.
 
 Per `execution-model.md` §2.1 rule 5: read the tree at preflight, and **report any unlisted failure before
