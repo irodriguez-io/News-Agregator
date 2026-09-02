@@ -1,5 +1,8 @@
 package io.irodriguez.intentionalreading.ui.components
 
+import androidx.compose.ui.unit.dp
+import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.IntentionalReadingSpacing
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.test.Test
@@ -101,14 +104,61 @@ class ArticleCardTest {
     }
 
     @Test
-    fun `the slice owned card source names no colour radius or font literal`() {
-        val ownedSource = buildString {
-            append(functionSource("ArticleCard"))
-            append(functionSource("ArticleMetadata"))
-            append(functionSource("MetadataText"))
-            append(functionSource("TopicTags"))
-        }
+    fun `the action rail uses item 018 shared controls with the existing callbacks`() {
+        val rail = articleActionRail()
+
+        assertEquals(
+            listOf("CircularTriageControl", "FilledPrimaryControl", "CircularTriageControl"),
+            Regex(
+                """\b(CircularTriageControl|FilledPrimaryControl|RoundTriageAction|Button)\s*\(""",
+            ).findAll(rail).map { it.groupValues[1] }.toList(),
+            "action rail control types",
+        )
+
+        val controls = listOf("CircularTriageControl", "FilledPrimaryControl").flatMap { name ->
+            callBlocks(rail, name)
+        }.sortedBy(rail::indexOf)
+        assertTrue(controls[0].contains("onClick = { onDismiss(article) }"))
+        assertTrue(controls[1].contains("onClick = { onReadArticle(article) }"))
+        assertTrue(controls[2].contains("onClick = { onSave(article) }"))
+    }
+
+    @Test
+    fun `the adopted triage controls keep compliant targets and accessible names`() {
+        val triageControls = callBlocks(articleActionRail(), "CircularTriageControl")
+        val layout = sharedControlLayout(IntentionalReadingSpacing, IntentionalReadingShapes)
+
+        assertEquals(2, triageControls.size, "circular triage control count")
+        assertTrue(layout.triageSize >= 48.dp, "triage target was smaller than 48 dp")
+        assertEquals(
+            listOf("notInterestedLabel", "saveForLaterLabel"),
+            triageControls.map { assignedIdentifier(it, "accessibleName") },
+            "triage accessible names",
+        )
+    }
+
+    @Test
+    fun `the swipe cue uses the Android small container roles`() {
+        val cue = functionSource("SwipeCue")
+
+        assertEquals("smallContainer", assignedScale(cue, "shape", "shapes"))
+        assertEquals("container", assignedScale(cue, "color", "tokens"))
+        assertEquals("fg", assignedScale(cue, "contentColor", "tokens"))
+    }
+
+    @Test
+    fun `the opened acknowledgment uses the Android small container roles`() {
+        val acknowledgment = functionSource("OpenedAcknowledgment")
+
+        assertEquals("smallContainer", assignedScale(acknowledgment, "shape", "shapes"))
+        assertEquals("container", assignedScale(acknowledgment, "color", "tokens"))
+        assertEquals("fg", assignedScale(acknowledgment, "contentColor", "tokens"))
+    }
+
+    @Test
+    fun `the whole card source names no colour radius size or font literal`() {
         val forbidden = listOf(
+            Regex("""\b\d+(?:\.\d+)?\.(?:dp|sp)\b"""),
             Regex("""\bColor\s*\("""),
             Regex("""\bRoundedCornerShape\s*\("""),
             Regex("""\bCircleShape\b"""),
@@ -118,7 +168,7 @@ class ArticleCardTest {
 
         forbidden.forEach { pattern ->
             assertFalse(
-                pattern.containsMatchIn(ownedSource),
+                pattern.containsMatchIn(source),
                 "Forbidden literal matched ${pattern.pattern}",
             )
         }
@@ -145,6 +195,26 @@ class ArticleCardTest {
     private fun assignedScale(block: String, property: String, scale: String): String? = Regex(
         """\b$property\s*=\s*$scale\.([A-Za-z0-9_]+)""",
     ).find(block)?.groupValues?.get(1)
+
+    private fun assignedIdentifier(block: String, property: String): String? = Regex(
+        """\b$property\s*=\s*([A-Za-z0-9_]+)""",
+    ).find(block)?.groupValues?.get(1)
+
+    private fun articleActionRail(): String {
+        val actions = functionSource("ArticleActions")
+        val start = actions.indexOf("Row(")
+        check(start >= 0) { "ArticleActions has no action rail Row" }
+        val parametersStart = start + "Row".length
+        val parametersEnd = balancedEnd(actions, parametersStart, '(', ')')
+        val bodyStart = actions.indexOf('{', parametersEnd + 1)
+        check(bodyStart >= 0) { "ArticleActions action rail Row has no body" }
+        return balancedBlock(actions, bodyStart, '{', '}')
+    }
+
+    private fun callBlocks(block: String, name: String): List<String> = Regex("""\b$name\s*\(""")
+        .findAll(block)
+        .map { match -> balancedBlock(block, match.range.last, '(', ')') }
+        .toList()
 
     private fun articleCardSurface(): String {
         val body = functionSource("ArticleCard")
