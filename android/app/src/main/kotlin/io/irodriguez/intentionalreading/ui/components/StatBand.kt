@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
@@ -68,7 +69,14 @@ private fun StatCell(stat: StatItem, modifier: Modifier = Modifier) {
             )
             Text(
                 text = stat.value,
-                style = MaterialTheme.typography.displayMedium,
+                style = if (stat.value.isNotEmpty() && stat.value.all(Char::isDigit)) {
+                    MaterialTheme.typography.displayMedium
+                } else {
+                    MaterialTheme.typography.headlineSmall
+                },
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
                 color = tokens.fg,
             )
         }
