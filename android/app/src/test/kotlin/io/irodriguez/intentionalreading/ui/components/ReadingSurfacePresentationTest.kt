@@ -23,7 +23,7 @@ class ReadingSurfacePresentationTest {
     @Test
     fun `the StatBand uses the functional label and editorial numeral slots`() {
         assertEquals("labelMedium", statStyleFor("stat.label.uppercase(Locale.ROOT)"))
-        assertEquals("displayMedium", statStyleFor("stat.value"))
+        assertEquals("displayMedium", statStyleForValue("3"))
     }
 
     @Test
