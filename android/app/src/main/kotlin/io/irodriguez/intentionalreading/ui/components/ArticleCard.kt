@@ -5,7 +5,6 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.border
@@ -16,18 +15,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +32,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -51,11 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
@@ -259,7 +247,7 @@ fun ArticleCard(
                                 Alignment.CenterEnd
                             },
                         )
-                        .padding(16.dp)
+                        .padding(spacing.gutter)
                         .clearAndSetSemantics {},
                 )
             }
@@ -300,17 +288,17 @@ private fun SwipeCue(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = tokens.surfaceHover,
+        shape = shapes.smallContainer,
+        color = tokens.container,
         contentColor = tokens.fg,
-        border = BorderStroke(1.dp, tokens.strongBorder),
-        tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(spacing.stackGap),
+            horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (action == SwipeGesture.Action.DISMISS) Text("←")
@@ -418,16 +406,17 @@ private val TopicTagOutlineWidth = Dp(1f)
 @Composable
 private fun OpenedAcknowledgment() {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        color = tokens.surfaceHover,
+        shape = shapes.smallContainer,
+        color = tokens.container,
         contentColor = tokens.fg,
-        border = BorderStroke(1.dp, tokens.border),
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(spacing.stackGap),
+            verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
         ) {
             Text(
                 text = stringResource(R.string.opened).uppercase(Locale.ROOT),
@@ -452,89 +441,52 @@ private fun ArticleActions(
     onSave: (Article) -> Unit,
     onMarkRead: (Article) -> Unit,
 ) {
-    val tokens = LocalIntentionalReadingTokens.current
+    val spacing = LocalIntentionalReadingSpacing.current
     val externalDescription = stringResource(R.string.read_article_external)
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val notInterestedLabel = stringResource(R.string.not_interested)
+    val saveForLaterLabel = stringResource(R.string.save_for_later)
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.stackGap)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(spacing.stackGap),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            RoundTriageAction(
-                arrow = "←",
-                label = stringResource(R.string.not_interested),
+            CircularTriageControl(
+                accessibleName = notInterestedLabel,
                 onClick = { onDismiss(article) },
-            )
-            Button(
+            ) {
+                Text(
+                    text = "←",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            FilledPrimaryControl(
                 onClick = { onReadArticle(article) },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 48.dp)
                     .semantics { contentDescription = externalDescription },
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = tokens.accent,
-                    contentColor = tokens.surface,
-                ),
             ) {
                 Text(stringResource(R.string.read_article))
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(spacing.baseUnit))
                 Text("↗")
             }
-            RoundTriageAction(
-                arrow = "→",
-                label = stringResource(R.string.save_for_later),
+            CircularTriageControl(
+                accessibleName = saveForLaterLabel,
                 onClick = { onSave(article) },
-            )
+            ) {
+                Text(
+                    text = "→",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
         }
         if (isOpened) {
-            OutlinedButton(
+            TonalSecondaryControl(
                 onClick = { onMarkRead(article) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, tokens.strongBorder),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.mark_read))
             }
         }
-    }
-}
-
-@Composable
-private fun RoundTriageAction(
-    arrow: String,
-    label: String,
-    onClick: () -> Unit,
-) {
-    val tokens = LocalIntentionalReadingTokens.current
-    Column(
-        modifier = Modifier.width(72.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        OutlinedIconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .semantics { contentDescription = label },
-            border = BorderStroke(1.dp, tokens.strongBorder),
-        ) {
-            Text(
-                text = arrow,
-                style = MaterialTheme.typography.bodyLarge,
-                color = tokens.fg,
-            )
-        }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp, lineHeight = 16.sp),
-            color = tokens.fg,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-        )
     }
 }
