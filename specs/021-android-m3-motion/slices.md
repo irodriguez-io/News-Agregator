@@ -70,8 +70,13 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
 
 1. **017, 018, 019 and 020 have all merged**, and `main` is green on the last of them.
 2. **`IntentionalReadingApp.kt` still switches destinations with a bare `when (destination)`** and still
-   resolves `reducedMotion` in the same composable. If item 018 restructured the scaffold, re-read before
-   planning slice 1.
+   resolves `reducedMotion` in the same composable. **Verified at dispatch:** the `when` is at line 261 and
+   `reducedMotion` resolves at line 92. Item 018 edited only the app bar, shifting lines by four without
+   restructuring; the file is 509 lines.
+
+   **Also verified:** `UndoToast` (line 341), `LiveStatusMessage` (347) and `SettingsSheet` (354) are all
+   hosted **after** and outside the destination branch, which is what makes Amendment 8's cross-destination
+   offer work and what slice 1 must not disturb.
 3. **`SettingsSheet.kt` still uses `ModalBottomSheet` with `rememberModalBottomSheetState`.** If it has
    become a dialog, slice 2's scope changes.
 4. **The bottom bar's destination order is still Read Later, Discover, History** (§18). The direction
@@ -81,9 +86,34 @@ and the reverse-tuck exit — and immediate presence, scrim intact, under reduce
 
 ---
 
+## Reconciled at dispatch — two things changed since this item was designed
+
+**1. Instrumented tests now compile AND run in CI** (PR #32), on a pinned 411 dp emulator. This item's
+`spec.md` §5.2 listed three claims as *"assertable in a Compose UI test"* — that a reduced-motion preference
+produces no animation, that the sheet traps and restores focus, and that a live undo offer survives a
+destination change. **When this item was designed those would have been written and never run.** They are
+now gateable, and this item's two most consequential guarantees — reduced motion honoured, and Amendment 8's
+cross-destination offer surviving — belong there rather than in a walkthrough note.
+
+**2. The "likeliest casualty" is no longer abstract.** §5.3 warned that *"any test asserting screen content
+by composition structure"* could break when `AnimatedContent` adds a layer. There are now **12 instrumented
+tests across 7 files, and five of them locate nodes by `boundsInRoot`:**
+
+| Test | Exposure to an `AnimatedContent` layer |
+|---|---|
+| `MainActivityLaunchSmokeTest` | **high** — launches the real activity through the scaffold |
+| `ReadingListLayoutTest` (020's toast-overlap guard) | **high** — asserts toast-vs-row bounds in the real hosting |
+| `DiscoverScreenLayoutTest` (019's Amendment 7 ordering guard) | medium — composes the screen, but asserts bounds ordering |
+| `CategoryChipRowLayoutTest`, `ArticleRowLayoutTest` | low — component-scoped |
+
+**019's ordering guard and 020's toast guard did not exist when this item was designed.** They are the two
+newest and most valuable assertions in the project, and this item is the one that can break them.
+
+**Four items now merge beneath this one, not three.**
+
 ## On existing assertions
 
-**Three items merge beneath this one, and this file is wave D's ground.** `spec.md` §5.3 names five cases
+**Four items merge beneath this one, and this file is wave D's ground.** `spec.md` §5.3 names five cases
 with reasons and is **not a freeze**.
 
 Per `execution-model.md` §2.1 rule 5: read the tree at preflight, and **report any unlisted failure before
