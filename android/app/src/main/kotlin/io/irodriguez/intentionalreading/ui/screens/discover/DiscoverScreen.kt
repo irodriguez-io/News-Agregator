@@ -1,13 +1,11 @@
 package io.irodriguez.intentionalreading.ui.screens.discover
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -27,13 +25,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
 import io.irodriguez.intentionalreading.ui.format.Labels
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import kotlin.math.roundToInt
 
@@ -53,6 +52,7 @@ fun DiscoverScreen(
     reducedMotion: () -> Boolean = { false },
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalIntentionalReadingSpacing.current
     val cardState = state as? DiscoverUiState.Card
     val refreshActionLabel = when (state.refreshAffordance) {
         DiscoverRefreshAffordance.HIDDEN -> null
@@ -111,8 +111,8 @@ fun DiscoverScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 18.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
+            .padding(spacing.mobileMargin),
+        verticalArrangement = Arrangement.spacedBy(spacing.sectionGap),
     ) {
         DiscoverMasthead(modifier = Modifier.testTag(DiscoverLayoutTags.MASTHEAD))
 
@@ -173,18 +173,18 @@ internal object DiscoverLayoutTags {
 @Composable
 private fun LoadingPanel(state: DiscoverUiState.Loading) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = tokens.surface,
+        shape = shapes.smallContainer,
+        color = tokens.container,
         contentColor = tokens.fg,
-        border = BorderStroke(1.dp, tokens.border),
-        tonalElevation = 0.dp,
     ) {
         Text(
             text = state.copy,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(spacing.gutter),
             color = tokens.muted,
         )
     }
@@ -198,24 +198,24 @@ private fun StatePanel(
     onAction: (() -> Unit)?,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = tokens.surface,
+        shape = shapes.smallContainer,
+        color = tokens.container,
         contentColor = tokens.fg,
-        border = BorderStroke(1.dp, tokens.border),
-        tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(spacing.gutter),
+            verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
         ) {
             Text(text = title, style = MaterialTheme.typography.headlineLarge)
             Text(text = copy, style = MaterialTheme.typography.bodyLarge, color = tokens.muted)
             OutlinedButton(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
-                border = BorderStroke(1.dp, tokens.strongBorder),
+                shape = shapes.filledPrimaryButton,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {
                 Text(actionLabel)
@@ -236,9 +236,10 @@ private fun CardBody(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
     ) {
         ArticleCard(
             state = state,
