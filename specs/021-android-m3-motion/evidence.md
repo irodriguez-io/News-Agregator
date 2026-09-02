@@ -142,5 +142,118 @@ Undo looks exactly like a passing run. `uiautomator dump` cannot see the toast; 
 
 ## 10. Hosted CI
 
-Recorded at PR time. Four tasks as of PR #32, including `connectedDebugAndroidTest` on a pinned 411 dp
-emulator.
+PR **#35**, targeting `main`. Head **`e51ae186`**.
+
+| Check | Result | Job |
+|---|---|---|
+| `build` | pass, 1m37s | [100335552499](https://github.com/irodriguez-io/News-Agregator/actions/runs/33656289696/job/100335552499) |
+| `test` | pass, 21s | [100335552257](https://github.com/irodriguez-io/News-Agregator/actions/runs/33656289670/job/100335552257) |
+| `instrumented` | pass, 5m21s | [100335552869](https://github.com/irodriguez-io/News-Agregator/actions/runs/33656289696/job/100335552869) |
+
+The `instrumented` log prints `Starting 17 tests` / `Finished 17 tests` / `0 skipped` / `0 failed`.
+
+### The instrumented gate found a real defect on this item
+
+**This is the second time the new CI gate has earned itself, and the second time in the same way.**
+
+On head `4f7b241`, `instrumented` failed: 15 of 17 passed, and both of this item's new sheet tests failed
+identically with `Failed: assertExists. Reason: could not find any node that satisfies: (Text contains
+'Settings')`. Not a wrong value — **the sheet never appeared**.
+
+Both tests disable `mainClock.autoAdvance` and then click to open the sheet, but `ModalBottomSheet`'s
+appearance is driven by *platform* animation, not solely Compose's test clock. CI's software-rendered
+emulator on a shared runner never reached the open state. `dismissUsesAReverseTuckBeforeRemovingTheModal`
+does not touch `animator_duration_scale` and failed identically, which ruled out the reduced-motion
+manipulation as the cause.
+
+**Same defect class as item 018's width test: asserting against an environment the test did not establish.**
+There it was a 360 dp width the test hoped for; here it is fast hardware the test hoped for. Both passed 17/17
+locally, and both times local passing was worth nothing — it is precisely what missed the defect.
+
+Fixed at **`e51ae186`**, 13 insertions / 0 deletions in one file. `autoAdvance` is enabled *only* to reach the
+open state, a `waitUntil` waits for exactly one `Settings` node, then `autoAdvance` goes back off before any
+measurement. Every timing assertion still runs under the manual clock, and no assertion was weakened — the
+0.5f translation tolerance, the exact scrim fingerprint, and both reverse-tuck presence assertions are intact.
+Only the two methods CI failed were touched; the entrance-motion test that passed is byte-identical.
+
+The implementer could not reproduce CI's original failure against the unchanged commit — isolated SwiftShader
+passed, 10x animation scales passed. Only both together reproduced a failure, and against its own first
+wait-only attempt rather than the original code. **Recorded as a gap, not glossed:** the causal story is
+consistent but unproven, and CI on the exact head is what closed it. Five consecutive green runs of both
+methods under SwiftShader plus 10x scales were captured, and all three scales restored to 1 afterwards
+(verified independently).
+
+## 11. Open at pause — 2026-09-02
+
+**021 is implemented, green in CI, and NOT merged. The final review requested changes.** Nothing below blocks
+on the owner except the merge decision and the walkthrough.
+
+### The one open finding: the internal-API suppression at `660adc7`
+
+`660adc7` added a **file-level** `@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")` at
+`android/app/src/main/kotlin/io/irodriguez/intentionalreading/ui/screens/settings/SettingsSheet.kt:1`. The
+Kotlin compiler's own warning on it: *"might compile and work, but the compiler behavior is UNSPECIFIED and
+WILL NOT BE PRESERVED."*
+
+Verified by disassembling the pinned artifact `material3-android 1.4.0` with `javap`, not by reading docs:
+
+1. **`SettingsSheet.kt:119-120` are dead writes.** `SheetState.setShowMotionSpec$material3` and
+   `setHideMotionSpec$material3` are `internal`, and **`ModalBottomSheetKt` assigns both itself** — in
+   `ModalBottomSheet_YbuCTN8$lambda$1$lambda$0`, a post-composition side effect that also sets
+   `anchoredDraggableMotionSpec`. The values come from `MotionSchemeKeyTokens.DefaultSpatial` resolved via
+   `MotionSchemeKt.value(...)`, i.e. from `MaterialTheme.motionScheme` — the very scheme this file already
+   overrides **publicly** through `SettingsSheetMotionScheme` at :152. The app writes during composition; the
+   library overwrites afterwards. So the 350 ms reveal is produced entirely by the public override, and these
+   two lines are discarded before any animation runs. **Delete both; every motion assertion should stay
+   green, and that check is what proves the claim.**
+2. **`SettingsSheet.kt:404` — `reducedMotionLayoutOffset()`** reads `anchoredDraggableState.anchors` and
+   `offset`, both `internal`, with `AnchoredDraggableState` living in the `androidx.compose.material3.internal`
+   package. `offset` has a public sibling, `requireOffset()`; `anchors.positionOf(SheetValue.Expanded)` has
+   none. Ask the smaller question first: under reduced motion the sheet is built with `initialValue =
+   SheetValue.Expanded` and every spec is `snap()`, so it should already sit at the expanded anchor and this
+   correction should compute 0. **Try deleting the function and its `Modifier.offset` branch** — if
+   `reducedMotionIsImmediateWhileTheDimmingScrimRemains` still holds at both test sizes, the reach was never
+   load-bearing. If it is needed, keep it but move the `@Suppress` from `@file:` onto that one function and
+   use `requireOffset()` for the offset half. A file-level blanket licenses internal-API access across all 440
+   lines and every future edit to this file.
+3. **Not a finding, but load-bearing:** `SheetState(...)` at :105 **is public** in 1.4.0 — `javap` shows it
+   unmangled. Removing the suppression does **not** force a constructor rewrite. Do not assume otherwise.
+
+The realistic failure is a `compose-bom` bump silently changing sheet motion, with the 350 ms assertion as the
+only thing standing between that and a shipped regression. This is a coupling-surface finding, not a live bug:
+behaviour is correct and asserted today, which is exactly why no gate caught it.
+
+### Resume here
+
+1. Dispatch **one bounded Codex brief** for finding 1 and 2 above (fresh session, item branch/worktree). It is
+   comfortably one context window: one production file, no new tests, no assertion changes permitted.
+2. Re-verify: gates locally with `--rerun-tasks`, then **push and re-run CI** — `instrumented` is the arbiter
+   for anything in this file, per the defect above.
+3. Post the final review on the new head. GitHub blocks approving a PR opened by the same account, so the
+   approval statement goes in as a review **comment** — that comment is the gate artifact.
+4. **Owner walkthrough**, which carries `waves/wave-e.md` **checkpoint 4 and checkpoint 5 (the wave sign-off)**
+   — on a device, both colour schemes, `screencap` not `uiautomator dump`.
+5. Present the merge decision to the owner. As with 017-020, the merge is theirs to authorise.
+
+### Two judgments still deferred to the owner
+
+- **Does the motion read as *expressive* or *busy*?** §47's boundary is taste, and no test can settle it. This
+  is the walkthrough's real question, not whether the 350 ms is 350 ms.
+- **Item 019's triage labels** — the owner deferred this to wave close, which is now.
+
+### Wave-close work that outlives this item
+
+- `waves/wave-e-note.md`, and the batched walkthrough record.
+- `specs/backlog.md` — close wave E.
+- **Retire the 13 legacy token names** item 017 kept alive for the wave's duration. They exist only because 17
+  files held 205 call sites at the time; that debt was scoped to the wave and comes due at its close.
+
+### Environment notes
+
+- Worktree `/Users/isidro.rodriguez/Documents/Repos/news-agregator-021`, branch
+  `feat/021-android-m3-motion`, clean, pushed. **The repo moved this session** from `~/Documents/VS Code/` to
+  `~/Documents/Repos/`.
+- `gh` must be authenticated as the account with write access, **`irodriguez-io`**; any other account produces a 403 on push.
+- Android gates need `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` and
+  `ANDROID_HOME="$HOME/Library/Android/sdk"`.
+- No Codex sessions left open — swept at pause.
