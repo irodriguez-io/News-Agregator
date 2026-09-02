@@ -80,7 +80,20 @@ says or when it appears.**
   composables drawing them change.
 - **Definition of done:** both gates green; all three actions present and operable without a gesture; targets
   ≥ 48 dp; accessible names intact; the swipe tests still green.
-- **Status:** pending
+- **Status:** **done** — RED `9d2797d`, GREEN `dd0b680`. Gate reproduced independently: **359 tests, 0
+  failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 355). Slice
+  review PASS.
+
+RED reproduced as `359 tests completed, 5 failed`, including `circular triage control count expected:<2>`
+and the literal scan. All three rail actions now use item 018's shared controls, and
+`OpenedAcknowledgment`'s §51 action uses `TonalSecondaryControl`.
+
+**The two orphaned composables are closed.** `ArticleCard.kt` now carries **no radius, colour, size or font
+literal anywhere in the file** — the literal scan was widened from slice 1's four owned composables to the
+whole file and asserts it. `SwipeCue` and `OpenedAcknowledgment` are restyled with their text, timing and
+offered choices untouched.
+
+`SharedControls.kt` is unmodified and no gesture test was edited.
 
 **Read 018's actual signatures at preflight.** This plan deliberately does not name them (D2).
 
