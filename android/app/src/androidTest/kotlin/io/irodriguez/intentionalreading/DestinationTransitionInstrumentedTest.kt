@@ -110,6 +110,7 @@ class DestinationTransitionInstrumentedTest {
 
     private fun settleImmediateChange() {
         composeTestRule.mainClock.advanceTimeByFrame()
+        composeTestRule.mainClock.advanceTimeByFrame()
         composeTestRule.waitForIdle()
     }
 

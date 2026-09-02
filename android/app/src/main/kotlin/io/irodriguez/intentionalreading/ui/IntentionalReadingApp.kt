@@ -9,6 +9,15 @@ import android.provider.OpenableColumns
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.PathEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -258,72 +268,120 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
                             .fillMaxWidth()
                             .weight(1f),
                     ) {
-                        when (destination) {
-                            Destination.READ_LATER -> ReadLaterScreen(
-                                state = uiState.readLater,
-                                onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
-                                onReadArticle = onOpenArticle,
-                                onMarkRead = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
+                        val emphasizedEasing = remember {
+                            PathEasing(
+                                Path().apply {
+                                    moveTo(0f, 0f)
+                                    cubicTo(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f)
+                                    cubicTo(0.208333f, 0.82f, 0.25f, 1f, 1f, 1f)
                                 },
-                                onRemove = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.REMOVE)
-                                },
-                                modifier = Modifier.fillMaxSize(),
                             )
-                            Destination.DISCOVER -> DiscoverScreen(
-                                state = uiState.discover,
-                                degraded = uiState.degraded,
-                                selectedCategory = selectedCategory,
-                                onCategorySelected = { category ->
-                                    viewModel.launchCategorySelection(category)
-                                },
-                                onRetry = viewModel::reload,
-                                onViewReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
-                                onDismiss = { article ->
-                                    viewModel.launchArticleAction(
-                                        article,
-                                        ArticleAction.DISMISS,
-                                        expectDiscoverHead = true,
-                                    )
-                                },
-                                onReadArticle = onOpenArticle,
-                                onSave = { article ->
-                                    viewModel.launchArticleAction(
-                                        article,
-                                        ArticleAction.SAVE,
-                                        expectDiscoverHead = true,
-                                    )
-                                },
-                                onMarkRead = { article ->
-                                    viewModel.launchArticleAction(
-                                        article,
-                                        ArticleAction.MARK_READ,
-                                        expectDiscoverHead = true,
-                                    )
-                                },
-                                onSwipeCommit = { article, action, onComplete ->
-                                    viewModel.launchArticleAction(
-                                        article = article,
-                                        action = action,
-                                        expectDiscoverHead = true,
-                                    ) { result ->
-                                        onComplete(result.persisted)
+                        }
+                        AnimatedContent(
+                            targetState = destination,
+                            transitionSpec = {
+                                if (initialState == targetState || reducedMotion()) {
+                                    EnterTransition.None togetherWith ExitTransition.None
+                                } else {
+                                    val offsetMultiplier = when (
+                                        destinationSlideDirection(initialState, targetState)
+                                    ) {
+                                        DestinationSlideDirection.FROM_LEFT -> -1
+                                        DestinationSlideDirection.FROM_RIGHT -> 1
                                     }
-                                },
-                                reducedMotion = reducedMotion,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                            Destination.HISTORY -> HistoryScreen(
-                                state = uiState.history,
-                                onReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
-                                onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
-                                onReopen = onOpenArticle,
-                                onMarkUnread = { article ->
-                                    viewModel.launchArticleAction(article, ArticleAction.MARK_UNREAD)
-                                },
-                                modifier = Modifier.fillMaxSize(),
-                            )
+                                    slideInHorizontally(
+                                        animationSpec = tween(
+                                            durationMillis = 300,
+                                            easing = emphasizedEasing,
+                                        ),
+                                        initialOffsetX = { fullWidth -> offsetMultiplier * fullWidth },
+                                    ) togetherWith (
+                                        scaleOut(
+                                            animationSpec = tween(
+                                                durationMillis = 300,
+                                                easing = emphasizedEasing,
+                                            ),
+                                            targetScale = 0.95f,
+                                        ) + fadeOut(
+                                            animationSpec = tween(
+                                                durationMillis = 300,
+                                                easing = emphasizedEasing,
+                                            ),
+                                            targetAlpha = 0.8f,
+                                        )
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                            label = "Destination transition",
+                        ) { targetDestination ->
+                            when (targetDestination) {
+                                Destination.READ_LATER -> ReadLaterScreen(
+                                    state = uiState.readLater,
+                                    onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
+                                    onReadArticle = onOpenArticle,
+                                    onMarkRead = { article ->
+                                        viewModel.launchArticleAction(article, ArticleAction.MARK_READ)
+                                    },
+                                    onRemove = { article ->
+                                        viewModel.launchArticleAction(article, ArticleAction.REMOVE)
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                Destination.DISCOVER -> DiscoverScreen(
+                                    state = uiState.discover,
+                                    degraded = uiState.degraded,
+                                    selectedCategory = selectedCategory,
+                                    onCategorySelected = { category ->
+                                        viewModel.launchCategorySelection(category)
+                                    },
+                                    onRetry = viewModel::reload,
+                                    onViewReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
+                                    onDismiss = { article ->
+                                        viewModel.launchArticleAction(
+                                            article,
+                                            ArticleAction.DISMISS,
+                                            expectDiscoverHead = true,
+                                        )
+                                    },
+                                    onReadArticle = onOpenArticle,
+                                    onSave = { article ->
+                                        viewModel.launchArticleAction(
+                                            article,
+                                            ArticleAction.SAVE,
+                                            expectDiscoverHead = true,
+                                        )
+                                    },
+                                    onMarkRead = { article ->
+                                        viewModel.launchArticleAction(
+                                            article,
+                                            ArticleAction.MARK_READ,
+                                            expectDiscoverHead = true,
+                                        )
+                                    },
+                                    onSwipeCommit = { article, action, onComplete ->
+                                        viewModel.launchArticleAction(
+                                            article = article,
+                                            action = action,
+                                            expectDiscoverHead = true,
+                                        ) { result ->
+                                            onComplete(result.persisted)
+                                        }
+                                    },
+                                    reducedMotion = reducedMotion,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                Destination.HISTORY -> HistoryScreen(
+                                    state = uiState.history,
+                                    onReadLater = { viewModel.selectDestination(Destination.READ_LATER) },
+                                    onDiscover = { viewModel.selectDestination(Destination.DISCOVER) },
+                                    onReopen = onOpenArticle,
+                                    onMarkUnread = { article ->
+                                        viewModel.launchArticleAction(article, ArticleAction.MARK_UNREAD)
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
                         }
                     }
                 }

@@ -10,5 +10,9 @@ internal fun destinationSlideDirection(
     target: Destination,
 ): DestinationSlideDirection {
     require(current != target) { "A destination transition requires two different destinations" }
-    return DestinationSlideDirection.FROM_LEFT
+    return if (target.ordinal < current.ordinal) {
+        DestinationSlideDirection.FROM_LEFT
+    } else {
+        DestinationSlideDirection.FROM_RIGHT
+    }
 }
