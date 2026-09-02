@@ -12,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.ui.components.ArticleKickerPart
@@ -27,6 +27,7 @@ import io.irodriguez.intentionalreading.ui.components.historyGroupCount
 import io.irodriguez.intentionalreading.ui.components.knownReadingTimeValue
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.format.RelativeTime
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 
 @Composable
@@ -38,9 +39,15 @@ fun HistoryScreen(
     onMarkUnread: (Article) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalIntentionalReadingSpacing.current
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 24.dp),
+        contentPadding = readingListContentPadding(
+            horizontal = spacing.mobileMargin,
+            top = spacing.tabletMargin,
+            bottom = spacing.sectionGap * 3,
+        ),
+        verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
     ) {
         item(key = "header") {
             EditorialHeader(
@@ -49,7 +56,7 @@ fun HistoryScreen(
                 description = stringResource(R.string.history_description),
                 actionLabel = stringResource(R.string.return_to_read_later),
                 onAction = onReadLater,
-                modifier = Modifier.padding(bottom = 32.dp),
+                modifier = Modifier.padding(bottom = spacing.sectionGap - spacing.stackGap),
             )
         }
 
@@ -67,7 +74,7 @@ fun HistoryScreen(
                             availableStatValue(state.aggregate.firstTagLabel),
                         ),
                     ),
-                    modifier = Modifier.padding(bottom = 20.dp),
+                    modifier = Modifier.padding(bottom = spacing.sectionGap - spacing.stackGap),
                 )
             }
             state.groups.forEach { group ->
@@ -125,10 +132,11 @@ fun HistoryScreen(
 @Composable
 private fun HistoryGroupHeading(period: HistoryPeriod, count: Int) {
     val tokens = LocalIntentionalReadingTokens.current
+    val spacing = LocalIntentionalReadingSpacing.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp, bottom = 12.dp),
+            .padding(top = spacing.stackGap),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
@@ -143,3 +151,10 @@ private fun HistoryGroupHeading(period: HistoryPeriod, count: Int) {
         )
     }
 }
+
+private fun readingListContentPadding(horizontal: Dp, top: Dp, bottom: Dp): PaddingValues = PaddingValues(
+    start = horizontal,
+    top = top,
+    end = horizontal,
+    bottom = bottom,
+)

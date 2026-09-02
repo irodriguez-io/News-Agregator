@@ -33,7 +33,23 @@ thumbnail, two-line title clamp, compliant action targets.
   `ReadLaterScreen.kt` and `HistoryScreen.kt` — compile untouched.
 - **Definition of done:** both gates green; the clamp asserted on the title element; targets ≥ 48 dp; no
   media region; no literals; every value the row displays unchanged.
-- **Status:** pending
+- **Status:** **done** — RED `d484feb`, GREEN `0ea9245`. Gate reproduced independently with
+  `--rerun-tasks`: **351 tests, 0 failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` both
+  successful (baseline 343). Slice review PASS.
+
+**Genuine value-failing RED**, reproduced as `351 tests completed, 5 failed` — `row action target dp
+expected:<48.0>`, `title max lines expected:<2>`, and the literal scan.
+
+**The composable's signature is byte-identical to `main`'s**, verified by diff. Both callers compile
+untouched, which is what slice 3 depends on.
+
+`shapes.queueRow` and the `container` fill, with **no shadow and no elevation** — §56.1's rule satisfied by a
+tonal container rather than a raised card. No thumbnail, nothing reserved (§74.2). No colour, radius or size
+literal.
+
+**`TonalSecondaryControl` adopted for the leading Read/Reopen action**, which §34.2 explicitly permits; the
+remaining compact actions use outlined pills with `quiet` labels and `outlineControl`. Every displayed value
+is unchanged, including the reading-time omission, and no reading-time or StatBand test was touched.
 
 **Do not change the parameters.** Two screens call this row and slice 3 edits both — a signature change here
 would put this slice's compile failure into a later slice, which §2.1 rule 3 forbids as failing-first
@@ -55,7 +71,23 @@ type scale — with every displayed value and every omission rule untouched.
   already exist; this slice is done when they are still green against the new presentation.
 - **Definition of done:** both gates green; **the existing null-rule tests green and unedited**; numerals in
   the editorial register; no literals.
-- **Status:** pending
+- **Status:** **done** — RED `daaefb7`, GREEN `8ceda93`. Gate reproduced independently: **358 tests, 0
+  failures, 0 errors**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 351). Slice
+  review PASS.
+
+RED reproduced as `358 tests completed, 5 failed`. **The two behaviour functions are byte-identical to
+`main`** — `knownReadingTimeValue` and `availableStatValue` both hash to `2b246291a633d1538f7922e5` on each
+side, verified by the reviewer rather than taken from the report. No reading-time test was edited.
+
+The band moved from divider rules in a 2+1 arrangement to a `Surface` with `shapes.statBand` and the
+`container` fill, in **three equal columns** as §76.6 specifies. The numerals moved from an inline
+`headlineLarge.copy(fontSize = 22.sp, lineHeight = 25.sp)` override to `displayMedium`, which is item 017's
+authored `stat-num` — removing two `sp` literals in the process.
+
+*A reviewer false alarm worth recording: an initial signature check reported `StatBand: CHANGED`. The check
+was faulty — `StatBand`'s declaration is a single line ending in `{`, so the `sed` range ran past it into the
+body. Compared properly, both composables' signatures are identical and the implementer's report was
+accurate.*
 
 **If a null-rule test needs editing to pass, the change is wrong.** Report it.
 
@@ -77,7 +109,35 @@ visual weight, and give both lists a bottom inset that clears a showing Undo off
 - **Definition of done:** both gates green; the grouping and Mark-unread tests green; the empty state uses
   only existing strings; **the toast-overlap screenshot captured with `screencap`**, at the bottom of a
   scrolled list with an offer showing.
-- **Status:** pending
+- **Status:** **done** — RED `2643559`, GREEN `1d5f529`. Gate reproduced independently: **360 unit tests,
+  0 failures**, `assembleDebug` and `assembleDebugAndroidTest` successful (baseline 358). **Full instrumented
+  suite run by the reviewer three times: 9/9 passing each time.** Slice review PASS.
+
+**The RED for the toast overlap was a genuine geometry failure on a device** — *"Read Later action bounds
+overlapped toast bounds"* and the same for History — not a compile error and not a value stub. That is the
+strongest form this evidence could take.
+
+**Wave D's observation is now a gated test, not a screenshot.** `ReadingListLayoutTest` asserts, for **both**
+screens at a forced 360 dp, that the last row's action bounds do not overlap a showing Undo toast's. Both
+tests force 360×800 dp via `DeviceConfigurationOverride.ForcedSize` with every `dp.toPx()` baseline computed
+inside the override, per `execution-model.md` §8.3, and pass at underlying widths of 411 dp and 320 dp.
+
+`UndoToast.kt` and `IntentionalReadingApp.kt` are **untouched** — the fix is a bottom inset owned by the
+lists, per D4, so the toast's global hosting and its cross-destination guarantee (§70, Amendment 8) are
+intact. `strings.xml` is untouched, so this **remains a one-gate item**.
+
+### A flake the implementer reported honestly, and what it was
+
+The implementer reported that the **full** `connectedDebugAndroidTest` crashed twice at test 1/9 in
+`ArticleCardGestureTest` — a pre-existing test outside this item — while passing when run alone.
+
+**Not reproducible.** The reviewer ran the full 9-test suite three consecutive times on this exact commit:
+9/9 passing every time.
+
+**The likely cause is specific rather than "flaky":** the implementer had just been toggling emulator density
+(`wm density 540` / `reset`) for its own width verification, and `ArticleCardGestureTest` operates on touch
+coordinates — exactly what a density change disturbs. CI runs on a fresh emulator with a fixed profile and no
+toggling, so it is less exposed. **CI on the PR is the arbiter.**
 
 ---
 
@@ -93,8 +153,23 @@ visual weight, and give both lists a bottom inset that clears a showing Undo off
    report — the allocation correction did not hold.
 5. **Every string the empty states need still exists** in `res/values/strings.xml`. If one is missing, that
    is D2's stop condition, not a licence to add it.
-6. **The Undo toast is still hosted globally** in `IntentionalReadingApp.kt`. If it has been re-parented,
-   the inset fix may no longer be the right one.
+6. **The Undo toast is still hosted globally** in `IntentionalReadingApp.kt` — verified at dispatch, line
+   341. If it has been re-parented, the inset fix may no longer be the right one.
+
+7. **ADDED AT DISPATCH — instrumented tests now run in CI.** PR #32 compiles them with
+   `assembleDebugAndroidTest` and runs them with `connectedDebugAndroidTest` on a pinned 411 dp emulator.
+
+   This matters for **one scenario this plan had assigned to the walkthrough**: *"the last row's actions are
+   reachable while the Undo toast shows."* `spec.md` §5.2 called it *"assertable only on a device"* and
+   pointed at `screencap`. **It is now gateable**, and slice 3 should assert it rather than only photograph
+   it — a screenshot proves it on the day it was taken; a gated test keeps proving it.
+
+   The walkthrough screenshot is still captured. It is evidence a reader recognises, and the toast's
+   *legibility* over a row is a judgment no assertion makes.
+
+   **If a width or size is involved, the test must establish it** — `DeviceConfigurationOverride.ForcedSize`,
+   with every `dp.toPx()` baseline computed **inside** the override. `execution-model.md` §8.3 records why,
+   and what it cost item 018 to get wrong.
 
 ---
 

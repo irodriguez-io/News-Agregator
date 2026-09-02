@@ -5,22 +5,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 
@@ -34,6 +35,9 @@ data class ArticleRowAction(
     val onClick: () -> Unit,
 )
 
+/** §72.2 — the accessibility floor for every interactive element. Never derived. */
+internal val ArticleRowMinimumTarget = Dp(48f)
+
 @Composable
 fun ArticleRow(
     articleTitle: String,
@@ -45,13 +49,19 @@ fun ArticleRow(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
-    Column(modifier = modifier.fillMaxWidth()) {
-        HorizontalDivider(color = tokens.border)
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shapes.queueRow,
+        color = tokens.container,
+        contentColor = tokens.fg,
+    ) {
         Column(
-            modifier = Modifier.padding(vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(spacing.gutter),
+            verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.baseUnit)) {
                 Text(
                     text = position,
                     style = MaterialTheme.typography.labelMedium,
@@ -60,68 +70,92 @@ fun ArticleRow(
                 if (!positionDetail.isNullOrEmpty()) {
                     Text(
                         text = positionDetail,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = tokens.muted,
                     )
                 }
             }
             if (kicker.isNotEmpty()) {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit * 2),
+                    verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
                 ) {
                     kicker.forEach { part ->
                         Text(
                             text = part.text.uppercase(Locale.ROOT),
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = if (part.emphasized) FontWeight.Bold else FontWeight.Normal,
-                            ),
-                            color = if (part.emphasized) tokens.fg else tokens.muted,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (part.emphasized) tokens.quiet else tokens.muted,
                         )
                     }
                 }
             }
             Text(
                 text = articleTitle,
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 24.sp, lineHeight = 27.sp),
+                style = MaterialTheme.typography.headlineSmall,
                 color = tokens.fg,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             if (tags.isNotEmpty()) {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit * 2),
+                    verticalArrangement = Arrangement.spacedBy(spacing.baseUnit * 2),
                 ) {
                     tags.take(3).forEach { tag ->
                         Surface(
-                            shape = CircleShape,
-                            color = tokens.surface,
+                            shape = shapes.pill,
+                            color = tokens.container,
                             contentColor = tokens.muted,
-                            border = BorderStroke(1.dp, tokens.border),
+                            border = BorderStroke(Dp.Hairline, tokens.outlineVariant),
                         ) {
                             Text(
                                 text = tag,
-                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp, lineHeight = 16.sp),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(
+                                    horizontal = spacing.baseUnit * 2,
+                                    vertical = spacing.baseUnit,
+                                ),
                             )
                         }
                     }
                 }
             }
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit * 2),
+                verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
             ) {
-                actions.forEach { action ->
-                    TextButton(
-                        onClick = action.onClick,
-                        modifier = Modifier
-                            .heightIn(min = 44.dp)
+                actions.forEachIndexed { index, action ->
+                    CompositionLocalProvider(
+                        LocalMinimumInteractiveComponentSize provides ArticleRowMinimumTarget,
+                    ) {
+                        val actionModifier = Modifier
+                            .sizeIn(
+                                minWidth = ArticleRowMinimumTarget,
+                                minHeight = ArticleRowMinimumTarget,
+                            )
                             .semantics {
                                 contentDescription = "${action.label} for $articleTitle"
-                            },
-                        colors = ButtonDefaults.textButtonColors(contentColor = tokens.fg),
-                    ) {
-                        Text(action.label)
+                            }
+                        if (index == 0) {
+                            TonalSecondaryControl(
+                                onClick = action.onClick,
+                                modifier = actionModifier,
+                            ) {
+                                Text(action.label, style = MaterialTheme.typography.labelLarge)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = action.onClick,
+                                modifier = actionModifier,
+                                shape = shapes.pill,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = tokens.quiet,
+                                ),
+                                border = BorderStroke(Dp.Hairline, tokens.outlineControl),
+                            ) {
+                                Text(action.label, style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
                     }
                 }
             }
