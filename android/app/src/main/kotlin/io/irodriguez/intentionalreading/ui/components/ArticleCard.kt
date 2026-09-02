@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,12 +24,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -49,6 +53,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
@@ -58,6 +63,8 @@ import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.format.RelativeTime
 import io.irodriguez.intentionalreading.ui.gesture.SwipeGesture
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverUiState
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
 import kotlinx.coroutines.coroutineScope
@@ -75,6 +82,8 @@ fun ArticleCard(
     modifier: Modifier = Modifier,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     val article = state.article
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -181,18 +190,25 @@ fun ArticleCard(
             .graphicsLayer {
                 this.translationX = gestureValues.translationX.value
                 rotationZ = gestureValues.rotationDegrees.value
-            },
-        shape = RoundedCornerShape(20.dp),
-        color = tokens.surface,
+            }
+            .shadow(
+                elevation = DeckCardShadowElevation,
+                shape = shapes.primaryCard,
+                clip = false,
+                ambientColor = MaterialTheme.colorScheme.surfaceTint,
+                spotColor = MaterialTheme.colorScheme.surfaceTint,
+            ),
+        shape = shapes.primaryCard,
+        color = tokens.card,
         contentColor = tokens.fg,
-        border = BorderStroke(1.dp, tokens.border),
-        shadowElevation = 8.dp,
-        tonalElevation = 0.dp,
     ) {
         Box {
             Column(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.padding(
+                    horizontal = spacing.mobileMargin,
+                    vertical = spacing.tabletMargin,
+                ),
+                verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
             ) {
                 ArticleMetadata(article = article, publicationAge = state.publicationAge)
 
@@ -200,14 +216,16 @@ fun ArticleCard(
                     text = article.title,
                     style = MaterialTheme.typography.headlineLarge,
                     color = tokens.fg,
+                    maxLines = DiscoverHeadlineMaxLines,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 if (article.excerpt.isNotEmpty()) {
                     Text(
                         text = article.excerpt,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = tokens.quietInk,
-                        maxLines = 4,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = tokens.quiet,
+                        maxLines = DiscoverDescriptionMaxLines,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -314,23 +332,28 @@ private fun SwipeCue(
 @Composable
 private fun ArticleMetadata(article: Article, publicationAge: String) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     val readingTime = RelativeTime.readingTime(article.readingTimeMinutes)
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit),
+        verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         MetadataText(article.source.name)
         if (publicationAge.isNotEmpty()) MetadataText(publicationAge)
         Surface(
-            shape = CircleShape,
-            color = tokens.accentSoft,
-            contentColor = tokens.accent,
+            shape = shapes.badge,
+            color = tokens.primarySoft,
+            contentColor = tokens.primary,
         ) {
             Text(
                 text = article.contentType.label.uppercase(Locale.ROOT),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(
+                    horizontal = spacing.stackGap,
+                    vertical = spacing.baseUnit,
+                ),
             )
         }
         MetadataText(Labels.categoryLabel(article.category.id))
@@ -351,30 +374,46 @@ private fun MetadataText(text: String) {
 @Composable
 private fun TopicTags(article: Article) {
     val tokens = LocalIntentionalReadingTokens.current
+    val shapes = LocalIntentionalReadingShapes.current
+    val spacing = LocalIntentionalReadingSpacing.current
     val topicsDescription = stringResource(R.string.article_topics)
     FlowRow(
         modifier = Modifier.semantics {
             contentDescription = "$topicsDescription: ${article.tags.take(5).joinToString { it.label }}"
         },
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.baseUnit),
+        verticalArrangement = Arrangement.spacedBy(spacing.baseUnit),
     ) {
         article.tags.take(5).forEach { tag ->
-            Surface(
-                shape = CircleShape,
-                color = tokens.surface,
-                contentColor = tokens.muted,
-                border = BorderStroke(1.dp, tokens.border),
-            ) {
+            CompositionLocalProvider(LocalContentColor provides tokens.muted) {
                 Text(
                     text = tag.label,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp, lineHeight = 16.sp),
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .border(
+                            TopicTagOutlineWidth,
+                            tokens.outlineVariant,
+                            shapes.pill,
+                        )
+                        .padding(
+                            horizontal = spacing.stackGap,
+                            vertical = spacing.baseUnit,
+                        ),
                 )
             }
         }
     }
 }
+
+// docs/v1/06-ui-ux.md §13.2 — the deck card is bounded independently of its content.
+private const val DiscoverHeadlineMaxLines = 3
+private const val DiscoverDescriptionMaxLines = 2
+
+// docs/v1/06-ui-ux.md §16.2 — preserve the existing elevation while tinting its ambient shadow.
+private val DeckCardShadowElevation = Dp(8f)
+
+// docs/v1/06-ui-ux.md §27.2 — a tag carries a decorative hairline, not a control boundary.
+private val TopicTagOutlineWidth = Dp(1f)
 
 @Composable
 private fun OpenedAcknowledgment() {
