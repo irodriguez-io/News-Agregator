@@ -73,7 +73,10 @@ class SettingsSheetInstrumentedTest {
                 host.size.value = size
             }
             composeTestRule.waitForIdle()
+            composeTestRule.mainClock.autoAdvance = true
             composeTestRule.onNodeWithContentDescription("Settings").performClick()
+            waitForSettingsSheet()
+            composeTestRule.mainClock.autoAdvance = false
             settleImmediateChange()
 
             val title = composeTestRule.onNodeWithText("Settings").assertExists()
@@ -105,7 +108,10 @@ class SettingsSheetInstrumentedTest {
 
         TEST_SIZES.forEach { size ->
             setSize(host, size)
+            composeTestRule.mainClock.autoAdvance = true
             composeTestRule.onNodeWithTag(OPEN_SETTINGS_TAG).performClick()
+            waitForSettingsSheet()
+            composeTestRule.mainClock.autoAdvance = false
             composeTestRule.mainClock.advanceTimeBy(1_000)
             composeTestRule.waitForIdle()
 
@@ -231,6 +237,12 @@ class SettingsSheetInstrumentedTest {
         composeTestRule.waitForIdle()
     }
 
+    private fun waitForSettingsSheet() {
+        composeTestRule.waitUntil(timeoutMillis = SHEET_APPEAR_TIMEOUT_MILLIS) {
+            composeTestRule.onAllNodes(hasText("Settings")).fetchSemanticsNodes().size == 1
+        }
+    }
+
     private fun fingerprint(image: ImageBitmap): Long {
         val pixels = image.toPixelMap()
         var fingerprint = 17L
@@ -314,5 +326,6 @@ class SettingsSheetInstrumentedTest {
         )
         val NOW: Instant = Instant.parse("2026-09-02T12:00:00Z")
         const val OPEN_SETTINGS_TAG = "settings-sheet-trigger"
+        const val SHEET_APPEAR_TIMEOUT_MILLIS = 30_000L
     }
 }
