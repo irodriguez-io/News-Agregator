@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -60,7 +59,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.irodriguez.intentionalreading.R
@@ -71,7 +69,6 @@ import io.irodriguez.intentionalreading.ui.components.ResetConfirmation
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
-import kotlin.math.roundToInt
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -121,8 +118,6 @@ fun SettingsSheet(
     val sheetMotionScheme = remember(baseMotionScheme, reducedMotionEnabled) {
         SettingsSheetMotionScheme(baseMotionScheme, reducedMotionEnabled)
     }
-    sheetState.showMotionSpec = settingsSheetRevealSpec(reducedMotionEnabled)
-    sheetState.hideMotionSpec = settingsSheetRevealSpec(reducedMotionEnabled)
     val sheetAlpha by animateFloatAsState(
         targetValue = if (reducedMotionEnabled || sheetState.targetValue != SheetValue.Hidden) 1f else 0f,
         animationSpec = settingsSheetRevealSpec(reducedMotionEnabled),
@@ -144,9 +139,7 @@ fun SettingsSheet(
     }
     BackHandler(onBack = dismissWithAnimation)
     val sheetModifier = if (reducedMotionEnabled) {
-        Modifier.offset {
-            IntOffset(x = 0, y = sheetState.reducedMotionLayoutOffset())
-        }
+        Modifier
     } else {
         Modifier.graphicsLayer { alpha = sheetAlpha }
     }
@@ -398,17 +391,6 @@ fun SettingsSheet(
 
 /** §79.2 — the complete sheet reveal and reverse tuck last 350 ms. */
 private const val SettingsSheetRevealDurationMillis = 350
-
-@OptIn(ExperimentalMaterial3Api::class)
-private fun SheetState.reducedMotionLayoutOffset(): Int {
-    val expandedOffset = anchoredDraggableState.anchors.positionOf(SheetValue.Expanded)
-    val currentOffset = offset
-    return if (expandedOffset.isFinite() && currentOffset.isFinite()) {
-        expandedOffset.roundToInt() - currentOffset.roundToInt()
-    } else {
-        0
-    }
-}
 
 private fun <T> settingsSheetRevealSpec(reducedMotion: Boolean): FiniteAnimationSpec<T> =
     if (reducedMotion) {
