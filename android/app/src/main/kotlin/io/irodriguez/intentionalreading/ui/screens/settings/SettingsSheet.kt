@@ -1,5 +1,3 @@
-@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
-
 package io.irodriguez.intentionalreading.ui.screens.settings
 
 import androidx.activity.compose.BackHandler
@@ -17,22 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,7 +45,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -73,7 +63,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(
     appearance: Appearance,
@@ -97,27 +87,9 @@ fun SettingsSheet(
     val tokens = LocalIntentionalReadingTokens.current
     val shapes = LocalIntentionalReadingShapes.current
     val reducedMotionEnabled = reducedMotion()
-    val density = LocalDensity.current
-    val sheetState = remember(density, reducedMotionEnabled) {
-        SheetState(
-            skipPartiallyExpanded = true,
-            positionalThreshold = {
-                with(density) { BottomSheetDefaults.PositionalThreshold.toPx() }
-            },
-            velocityThreshold = {
-                with(density) { BottomSheetDefaults.VelocityThreshold.toPx() }
-            },
-            initialValue = if (reducedMotionEnabled) SheetValue.Expanded else SheetValue.Hidden,
-            confirmValueChange = { true },
-            skipHiddenState = false,
-        )
-    }
+    val sheetState = rememberSettingsSheetState(reducedMotionEnabled)
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
-    val baseMotionScheme = MaterialTheme.motionScheme
-    val sheetMotionScheme = remember(baseMotionScheme, reducedMotionEnabled) {
-        SettingsSheetMotionScheme(baseMotionScheme, reducedMotionEnabled)
-    }
     val sheetAlpha by animateFloatAsState(
         targetValue = if (reducedMotionEnabled || sheetState.targetValue != SheetValue.Hidden) 1f else 0f,
         animationSpec = settingsSheetRevealSpec(reducedMotionEnabled),
@@ -143,12 +115,7 @@ fun SettingsSheet(
     } else {
         Modifier.graphicsLayer { alpha = sheetAlpha }
     }
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme,
-        motionScheme = sheetMotionScheme,
-        shapes = MaterialTheme.shapes,
-        typography = MaterialTheme.typography,
-    ) {
+    SettingsSheetMotionTheme(reducedMotionEnabled) {
         ModalBottomSheet(
             onDismissRequest = dismissWithAnimation,
             modifier = sheetModifier,
@@ -387,40 +354,4 @@ fun SettingsSheet(
         }
         }
     }
-}
-
-/** §79.2 — the complete sheet reveal and reverse tuck last 350 ms. */
-private const val SettingsSheetRevealDurationMillis = 350
-
-private fun <T> settingsSheetRevealSpec(reducedMotion: Boolean): FiniteAnimationSpec<T> =
-    if (reducedMotion) {
-        snap()
-    } else {
-        tween(
-            durationMillis = SettingsSheetRevealDurationMillis,
-            easing = LinearOutSlowInEasing,
-        )
-    }
-
-private class SettingsSheetMotionScheme(
-    private val base: MotionScheme,
-    private val reducedMotion: Boolean,
-) : MotionScheme {
-    override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> =
-        settingsSheetRevealSpec(reducedMotion)
-
-    override fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> =
-        if (reducedMotion) snap() else base.fastSpatialSpec()
-
-    override fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> =
-        if (reducedMotion) snap() else base.slowSpatialSpec()
-
-    override fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> =
-        if (reducedMotion) snap() else base.defaultEffectsSpec()
-
-    override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> =
-        if (reducedMotion) snap() else base.fastEffectsSpec()
-
-    override fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> =
-        if (reducedMotion) snap() else base.slowEffectsSpec()
 }
