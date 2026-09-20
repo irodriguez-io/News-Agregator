@@ -183,57 +183,118 @@ consistent but unproven, and CI on the exact head is what closed it. Five consec
 methods under SwiftShader plus 10x scales were captured, and all three scales restored to 1 afterwards
 (verified independently).
 
-## 11. Open at pause — 2026-09-02
+## 11. The internal-API finding — raised, found wrong, resolved differently
 
-**021 is implemented, green in CI, and NOT merged. The final review requested changes.** Nothing below blocks
-on the owner except the merge decision and the walkthrough.
+**Status 2026-09-19: resolved. 021 is implemented, unmerged, and awaiting CI on the new head, the owner
+walkthrough, and the merge decision.**
 
-### The one open finding: the internal-API suppression at `660adc7`
+The final review of `660adc7` raised one finding: the **file-level**
+`@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")` at
+`android/app/src/main/kotlin/io/irodriguez/intentionalreading/ui/screens/settings/SettingsSheet.kt:1`, with
+the Kotlin compiler's own warning against it — *"might compile and work, but the compiler behavior is
+UNSPECIFIED and WILL NOT BE PRESERVED."*
 
-`660adc7` added a **file-level** `@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")` at
-`android/app/src/main/kotlin/io/irodriguez/intentionalreading/ui/screens/settings/SettingsSheet.kt:1`. The
-Kotlin compiler's own warning on it: *"might compile and work, but the compiler behavior is UNSPECIFIED and
-WILL NOT BE PRESERVED."*
+**The objection was right. The analysis under it was wrong, and the remedy it prescribed was impossible.**
+Both halves are recorded here, because the method that produced the wrong analysis will be reached for again.
 
-Verified by disassembling the pinned artifact `material3-android 1.4.0` with `javap`, not by reading docs:
+### What the finding claimed, and what was actually true
 
-1. **`SettingsSheet.kt:119-120` are dead writes.** `SheetState.setShowMotionSpec$material3` and
-   `setHideMotionSpec$material3` are `internal`, and **`ModalBottomSheetKt` assigns both itself** — in
-   `ModalBottomSheet_YbuCTN8$lambda$1$lambda$0`, a post-composition side effect that also sets
-   `anchoredDraggableMotionSpec`. The values come from `MotionSchemeKeyTokens.DefaultSpatial` resolved via
-   `MotionSchemeKt.value(...)`, i.e. from `MaterialTheme.motionScheme` — the very scheme this file already
-   overrides **publicly** through `SettingsSheetMotionScheme` at :152. The app writes during composition; the
-   library overwrites afterwards. So the 350 ms reveal is produced entirely by the public override, and these
-   two lines are discarded before any animation runs. **Delete both; every motion assertion should stay
-   green, and that check is what proves the claim.**
-2. **`SettingsSheet.kt:404` — `reducedMotionLayoutOffset()`** reads `anchoredDraggableState.anchors` and
-   `offset`, both `internal`, with `AnchoredDraggableState` living in the `androidx.compose.material3.internal`
-   package. `offset` has a public sibling, `requireOffset()`; `anchors.positionOf(SheetValue.Expanded)` has
-   none. Ask the smaller question first: under reduced motion the sheet is built with `initialValue =
-   SheetValue.Expanded` and every spec is `snap()`, so it should already sit at the expanded anchor and this
-   correction should compute 0. **Try deleting the function and its `Modifier.offset` branch** — if
-   `reducedMotionIsImmediateWhileTheDimmingScrimRemains` still holds at both test sizes, the reach was never
-   load-bearing. If it is needed, keep it but move the `@Suppress` from `@file:` onto that one function and
-   use `requireOffset()` for the offset half. A file-level blanket licenses internal-API access across all 440
-   lines and every future edit to this file.
-3. **Not a finding, but load-bearing:** `SheetState(...)` at :105 **is public** in 1.4.0 — `javap` shows it
-   unmangled. Removing the suppression does **not** force a constructor rewrite. Do not assume otherwise.
+The finding asserted **exactly two** reaches into `material3` internals, and that the 350 ms reveal was
+produced *"entirely by the public override"* `SettingsSheetMotionScheme`. It instructed that the suppression
+be removed or narrowed onto a single function.
 
-The realistic failure is a `compose-bom` bump silently changing sheet motion, with the 350 ms assertion as the
-only thing standing between that and a shipped regression. This is a coupling-surface finding, not a live bug:
-behaviour is correct and asserted today, which is exactly why no gate caught it.
+Removing it does not compile. In the pinned `material3-android 1.4.0` the **entire expressive motion API is
+`internal`** — seven reaches, not two:
 
-### Resume here
+| Reach | Site before the fix |
+|---|---|
+| `ExperimentalMaterial3ExpressiveApi` | import, and the `@OptIn` at `:76` |
+| `MotionScheme` | import, and the `SettingsSheetMotionScheme` supertype |
+| `MaterialTheme.motionScheme` | `:117` |
+| `MaterialTheme(colorScheme, motionScheme, shapes, typography, content)` | `:148` — the five-argument overload |
+| `BottomSheetDefaults.PositionalThreshold` | `:105` |
+| `BottomSheetDefaults.VelocityThreshold` | `:108` |
+| `SettingsSheetMotionScheme` itself | `:405-408` |
 
-1. Dispatch **one bounded Codex brief** for finding 1 and 2 above (fresh session, item branch/worktree). It is
-   comfortably one context window: one production file, no new tests, no assertion changes permitted.
-2. Re-verify: gates locally with `--rerun-tasks`, then **push and re-run CI** — `instrumented` is the arbiter
-   for anything in this file, per the defect above.
-3. Post the final review on the new head. GitHub blocks approving a PR opened by the same account, so the
+So `SettingsSheetMotionScheme` — the override the finding called **public**, and credited with producing the
+reveal — is itself built entirely on internal API. The suppression could not be removed, and could not be
+narrowed onto one function, because the reaches are scattered through the composable body.
+
+**Why the analysis was wrong: `javap` cannot see Kotlin `internal` on types.** Kotlin `internal` *members* are
+name-mangled (`setShowMotionSpec$material3`), which is how the finding correctly spotted the dead writes.
+Kotlin `internal` *classes and interfaces* are emitted as **public JVM types**, with the real visibility
+recorded only in `@kotlin.Metadata`. Disassembly is therefore systematically blind to exactly the kind of
+internal the motion API uses. The finding's confident note that *"`SheetState(...)` is public — `javap` shows
+it unmangled"* happens to be true, but was reached by a method that cannot establish it. **The Kotlin
+compiler, not `javap`, is the authority on Kotlin visibility.** Ask it first.
+
+`1.4.0` is the latest stable; the expressive API becomes public-experimental only in `1.5.0-alpha*`.
+Upgrading a release-signed app to an alpha to launder a suppression was considered and rejected.
+
+### What was actually done
+
+The finding's *objection* survived its analysis intact, and it was the objection that mattered: **a
+file-level blanket licensed internal-API access across all 426 lines of a file that is mostly settings UI,
+appearance selection, import/export and reset confirmation** — none of which has any business touching
+`material3` internals.
+
+Two commits, each one bounded Codex session, no test edited at any point:
+
+**`109529d` — the dead code the finding got right.**
+The two writes at `:119-120` were confirmed dead and deleted: `ModalBottomSheetKt` assigns both itself
+post-composition, so the app's composition-time writes are discarded before any animation runs.
+`reducedMotionLayoutOffset()` and its `Modifier.offset` branch were **deleted outright** — the open question
+the finding could not answer. Under reduced motion the sheet is built at `SheetValue.Expanded` with every
+spec `snap()`, so the correction computed 0 and the reach was never load-bearing. Proven by the **unedited**
+`reducedMotionIsImmediateWhileTheDimmingScrimRemains` passing at **both 360 and 411 dp** with the function
+gone.
+
+**`55fbaed` — the suppression confined instead of removed.**
+The internal-API-touching motion plumbing moved to a new sibling, `SettingsSheetMotion.kt` (90 lines), which
+now carries the `@file:Suppress` alone: `settingsSheetRevealSpec`, `SettingsSheetRevealDurationMillis`, the
+`SettingsSheetMotionScheme` class, and two new helpers — `rememberSettingsSheetState(reducedMotion)` holding
+the `SheetState` construction, and `SettingsSheetMotionTheme(reducedMotion) { }` holding the
+`MaterialTheme.motionScheme` read and the five-argument `MaterialTheme(...)` wrap.
+
+`SettingsSheet.kt` carries **no suppression and zero internal reach** — verified mechanically:
+`grep -c "INVISIBLE_MEMBER" SettingsSheet.kt` returns **0**, and no reference to `MotionScheme`,
+`motionScheme`, `ExpressiveApi`, `PositionalThreshold` or `VelocityThreshold` remains in it. Its blanket
+`@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)` narrowed to
+`@OptIn(ExperimentalMaterial3Api::class)`, with the expressive opt-in now scoped to the one function in the
+motion file that needs it.
+
+**The blanket went from 426 lines of mixed UI to 90 lines of motion plumbing that exists for nothing else.**
+Behaviour is byte-for-byte unchanged: both `remember` keyings preserved exactly, the `MaterialTheme`
+passthrough identical, no value, easing or timing touched.
+
+### What the residual risk actually is
+
+Unchanged by this work, and worth stating plainly: **a `compose-bom` bump can still silently change sheet
+motion, with the 350 ms assertion the only thing between that and a shipped regression.** Confinement makes
+the coupling visible and small; it does not remove it. The pin is `compose-bom 2026.08.00`. If a future bump
+moves the expressive API to public-experimental, `SettingsSheetMotion.kt` is the single file to revisit, and
+the `@file:Suppress` becomes an ordinary `@OptIn`.
+
+### Verification of the fix
+
+| Gate | Result | By whom |
+|---|---|---|
+| `SettingsSheet.kt` suppression count | **0** | reviewer, mechanically |
+| Unit + assemble, `--rerun-tasks` | **385 tests, 0 failures, 0 errors, 0 skipped** (44 result files) | reviewer, own run |
+| Instrumented | **17 tests, 0 failed** on Pixel_10 / API 37 | implementer — **CI is the arbiter** |
+
+The local instrumented run was on `Pixel_10 / API 37 / arm64-v8a`, not CI's pinned `pixel_6 / API 34 /
+x86_64`. Per §10's defect, `instrumented` on the exact head is what closes this, not the local run.
+
+## 12. Resume here
+
+1. **CI on the pushed head** — `test`, `build` and `instrumented` all green. `instrumented` is the arbiter for
+   anything in `SettingsSheet.kt` or `SettingsSheetMotion.kt`.
+2. Post the final review on that head. GitHub blocks approving a PR opened by the same account, so the
    approval statement goes in as a review **comment** — that comment is the gate artifact.
-4. **Owner walkthrough**, which carries `waves/wave-e.md` **checkpoint 4 and checkpoint 5 (the wave sign-off)**
-   — on a device, both colour schemes, `screencap` not `uiautomator dump`.
-5. Present the merge decision to the owner. As with 017-020, the merge is theirs to authorise.
+3. **Owner walkthrough**, carrying `waves/wave-e.md` **checkpoint 4 and checkpoint 5 (the wave sign-off)** —
+   on a device, both colour schemes, `screencap` not `uiautomator dump`.
+4. Present the merge decision to the owner. As with 017-020, the merge is theirs to authorise.
 
 ### Two judgments still deferred to the owner
 
@@ -251,9 +312,12 @@ behaviour is correct and asserted today, which is exactly why no gate caught it.
 ### Environment notes
 
 - Worktree `/Users/isidro.rodriguez/Documents/Repos/news-agregator-021`, branch
-  `feat/021-android-m3-motion`, clean, pushed. **The repo moved this session** from `~/Documents/VS Code/` to
-  `~/Documents/Repos/`.
+  `feat/021-android-m3-motion`, clean. **The repo moved** from `~/Documents/VS Code/` to `~/Documents/Repos/`.
+- **The branch was merged forward from `main` at `7a70636`**, picking up the two release-signing PRs (#1, #2)
+  that landed after this item was cut. Items now merge to `main`; `integration/v1` is stale.
 - `gh` must be authenticated as the account with write access, **`irodriguez-io`**; any other account produces a 403 on push.
-- Android gates need `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` and
-  `ANDROID_HOME="$HOME/Library/Android/sdk"`.
-- No Codex sessions left open — swept at pause.
+- Android gates need both of these exported, or Gradle fails before any test runs — once on a missing JDK,
+  once on a missing SDK:
+  `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home` (or Android Studio's bundled
+  `"/Applications/Android Studio.app/Contents/jbr/Contents/Home"`) and `ANDROID_HOME="$HOME/Library/Android/sdk"`.
+- No Codex sessions left open — swept.
