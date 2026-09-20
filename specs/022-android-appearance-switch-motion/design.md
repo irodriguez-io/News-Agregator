@@ -64,9 +64,23 @@ Driven by a single `animateFloatAsState` with `tween(300, easing = <M3 Standard>
 
 **`surfaceTint` is the trap.** `intentionalReadingColorScheme` currently takes `darkTheme: Boolean` and uses
 it in exactly one place — `surfaceTint = (if (darkTheme) tokens.bg else tokens.tertiary).copy(alpha = 0.10f)`.
-A boolean flips at some instant during the fade, so that one role would snap while the other 40 travel. The
-factory must take a fraction and lerp both variants, or the two derived schemes must be lerped whole. Either
-is acceptable; the implementer picks one and tests the endpoints.
+A boolean flips at some instant during the fade, so that one role would snap while the other 40 travel.
+
+**Corrected 2026-09-20, mid-slice-2.** This note first offered two options — lerp the tokens and derive, or
+derive both schemes and lerp those — and called them interchangeable. **They are not, and the difference is
+a visible artifact.** `surfaceTint` is the one role whose two schemes are computed from *different source
+tokens*: `tertiary` in light, `bg` in dark. Blending the tokens first and then selecting therefore mixes
+`light.bg` — which is near-white — into the tint at every intermediate fraction, so the tint travels
+*brighter than either endpoint* before coming back down. That is an overshoot, and §79.4 authorises a
+cross-fade in which only colour travels, not an excursion outside the two schemes.
+
+**Derive the light scheme and the dark scheme, then lerp the two `ColorScheme`s role by role.** Every role
+is then monotonic between its own two authored endpoints by construction, the `surfaceTint` question
+disappears, and the endpoint guarantee below is trivially true.
+
+Found by the slice 2 implementer, which wrote a test asserting the tint stays between the authored endpoint
+tints, hit the contradiction against the token-blend implementation, and stopped to report rather than
+editing its own test. The test was right.
 
 **The endpoint guarantee is the regression guard.** At `0f` and `1f` the output must be bit-identical to
 today's, which is why `ThemeDerivationTest` must keep passing **unedited**. An implementer who finds
