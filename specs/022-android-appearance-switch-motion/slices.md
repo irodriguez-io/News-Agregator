@@ -49,6 +49,15 @@ repaints in place instead of destroying and rebuilding the Activity.
   existing unit test is untouched; the instrumented suite gains one class.
 - **Definition of done:** all four gates green; the instrumented guard passing on the emulator job; item
   010's cold-start launch-frame behaviour re-verified unchanged; 010's D5 annotated.
+- **Status: done.** RED `554fdee`, GREEN `5a9a3ce`, review follow-up `9dffad5`. The slice review found one
+  thing: the first guard drove only the *system-toggle* path, leaving scenario 1 — the reader selecting an
+  appearance, which is the path the defect was actually reported on — with no Activity-survival assertion.
+  `ReaderAppearanceConfigurationInstrumentedTest` closes it by driving
+  `AppViewModel.launchAppearanceChange`, the same method `IntentionalReadingApp.kt:424` calls from the
+  Settings control. **Both guards were demonstrated to fail with `android:configChanges="uiMode"`
+  removed**, and in the second the scheme assertions still passed while only Activity identity failed —
+  which is what proves it isolates the survival property rather than passing incidentally. 385 JVM and 19
+  instrumented tests green, re-run independently with `--rerun-tasks`.
 
 ---
 
