@@ -1410,7 +1410,8 @@ equivalent system setting on Android — **remove or effectively eliminate**:
 - decorative translation;
 - directional destination transitions (§79.1);
 - the modal sheet's slide (§79.2);
-- the appearance scheme transition (§79.4).
+- the appearance scheme transition (§79.4);
+- the card entrance (§79.5).
 
 Transitions and animations become **effectively immediate**.
 
@@ -2288,11 +2289,13 @@ backdrop   semi-transparent scrim dimming the content behind
 ## 79.3 Reduced motion
 
 **§48 binds this section without exception.** Under a reduced-motion preference **every transition in
-§79 becomes effectively immediate** — §79.1, §79.2 and §79.4 alike — and the destination change, the
-sheet's presence and the appearance in effect remain fully clear from text, state and live status.
+§79 becomes effectively immediate** — §79.1, §79.2, §79.4 and §79.5 alike — and the destination change,
+the sheet's presence, the appearance in effect and the card in hand remain fully clear from text, state
+and live status.
 
 `reducedMotion` is already resolved in the composable that owns both the navigation scaffold and the
-settings sheet, so those two animations sit where the flag already is; §79.4's sits in the theme.
+settings sheet, so those two animations sit where the flag already is; §79.4's sits in the theme, and
+§79.5's sits in the card, where the flag is already threaded and already branches.
 
 **A test must assert that each animation honours it.**
 
@@ -2327,6 +2330,44 @@ not make it reversible and must not be read as preserving the offer. Nothing her
 §48 and §79.3 bind this section: under a reduced-motion preference the new scheme takes effect
 immediately, with no intermediate blend — and still without a restart, which is not motion and is not
 conditional on any preference.
+
+## 79.5 Card swipe motion
+
+§43 gives the post-commitment sequence and §44.2 gives the exit's curve and duration. This section states
+what neither does: the exit's opacity, and how the replacement arrives.
+
+**Exit.** Curve and duration are §44.2's and are not restated here. In addition to the translation and
+rotation of §44, **the departing card fades to fully transparent across the exit** — the behaviour the
+browser reference implementation has always had. A card that holds full opacity until it leaves the
+viewport reads as vanishing rather than leaving, which fails §44's *controlled*.
+
+**Entrance.**
+
+```text
+duration   300ms
+easing     decelerated
+opacity    0 → 1
+rise       a short translation upward to the resting position
+lateral    none
+scale      none
+rotation   none
+```
+
+**The entrance is in place.** The arriving card does not slide in from a side, is not promoted from
+behind, and implies no deck being dealt. §23 permits an offset secondary card and forbids deck
+gamification and exaggerated swipe-app aesthetics; §47 forbids continuous card movement. A lateral or
+depth entrance would sit against all three.
+
+**The entrance does not gate input.** It is a visual treatment of a card that is already present and
+already the reader's to act on. §43's sequence is unchanged, and the arriving card **accepts a swipe from
+the first frame it is on screen** — including while it is still transparent. There is no window in which
+the card declines a touch, and a swipe made during an entrance is attributed to the arriving article.
+
+**A restored card arrives the same way.** Undo (§70) returns an article to the decision surface; it is a
+card appearing and this section governs it.
+
+§48 and §79.3 bind this section: under a reduced-motion preference the card leaves and the replacement
+arrives effectively immediately, with no fade and no rise.
 
 ---
 
