@@ -94,9 +94,16 @@ explicit and it already cost this project a misdiagnosis this session.
    and it is the correct first move if the fade janks.
 2. If that is still not enough, **reduce the fade to the `ColorScheme` only** and let the token local settle
    at the end of the animation. Most of the visible surface is Material roles.
-3. If neither works, **take the instant switch** — the owner's rejected option — record it in `evidence.md`
-   as a taken fallback with the measurement that forced it, and ship the flash fix alone. The defect in
-   `spec.md` §1.1 is closed either way; only §1.5's polish is lost.
+3. **Before concluding the fade is unaffordable, note that R8 has not been pulled.** This project's release
+   build sets `isMinifyEnabled = false` (`android/app/build.gradle.kts:47`) and ships no baseline profile,
+   so the measurement above is taken on an unoptimised release build and is a **floor, not a ceiling** — an
+   R8-enabled build can only be faster. Enabling it is out of this item's scope and is its own decision
+   (it needs keep rules verified against a Compose app and a full walkthrough of its own), but a fade that
+   misses by a small margin on an unoptimised build is a reason to raise that decision with the owner, not
+   a reason to take step 4.
+4. If none of the above works, **take the instant switch** — the owner's rejected option — record it in
+   `evidence.md` as a taken fallback with the measurement that forced it, and ship the flash fix alone. The
+   defect in `spec.md` §1.1 is closed either way; only §1.5's polish is lost.
 
 Recording a taken fallback is not a defect. Shipping a fade that judders would be.
 
