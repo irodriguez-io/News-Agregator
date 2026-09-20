@@ -1,11 +1,26 @@
 package io.irodriguez.intentionalreading.ui.theme
 
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalContext
+import io.irodriguez.intentionalreading.IntentionalReadingApplication
 import io.irodriguez.intentionalreading.domain.model.Appearance
 
 @Composable
@@ -18,19 +33,107 @@ fun IntentionalReadingTheme(
         Appearance.DARK -> true
         Appearance.SYSTEM -> isSystemInDarkTheme()
     }
-    val tokens = if (darkTheme) darkTokens() else lightTokens()
+    val application = LocalContext.current.applicationContext as? IntentionalReadingApplication
+    val reducedMotion = application?.container?.reducedMotion?.invoke() ?: false
+    val targetFraction = if (darkTheme) 1f else 0f
+    // A fixed light-to-dark axis also lets an interrupted switch reverse from its current colour.
+    // animateFloatAsState starts at the first target, so a cold start never fades from another scheme.
+    val animatedFraction by animateFloatAsState(
+        targetValue = targetFraction,
+        animationSpec = appearanceTransitionSpec(reducedMotion),
+        label = "appearance scheme",
+    )
+    // Snap in this composition too, without waiting for the animation's next frame.
+    val darkFraction = if (reducedMotion) targetFraction else animatedFraction
+    // D4 rung 2: Material roles fade; direct token readers settle once, at the endpoint.
+    val targetTokens = if (darkTheme) darkTokens() else lightTokens()
+    var settledTokens by remember { mutableStateOf(targetTokens) }
+    val tokens = if (darkFraction == targetFraction) targetTokens else settledTokens
+    SideEffect { settledTokens = tokens }
+    val lightScheme = remember { intentionalReadingColorScheme(lightTokens(), darkTheme = false) }
+    val darkScheme = remember { intentionalReadingColorScheme(darkTokens(), darkTheme = true) }
     CompositionLocalProvider(
         LocalIntentionalReadingTokens provides tokens,
         LocalIntentionalReadingShapes provides IntentionalReadingShapes,
         LocalIntentionalReadingSpacing provides IntentionalReadingSpacing,
     ) {
         MaterialTheme(
-            colorScheme = intentionalReadingColorScheme(tokens, darkTheme),
+            colorScheme = blendColorSchemes(lightScheme, darkScheme, darkFraction),
             typography = IntentionalReadingTypography,
             shapes = IntentionalReadingMaterialShapes,
             content = content,
         )
     }
+}
+
+// Material 3 Standard (motionEasingStandardInterpolator), not Material 2 FastOutSlowIn.
+private val AppearanceStandardEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+
+internal fun appearanceTransitionSpec(reducedMotion: Boolean): FiniteAnimationSpec<Float> =
+    if (reducedMotion) snap() else tween(durationMillis = 300, easing = AppearanceStandardEasing)
+
+/** Blend derived roles so each colour travels only between its own authored endpoints. */
+internal fun blendColorSchemes(
+    from: ColorScheme,
+    to: ColorScheme,
+    fraction: Float,
+): ColorScheme {
+    if (fraction <= 0f) return from
+    if (fraction >= 1f) return to
+
+    fun blend(start: Color, end: Color): Color =
+        lerp(start.convert(ColorSpaces.Oklab), end.convert(ColorSpaces.Oklab), fraction)
+
+    return from.copy(
+        primary = blend(from.primary, to.primary),
+        onPrimary = blend(from.onPrimary, to.onPrimary),
+        primaryContainer = blend(from.primaryContainer, to.primaryContainer),
+        onPrimaryContainer = blend(from.onPrimaryContainer, to.onPrimaryContainer),
+        inversePrimary = blend(from.inversePrimary, to.inversePrimary),
+        secondary = blend(from.secondary, to.secondary),
+        onSecondary = blend(from.onSecondary, to.onSecondary),
+        secondaryContainer = blend(from.secondaryContainer, to.secondaryContainer),
+        onSecondaryContainer = blend(from.onSecondaryContainer, to.onSecondaryContainer),
+        tertiary = blend(from.tertiary, to.tertiary),
+        onTertiary = blend(from.onTertiary, to.onTertiary),
+        tertiaryContainer = blend(from.tertiaryContainer, to.tertiaryContainer),
+        onTertiaryContainer = blend(from.onTertiaryContainer, to.onTertiaryContainer),
+        background = blend(from.background, to.background),
+        onBackground = blend(from.onBackground, to.onBackground),
+        surface = blend(from.surface, to.surface),
+        onSurface = blend(from.onSurface, to.onSurface),
+        surfaceVariant = blend(from.surfaceVariant, to.surfaceVariant),
+        onSurfaceVariant = blend(from.onSurfaceVariant, to.onSurfaceVariant),
+        surfaceTint = blend(from.surfaceTint, to.surfaceTint),
+        inverseSurface = blend(from.inverseSurface, to.inverseSurface),
+        inverseOnSurface = blend(from.inverseOnSurface, to.inverseOnSurface),
+        error = blend(from.error, to.error),
+        onError = blend(from.onError, to.onError),
+        errorContainer = blend(from.errorContainer, to.errorContainer),
+        onErrorContainer = blend(from.onErrorContainer, to.onErrorContainer),
+        outline = blend(from.outline, to.outline),
+        outlineVariant = blend(from.outlineVariant, to.outlineVariant),
+        scrim = blend(from.scrim, to.scrim),
+        surfaceBright = blend(from.surfaceBright, to.surfaceBright),
+        surfaceDim = blend(from.surfaceDim, to.surfaceDim),
+        surfaceContainer = blend(from.surfaceContainer, to.surfaceContainer),
+        surfaceContainerHigh = blend(from.surfaceContainerHigh, to.surfaceContainerHigh),
+        surfaceContainerHighest = blend(from.surfaceContainerHighest, to.surfaceContainerHighest),
+        surfaceContainerLow = blend(from.surfaceContainerLow, to.surfaceContainerLow),
+        surfaceContainerLowest = blend(from.surfaceContainerLowest, to.surfaceContainerLowest),
+        primaryFixed = blend(from.primaryFixed, to.primaryFixed),
+        primaryFixedDim = blend(from.primaryFixedDim, to.primaryFixedDim),
+        onPrimaryFixed = blend(from.onPrimaryFixed, to.onPrimaryFixed),
+        onPrimaryFixedVariant = blend(from.onPrimaryFixedVariant, to.onPrimaryFixedVariant),
+        secondaryFixed = blend(from.secondaryFixed, to.secondaryFixed),
+        secondaryFixedDim = blend(from.secondaryFixedDim, to.secondaryFixedDim),
+        onSecondaryFixed = blend(from.onSecondaryFixed, to.onSecondaryFixed),
+        onSecondaryFixedVariant = blend(from.onSecondaryFixedVariant, to.onSecondaryFixedVariant),
+        tertiaryFixed = blend(from.tertiaryFixed, to.tertiaryFixed),
+        tertiaryFixedDim = blend(from.tertiaryFixedDim, to.tertiaryFixedDim),
+        onTertiaryFixed = blend(from.onTertiaryFixed, to.onTertiaryFixed),
+        onTertiaryFixedVariant = blend(from.onTertiaryFixedVariant, to.onTertiaryFixedVariant),
+    )
 }
 
 internal fun intentionalReadingColorScheme(
