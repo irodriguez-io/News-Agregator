@@ -143,6 +143,20 @@ path that works today and is covered by 004's walkthrough. Trading a working pat
 D2's field already guards is a bad exchange in an item this small. If D2's fallback is ever taken,
 this is the next thing to try, and the reasoning above is why it is written down.
 
+**Superseded on 2026-09-20 by item 022, slice 1.** The appearance-switch flash anticipated here
+was observed on 2026-09-20. Item 022 adopts `android:configChanges="uiMode"` for `MainActivity`,
+with no other configuration key and no `onConfigurationChanged` override. The safety argument
+above was re-verified against merged `main` at `15e082c5bc147a8d4bb036f9b37ba945c46205a0`,
+rather than assumed after wave E: the only night-qualified resource is `values-night/colors.xml`'s
+`launch_background`, used by the window and splash launch backgrounds; runtime colours still come
+from Kotlin tokens and their derived scheme, and no runtime drawable, dimension, string or style
+is night-qualified. An instrumented guard now changes the phone's night mode with `Appearance.SYSTEM`
+in effect and asserts both the composed scheme and survival of the original Activity instance;
+item 018 made that guard enforceable through `connectedDebugAndroidTest` in CI. The platform
+`setApplicationNightMode` call and item 010's dedupe guard remain unchanged, preserving the
+cold-start launch-frame mechanism. The original reasoning above is retained as the decision at
+the time; see [022 D1, D2 and D6](../022-android-appearance-switch-motion/design.md).
+
 ## D6 — Why the emulator is the gate, and what CI can still hold
 
 No JVM test observes a pre-Compose frame. Instrumented tests are parked from CI
