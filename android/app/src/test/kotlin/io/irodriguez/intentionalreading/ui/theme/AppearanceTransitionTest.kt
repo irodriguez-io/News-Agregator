@@ -21,8 +21,8 @@ class AppearanceTransitionTest {
         // Given the two existing authored palettes and their complete Material role maps.
         val light = lightTokens()
         val dark = darkTokens()
-        val lightScheme = intentionalReadingColorScheme(light, darkTheme = false).namedRoles()
-        val darkScheme = intentionalReadingColorScheme(dark, darkTheme = true).namedRoles()
+        val lightScheme = intentionalReadingColorScheme(light, darkTheme = false)
+        val darkScheme = intentionalReadingColorScheme(dark, darkTheme = true)
 
         listOf(light to dark, dark to light).forEach { (from, to) ->
             // When the blend is at either endpoint.
@@ -35,14 +35,12 @@ class AppearanceTransitionTest {
             assertEquals(from.namedColors(), start.namedColors())
             assertEquals(to.namedColors(), end.namedColors())
             // And all 48 scheme roles retain their exact original values, including surfaceTint.
-            assertEquals(
-                if (from == light) lightScheme else darkScheme,
-                intentionalReadingColorScheme(start, darkFraction = if (from == light) 0f else 1f).namedRoles(),
-            )
-            assertEquals(
-                if (to == dark) darkScheme else lightScheme,
-                intentionalReadingColorScheme(end, darkFraction = if (to == dark) 1f else 0f).namedRoles(),
-            )
+            val fromScheme = if (from == light) lightScheme else darkScheme
+            val toScheme = if (to == dark) darkScheme else lightScheme
+            assertSame(fromScheme, blendColorSchemes(fromScheme, toScheme, 0f))
+            assertSame(toScheme, blendColorSchemes(fromScheme, toScheme, 1f))
+            assertEquals(fromScheme.namedRoles(), blendColorSchemes(fromScheme, toScheme, 0f).namedRoles())
+            assertEquals(toScheme.namedRoles(), blendColorSchemes(fromScheme, toScheme, 1f).namedRoles())
         }
     }
 
@@ -64,9 +62,11 @@ class AppearanceTransitionTest {
                 assertTrue(color.red < maxOf(start.red, end.red), "$name lightness at end")
             }
             // And every derived role travels too, rather than snapping to either authored scheme.
-            val startScheme = intentionalReadingColorScheme(from, from == darkTokens()).namedRoles()
-            val endScheme = intentionalReadingColorScheme(to, to == darkTokens()).namedRoles()
-            intentionalReadingColorScheme(middle, darkFraction = 0.5f).namedRoles()
+            val fromScheme = intentionalReadingColorScheme(from, from == darkTokens())
+            val toScheme = intentionalReadingColorScheme(to, to == darkTokens())
+            val startScheme = fromScheme.namedRoles()
+            val endScheme = toScheme.namedRoles()
+            blendColorSchemes(fromScheme, toScheme, 0.5f).namedRoles()
                 .forEachIndexed { index, (name, color) ->
                     val start = startScheme[index].second.convert(ColorSpaces.Oklab)
                     val end = endScheme[index].second.convert(ColorSpaces.Oklab)
@@ -74,21 +74,45 @@ class AppearanceTransitionTest {
                     assertTrue(actual.red > minOf(start.red, end.red), "$name lightness at start")
                     assertTrue(actual.red < maxOf(start.red, end.red), "$name lightness at end")
                 }
+            // And all four Oklab components stay within their endpoints across the entire fade.
+            for (step in 0..100) {
+                val fraction = step / 100f
+                blendColorSchemes(fromScheme, toScheme, fraction).namedRoles()
+                    .forEachIndexed { index, (name, color) ->
+                        val start = startScheme[index].second.convert(ColorSpaces.Oklab)
+                        val end = endScheme[index].second.convert(ColorSpaces.Oklab)
+                        val actual = color.convert(ColorSpaces.Oklab)
+                        listOf(
+                            Triple(start.red, end.red, actual.red),
+                            Triple(start.green, end.green, actual.green),
+                            Triple(start.blue, end.blue, actual.blue),
+                            Triple(start.alpha, end.alpha, actual.alpha),
+                        ).forEachIndexed { component, (a, b, value) ->
+                            assertTrue(value in minOf(a, b)..maxOf(a, b), "$name component $component at $fraction")
+                        }
+                    }
+            }
         }
     }
 
     @Test
     fun `surface tint cross-fades both variants instead of flipping a boolean`() {
-        // Given blended tokens independent of the surface-tint fraction.
-        val tokens = blendTokens(lightTokens(), darkTokens(), 0.5f)
-        // When the dark fraction is interior.
-        val tint = intentionalReadingColorScheme(tokens, darkFraction = 0.5f).surfaceTint
-        // Then both variants contribute, while each endpoint keeps its original tint.
-        assertEquals(lerp(tokens.tertiary, tokens.bg, 0.5f).copy(alpha = 0.10f), tint)
-        assertNotEquals(tokens.tertiary.copy(alpha = 0.10f), tint)
-        assertNotEquals(tokens.bg.copy(alpha = 0.10f), tint)
-        assertEquals(tokens.tertiary.copy(alpha = 0.10f), intentionalReadingColorScheme(tokens, 0f).surfaceTint)
-        assertEquals(tokens.bg.copy(alpha = 0.10f), intentionalReadingColorScheme(tokens, 1f).surfaceTint)
+        // Given the two derived endpoint tints, with their original Boolean factory unchanged.
+        val lightScheme = intentionalReadingColorScheme(lightTokens(), darkTheme = false)
+        val darkScheme = intentionalReadingColorScheme(darkTokens(), darkTheme = true)
+        // When the shared progress travels between the schemes.
+        listOf(0.1f, 0.25f, 0.5f, 0.75f, 0.9f).forEach { fraction ->
+            val tint = blendColorSchemes(lightScheme, darkScheme, fraction).surfaceTint
+            // Then the tint is the blend of the derived tints, compared in their endpoint colour space.
+            assertEquals(
+                lerp(lightScheme.surfaceTint, darkScheme.surfaceTint, fraction),
+                tint.convert(lightScheme.surfaceTint.colorSpace),
+            )
+            assertNotEquals(lightScheme.surfaceTint, tint)
+            assertNotEquals(darkScheme.surfaceTint, tint)
+        }
+        assertEquals(lightScheme.surfaceTint, blendColorSchemes(lightScheme, darkScheme, 0f).surfaceTint)
+        assertEquals(darkScheme.surfaceTint, blendColorSchemes(lightScheme, darkScheme, 1f).surfaceTint)
     }
 
     @Test
