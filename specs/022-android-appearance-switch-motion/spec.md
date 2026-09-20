@@ -103,6 +103,10 @@ The amendment binds the Android client only. No `js/**` or `css/**` change is au
 
 - The Discover card swipe motion (its own item).
 - Any change to which appearance options exist, or to the Settings sheet's layout, copy or controls.
+- Any change to undo. An appearance change clears the undo record under Amendment 8 and continues to;
+  declining the Activity rebuild does not make it reversible. **The first draft of this spec said the
+  live undo offer survived the switch, which contradicted Amendment 8; corrected 2026-09-20 after the
+  slice 1 implementer refused to resolve the contradiction in either direction.**
 - Any change to the launch frame, `values-night/colors.xml`, `themes.xml`, or item 010's cold-start
   behaviour. The platform night mode continues to be set and continues to be what makes the launch frame
   correct.
@@ -120,7 +124,8 @@ The amendment binds the Android client only. No `js/**` or `css/**` change is au
 Given the reader is on any destination
 When the reader selects an appearance different from the current one
 Then the Activity is not destroyed and recreated
-And the destination, scroll position and any live undo offer are unchanged
+And the destination and scroll position are unchanged
+And the undo record is cleared, exactly as Amendment 8 already requires of an appearance change
 
 ### Scenario: the colours cross-fade rather than snap
 Given a reduced-motion preference is not set

@@ -2317,8 +2317,12 @@ this section; a blend exists only while the transition is running, and at rest t
 §78 derives.
 
 **This section governs the transition, not the switch.** A change of appearance must not restart,
-rebuild or reload the interface. The reader's destination, scroll position and any live undo offer
-survive it unchanged, and the transition is the only thing the reader sees.
+rebuild or reload the interface. The reader's destination and scroll position survive it unchanged,
+and the transition is the only thing the reader sees.
+
+**The undo record is not among what survives, and that is Amendment 8, not this section.** An
+appearance change is not reversible and clears the undo record; declining the Activity rebuild does
+not make it reversible and must not be read as preserving the offer. Nothing here changes §70.
 
 §48 and §79.3 bind this section: under a reduced-motion preference the new scheme takes effect
 immediately, with no intermediate blend — and still without a restart, which is not motion and is not
