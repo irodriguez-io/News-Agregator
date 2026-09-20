@@ -8,33 +8,38 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -51,8 +56,12 @@ import io.irodriguez.intentionalreading.domain.model.Appearance
 import io.irodriguez.intentionalreading.ui.components.ImportConfirmation
 import io.irodriguez.intentionalreading.ui.components.LiveStatusMessage
 import io.irodriguez.intentionalreading.ui.components.ResetConfirmation
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import java.util.Locale
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +75,7 @@ fun SettingsSheet(
     importInProgress: Boolean,
     importTooLarge: Boolean,
     importUnreadable: Boolean,
+    reducedMotion: () -> Boolean = { false },
     onAppearanceSelected: (Appearance) -> Unit,
     onExport: () -> Unit,
     onSelectImport: () -> Unit,
@@ -75,19 +85,50 @@ fun SettingsSheet(
     onDismiss: () -> Unit,
 ) {
     val tokens = LocalIntentionalReadingTokens.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shapes = LocalIntentionalReadingShapes.current
+    val reducedMotionEnabled = reducedMotion()
+    val sheetState = rememberSettingsSheetState(reducedMotionEnabled)
     val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
+    val sheetAlpha by animateFloatAsState(
+        targetValue = if (reducedMotionEnabled || sheetState.targetValue != SheetValue.Hidden) 1f else 0f,
+        animationSpec = settingsSheetRevealSpec(reducedMotionEnabled),
+        label = "Settings sheet fade",
+    )
     var resetConfirmationVisible by rememberSaveable { mutableStateOf(false) }
-    BackHandler(onBack = onDismiss)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = tokens.surface,
-        contentColor = tokens.fg,
-        scrimColor = tokens.backdrop,
-        dragHandle = null,
-    ) {
+    val dismissWithAnimation = {
+        coroutineScope.launch {
+            if (reducedMotionEnabled) {
+                sheetState.hide()
+            } else {
+                val hide = async { sheetState.hide() }
+                delay(SettingsSheetRevealDurationMillis.toLong())
+                hide.await()
+            }
+            if (!sheetState.isVisible) onDismiss()
+        }
+        Unit
+    }
+    BackHandler(onBack = dismissWithAnimation)
+    val sheetModifier = if (reducedMotionEnabled) {
+        Modifier
+    } else {
+        Modifier.graphicsLayer { alpha = sheetAlpha }
+    }
+    SettingsSheetMotionTheme(reducedMotionEnabled) {
+        ModalBottomSheet(
+            onDismissRequest = dismissWithAnimation,
+            modifier = sheetModifier,
+            sheetState = sheetState,
+            shape = shapes.modalSheet,
+            containerColor = tokens.surface,
+            contentColor = tokens.fg,
+            scrimColor = tokens.backdrop,
+            dragHandle = null,
+            contentWindowInsets = {
+                if (reducedMotionEnabled) WindowInsets() else BottomSheetDefaults.windowInsets
+            },
+        ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -97,7 +138,7 @@ fun SettingsSheet(
                     .verticalScroll(rememberScrollState())
                     .onPreviewKeyEvent { event ->
                         if (event.key == Key.Escape && event.type == KeyEventType.KeyUp) {
-                            onDismiss()
+                            dismissWithAnimation()
                             true
                         } else {
                             false
@@ -130,7 +171,7 @@ fun SettingsSheet(
                 }
                 val closeDescription = stringResource(R.string.close_settings)
                 IconButton(
-                    onClick = onDismiss,
+                    onClick = dismissWithAnimation,
                     modifier = Modifier
                         .heightIn(min = 48.dp)
                         .semantics { contentDescription = closeDescription },
@@ -179,26 +220,31 @@ fun SettingsSheet(
                             Appearance.SYSTEM -> stringResource(R.string.appearance_system)
                         }
                         val selected = option == appearance
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                                .selectable(
-                                    selected = selected,
-                                    role = Role.RadioButton,
-                                    onClick = { onAppearanceSelected(option) },
-                                ),
-                            verticalAlignment = Alignment.CenterVertically,
+                        Surface(
+                            color = tokens.card,
+                            shape = shapes.smallContainer,
                         ) {
-                            RadioButton(
-                                selected = selected,
-                                onClick = null,
-                            )
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = tokens.fg,
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .selectable(
+                                        selected = selected,
+                                        role = Role.RadioButton,
+                                        onClick = { onAppearanceSelected(option) },
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                RadioButton(
+                                    selected = selected,
+                                    onClick = null,
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = tokens.fg,
+                                )
+                            }
                         }
                     }
                 }
@@ -305,6 +351,7 @@ fun SettingsSheet(
         }
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
+        }
         }
     }
 }

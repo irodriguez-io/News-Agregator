@@ -69,7 +69,7 @@ valuable defects were found by the owner using the app — none by reading diffs
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
 | ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
 | ~~D~~ | ~~015 Undo race · 012 Card first · 014 Raise the offer · 016 Widen what is reversible~~ | **merged 2026-08-31** | `waves/wave-d.md`, `waves/wave-d-note.md`, `waves/wave-d-amendments.md` |
-| E | ~~017 Tokens~~ · ~~018 Components~~ · ~~019 Discover~~ · ~~020 Read Later + History~~ · 021 Motion | **in flight — 017 and 018 merged; 019 and 020 implemented concurrently** | `waves/wave-e.md`, `waves/wave-e-amendment.md` |
+| E | ~~017 Tokens~~ · ~~018 Components~~ · ~~019 Discover~~ · ~~020 Read Later + History~~ · ~~021 Motion~~ | **all five implemented — 017–020 merged, 021 in review; wave close pending** | `waves/wave-e.md`, `waves/wave-e-amendment.md` |
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
