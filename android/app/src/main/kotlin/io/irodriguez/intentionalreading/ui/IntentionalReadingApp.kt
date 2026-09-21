@@ -174,7 +174,7 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
         }
     }
 
-    IntentionalReadingTheme(appearance = appearance) {
+    IntentionalReadingTheme(appearance = appearance, reducedMotion = reducedMotion) {
         val tokens = LocalIntentionalReadingTokens.current
         val announcementText = announcement?.let { event ->
             stringResource(

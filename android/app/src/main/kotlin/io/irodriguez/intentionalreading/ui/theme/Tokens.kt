@@ -1,8 +1,10 @@
 package io.irodriguez.intentionalreading.ui.theme
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.max
 import kotlin.math.min
@@ -38,7 +40,50 @@ data class IntentionalReadingTokens(
     val onTonal: Color,
 )
 
-val LocalIntentionalReadingTokens = staticCompositionLocalOf<IntentionalReadingTokens> {
+/** Interpolate only colours; return authored endpoints without a colour-space round trip. */
+internal fun blendTokens(
+    from: IntentionalReadingTokens,
+    to: IntentionalReadingTokens,
+    fraction: Float,
+): IntentionalReadingTokens {
+    if (fraction <= 0f) return from
+    if (fraction >= 1f) return to
+
+    // Keep interior colours in Oklab so close endpoints do not quantize to an 8-bit end value.
+    fun blend(start: Color, end: Color): Color =
+        lerp(start.convert(ColorSpaces.Oklab), end.convert(ColorSpaces.Oklab), fraction)
+
+    return IntentionalReadingTokens(
+        bg = blend(from.bg, to.bg),
+        surface = blend(from.surface, to.surface),
+        fg = blend(from.fg, to.fg),
+        muted = blend(from.muted, to.muted),
+        border = blend(from.border, to.border),
+        accent = blend(from.accent, to.accent),
+        accentSoft = blend(from.accentSoft, to.accentSoft),
+        surfaceHover = blend(from.surfaceHover, to.surfaceHover),
+        strongBorder = blend(from.strongBorder, to.strongBorder),
+        quietInk = blend(from.quietInk, to.quietInk),
+        toastSurface = blend(from.toastSurface, to.toastSurface),
+        toastInk = blend(from.toastInk, to.toastInk),
+        backdrop = blend(from.backdrop, to.backdrop),
+        primary = blend(from.primary, to.primary),
+        secondary = blend(from.secondary, to.secondary),
+        tonal = blend(from.tonal, to.tonal),
+        tertiary = blend(from.tertiary, to.tertiary),
+        error = blend(from.error, to.error),
+        card = blend(from.card, to.card),
+        container = blend(from.container, to.container),
+        primarySoft = blend(from.primarySoft, to.primarySoft),
+        outlineVariant = blend(from.outlineVariant, to.outlineVariant),
+        outlineControl = blend(from.outlineControl, to.outlineControl),
+        quiet = blend(from.quiet, to.quiet),
+        onPrimary = blend(from.onPrimary, to.onPrimary),
+        onTonal = blend(from.onTonal, to.onTonal),
+    )
+}
+
+val LocalIntentionalReadingTokens = compositionLocalOf<IntentionalReadingTokens> {
     error("Intentional Reading tokens were not provided")
 }
 

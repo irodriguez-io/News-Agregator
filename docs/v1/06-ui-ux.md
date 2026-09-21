@@ -1409,7 +1409,8 @@ equivalent system setting on Android — **remove or effectively eliminate**:
 - large swipe exit transitions;
 - decorative translation;
 - directional destination transitions (§79.1);
-- the modal sheet's slide (§79.2).
+- the modal sheet's slide (§79.2);
+- the appearance scheme transition (§79.4).
 
 Transitions and animations become **effectively immediate**.
 
@@ -2286,14 +2287,46 @@ backdrop   semi-transparent scrim dimming the content behind
 
 ## 79.3 Reduced motion
 
-**§48 binds this section without exception.** Under a reduced-motion preference both transitions above
-become effectively immediate, and the destination change and the sheet's presence remain fully clear from
-text, state and live status.
+**§48 binds this section without exception.** Under a reduced-motion preference **every transition in
+§79 becomes effectively immediate** — §79.1, §79.2 and §79.4 alike — and the destination change, the
+sheet's presence and the appearance in effect remain fully clear from text, state and live status.
 
 `reducedMotion` is already resolved in the composable that owns both the navigation scaffold and the
-settings sheet, so both animations sit where the flag already is.
+settings sheet, so those two animations sit where the flag already is; §79.4's sits in the theme.
 
 **A test must assert that each animation honours it.**
+
+## 79.4 Appearance scheme transition
+
+The reader's appearance choice — §64's `Light`, `Dark`, `System` — changes the resolved colour scheme.
+That change is a transition and is specified here.
+
+```text
+duration   300ms
+easing     Material 3 Standard
+property   the resolved colour scheme only
+motion     none — nothing moves, scales, or changes size or position
+```
+
+**Only colour travels.** The transition is a cross-fade between the scheme being left and the scheme
+being entered. No element translates, scales, rotates or reflows, and no layout value is animated. A
+transition that moved the interface would be ornamental under §46 and is not authorised here.
+
+**The end states are the authored palette exactly.** §77's seeds and §78's derivation are unchanged by
+this section; a blend exists only while the transition is running, and at rest the scheme is the one
+§78 derives.
+
+**This section governs the transition, not the switch.** A change of appearance must not restart,
+rebuild or reload the interface. The reader's destination and scroll position survive it unchanged,
+and the transition is the only thing the reader sees.
+
+**The undo record is not among what survives, and that is Amendment 8, not this section.** An
+appearance change is not reversible and clears the undo record; declining the Activity rebuild does
+not make it reversible and must not be read as preserving the offer. Nothing here changes §70.
+
+§48 and §79.3 bind this section: under a reduced-motion preference the new scheme takes effect
+immediately, with no intermediate blend — and still without a restart, which is not motion and is not
+conditional on any preference.
 
 ---
 
