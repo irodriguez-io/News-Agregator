@@ -404,3 +404,102 @@ transferable thing this item produced:
 
 The pattern: each was a plausible-sounding instruction that only failed when something tried to execute it
 literally.
+
+---
+
+## Walkthrough — 2026-09-20, orchestrator-driven over `adb`
+
+**Both preconditions met before anything was judged.** `animator_duration_scale` verified at `1.0`, not
+`0` — at `0` the app correctly enters reduced motion and every spec becomes `snap()`, which is what
+produced a misdiagnosis earlier the same day. And a **release** build, signed with the real release key:
+`apksigner` reports SHA-256 `baf9fe55…4325`, matching the project keystore, so this is not a debug-key
+stand-in. `isMinifyEnabled = false` and no baseline profile, so every figure below is a floor.
+
+Captures in the session scratchpad; pixel values read directly from the PNGs.
+
+### 1. The fade is real, and only colour travels
+
+Sampled at `animator_duration_scale = 10.0` so a 300ms fade spans ~3s and `screencap` can catch it — the
+app only treats `0` as reduced motion, so 10× still animates. Settings sheet surface across five frames:
+
+```
+#FFFFFF → #FEFEFE → #ECECEE → #C2C5C9 → #92969E
+```
+
+Monotonic, no jumps, no excursion past either endpoint — the `surfaceTint` overshoot D3 originally risked
+does not occur. In the mid-transition frame **every element is in exactly the same position** as in the
+light frame: masthead, headings, radio rows, buttons. Nothing moves, scales or reflows. §79.4's *"only
+colour travels"* holds.
+
+Incidental finding, now explained: the Appearance radio rows show tonal containers in dark and none in
+light. That was flagged as a possible defect at wave E's walkthrough. It is an **authored scheme
+difference**, and it now cross-fades with everything else rather than snapping.
+
+### 2. Real-speed switching
+
+Four Light↔Dark switches at `1.0` on the release build, `dumpsys gfxinfo`:
+
+| Metric | Value |
+|---|---|
+| Frames rendered | 314 |
+| Janky | **15 (4.78%)** |
+| 50th / 90th / 95th / 99th | 17ms / 30ms / 36ms / 42ms |
+| Missed Vsync | 1 |
+
+Consistent with §Results' first-use characterisation; the run includes this process's first switch.
+
+### 3. The Activity never restarts — the defect itself
+
+`logcat` cleared, two switches driven, then inspected for lifecycle events:
+
+```
+Activity lifecycle events during two switches: (none)
+pid before: 28606     pid after: 28606
+```
+
+No relaunch, no process change. **This is the reported defect, closed.**
+
+### 4. System still follows the phone, both directions
+
+With `System` selected, `cmd uimode night yes` then `no`. The app followed each way, `System` stayed
+selected, and `pid` remained `28606` throughout — zero `Start proc` events. This is precisely the risk
+item 010's D5 named when it declined this manifest attribute.
+
+### 5. Reduced motion is immediate, and still has no flash
+
+All three scales set to `0`. The capture taken **immediately** after the tap and the settled capture are
+**identical**: `#0E1523` both. No intermediate blend, against the animated case's five-step progression in
+§1. `pid` unchanged — slice 1's fix is a manifest declaration and is correctly *not* conditional on the
+preference.
+
+*Note for whoever drives this surface next:* under reduced motion the sheet sits ~50px lower, because
+`SettingsSheet.kt:129` drops `BottomSheetDefaults.windowInsets`. Tap coordinates captured in the animated
+layout miss the radio rows. Authored behaviour, not a defect — but it cost a confusing retry here.
+
+### 6. Cold start with Dark stored on a light phone
+
+`cmd uimode night no`, `force-stop`, relaunch. Four frames from first paint to settled, sampled clear of
+the splash icon:
+
+```
+cold-1  #060A15    cold-2  #060A15    cold-3  #060A15    settled  #060A15
+```
+
+Bit-exact against `values-night/colors.xml`'s authored `launch_background`. **No light flash at any
+frame.** Item 010's mechanism is fully preserved — which is the point of keeping `setApplicationNightMode`
+and declining only the rebuild it triggers.
+
+*(First pass sampled at (540,1200) and read `#FCFEFF`, which looked like a light flash. That point lands
+on the white page of the splash icon. Sampling error, not a regression — recorded so it is not
+re-discovered.)*
+
+### What the walkthrough does not settle
+
+**Whether 300ms reads as deliberate or sluggish.** Every check above is mechanical. §44's character
+constraint and §47's boundary are taste, and that judgement is the owner's, live on a device. It remains
+the one open item on this PR.
+
+### Device state restored
+
+`uimode night no`; all three animation scales returned to `1.0`; the release `keystore.properties` copied
+in for the signed build was removed from the worktree afterwards.
