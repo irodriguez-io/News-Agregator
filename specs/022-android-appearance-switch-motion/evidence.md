@@ -503,3 +503,56 @@ the one open item on this PR.
 
 `uimode night no`; all three animation scales returned to `1.0`; the release `keystore.properties` copied
 in for the signed build was removed from the worktree afterwards.
+
+---
+
+## Hosted CI — one instrumented failure, investigated
+
+`DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` — item
+**021's** test, not one of this item's — failed on head `29c90cd` with:
+
+```
+androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException:
+Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds.
+```
+
+**The orchestrator's first diagnosis was wrong and is recorded so it is not re-derived.** The theory was
+that slice 2's `animateFloatAsState` in `IntentionalReadingTheme` — which wraps every screen — registers
+frame-clock work, and that with this test's `mainClock.autoAdvance = false` the composition never reaches
+idle. Three facts refute it:
+
+1. **The reported state is `has-window-focus=false` with `is-layout-requested=false`** on both attempts.
+   A busy composition would report layout requested; it does not. Espresso was blocked on **window
+   focus**, not on the view tree being busy.
+2. **On the pinned Compose 1.12.0, `animateFloatAsState` initialises at its target and calls `animateTo`
+   only when that target changes.** This test never changes appearance, so no animation ever starts.
+   Compose's idling implementation also excludes pending frame-clock work from its busy condition when
+   `autoAdvance = false`.
+3. **The theme animation landed in `440d4f1`, which is included in `7910d35` — and `7910d35` passed.**
+   `82bc5e1` changed only how `reducedMotion` is injected.
+
+**What is established:** Espresso was blocked by a root without window focus.
+**What is not:** why the CI Activity lacked focus. Removing the theme animation was **not** shown to fix
+anything and was not attempted.
+
+### The environmental case, and its limit
+
+| Head | App code | Instrumented |
+|---|---|---|
+| `7910d35` | identical | **pass** |
+| `29c90cd` | identical (delta is `evidence.md` only) | **fail**, twice |
+
+Seven consecutive successes precede this on `android.yml`. The failing run logged emulator boot warnings
+(`Failed to load snapshot 'default_boot'`) and three `adb` exit-code-1 retries, on CI's `-no-window
+-gpu swiftshader_indirect` emulator. Both failed attempts belong to the **same workflow run**
+(`gh run rerun --failed` reuses it), so they are not two independent samples.
+
+That is a strong environmental case but not a closed one. **It is recorded as an open question rather
+than written off**, and belongs in `backlog.md`'s verification debt if it recurs.
+
+### A local trap this exposed
+
+The walkthrough installed a **release-signed** APK on the emulator, which makes every later
+`connectedDebugAndroidTest` fail with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` — debug and release carry
+different certificates. It cost an implementer session a wasted run. **Uninstall the package after any
+release-build walkthrough.**
