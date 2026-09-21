@@ -1,4 +1,51 @@
-# Item 022 — Slice 2 evidence
+# 022 — The appearance switch changes colour, not the screen · evidence
+
+**Branch:** `feat/022-android-appearance-switch-motion`, cut from `main` at `15e082c`\
+**Slices:** 2, both done · **Tests:** 385 → **391** unit, 17 → **20** instrumented, 0 failures throughout\
+**Implementer:** Codex, three fresh sessions (`codex-022-s1`, `codex-022-s1-fu`, `codex-022-s2`)\
+**Reviewer:** the orchestrating Claude session — spec and plan author, not code author
+(`execution-model.md` §5)\
+**Amendment:** 10, authored by this item.
+
+---
+
+## 0. Slice 1 — stop the restart
+
+**Commits:** RED `554fdee`, GREEN `5a9a3ce`, review follow-up `9dffad5`.
+
+The whole production change is one manifest attribute on `MainActivity`:
+`android:configChanges="uiMode"`, that key and no other. No `onConfigurationChanged` override was
+written; `UiModeManager.setApplicationNightMode` and item 010's process-scoped dedupe guard are both
+untouched, so the cold-start launch frame item 010 shipped still works.
+
+**This took item 010's own recommendation.** `specs/010-android-launch-theme/design.md` D5 considered this
+attribute, declined it on scope because the flash had not been observed, and wrote: *"If D2's fallback is
+ever taken, this is the next thing to try."* It was observed on 2026-09-20. D5 is annotated in place, dated,
+with its original reasoning retained.
+
+**D5's safety argument was re-verified, not inherited.** `res/values-night/` still holds exactly one file
+with exactly one entry, `launch_background`, consumed only by the pre-Compose window and splash
+backgrounds. Every runtime colour comes from Kotlin tokens, which Amendment 9 makes structural.
+
+**Two instrumented guards, and both were demonstrated to fail with the attribute removed:**
+
+| Guard | Path it drives | Proof of failure |
+|---|---|---|
+| `AppearanceConfigurationInstrumentedTest` | the platform raising `uiMode` directly (`cmd uimode night`) | `expected same:<MainActivity@6aa1dd8> was not:<MainActivity@e306f13>` |
+| `ReaderAppearanceConfigurationInstrumentedTest` | `AppViewModel.launchAppearanceChange`, the method `IntentionalReadingApp.kt:424` calls from the Settings control | scheme assertions **passed**, only Activity identity failed |
+
+The second row is the important one: with the fix removed, everything about the scheme still checked out
+and *only* the survival assertion broke. That is what distinguishes a guard from a test that happens to be
+green.
+
+**The slice review found the second guard's absence.** The first guard drove only the system-toggle path,
+leaving the reader-selection path — the one the defect was actually reported on — unasserted. Both paths
+raise a `uiMode` change and the manifest governs both, but a later change that rebuilt the Activity on the
+user path alone would have kept the whole gate green.
+
+---
+
+## Slice 2
 
 Measured 2026-09-20 in `news-agregator-022`, branch `feat/022-android-appearance-switch-motion`.
 
@@ -318,3 +365,42 @@ was restored in `finally`. The diagnostic log is `/tmp/022-injection-scale-zero.
 
 Local logs: `/tmp/022-injection-red.log`, `/tmp/022-injection-disconnected-red.log`,
 `/tmp/022-injection-green-gates.log`, `/tmp/022-injection-green-connected.log`.
+
+---
+
+## Definition of done — item level
+
+| Requirement | State |
+|---|---|
+| `spec.md` §5 scenarios covered | **yes** — 8 scenarios; slice 1 owns 4, slice 2 owns 4 |
+| Amendment 10 authored and approved at the plan gate | **yes** — `337c92c`, owner-approved 2026-09-20 |
+| `docs/v1/06-ui-ux.md` §79.4 / §48 / §79.3 edits | **yes** |
+| `./gradlew :app:testDebugUnitTest` | **391 passed**, 0 failures, 0 skipped |
+| `./gradlew :app:assembleDebug` | **green** |
+| `./gradlew :app:assembleDebugAndroidTest` | **green** |
+| `./gradlew :app:connectedDebugAndroidTest` | **20 passed** on `Pixel_10`, 0 failures, 0 skipped |
+| Gates re-run independently by the reviewer with `--rerun-tasks` | **yes**, on both slice heads |
+| `ThemeDerivationTest` unedited | **yes** — all 55 pre-existing test files byte-identical |
+| Item 010's guards (`LaunchNightModeTest`, `LaunchBackgroundTest`) unedited and passing | **yes** |
+| Failing-first discipline | **yes** — every implementation commit preceded by a red test commit; see §"RED history and test authority" for the one supersession and why it was authorised |
+| D4 release-build `gfxinfo` measurement recorded | **yes** — three candidates measured; owner chose rung 1 |
+| Walkthrough | **open** — owner checkpoint 2, not yet performed |
+| Hosted CI green on the exact final head | **open** — PR not yet opened |
+
+**Two owner checkpoints:** Amendment 10's text (closed, 2026-09-20) and the walkthrough (open). The
+walkthrough carries the judgement no gate settles — whether 300ms reads as deliberate or sluggish — and
+must be run with `animator_duration_scale` verified non-zero and on a release build. Both preconditions
+cost this project a misdiagnosis on 2026-09-20.
+
+## What this item cost, and why
+
+Three detours, all three my design errors, all three caught by the implementer declining to paper over
+them rather than by any gate. They are recorded in `slices.md` under slice 2's status and are the most
+transferable thing this item produced:
+
+1. A spec scenario that contradicted **Amendment 8** on undo — also wrongly written into `§79.4`.
+2. **D3** offering two blend shapes as equivalent when one overshoots both endpoints on `surfaceTint`.
+3. **D4's** fallback ladder optimising a measurement without weighing what the result looked like.
+
+The pattern: each was a plausible-sounding instruction that only failed when something tried to execute it
+literally.
