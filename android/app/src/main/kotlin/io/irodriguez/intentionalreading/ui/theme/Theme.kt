@@ -11,9 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -45,11 +42,7 @@ fun IntentionalReadingTheme(
     )
     // Snap in this composition too, without waiting for the animation's next frame.
     val darkFraction = if (reducedMotion) targetFraction else animatedFraction
-    // D4 rung 2: Material roles fade; direct token readers settle once, at the endpoint.
-    val targetTokens = if (darkTheme) darkTokens() else lightTokens()
-    var settledTokens by remember { mutableStateOf(targetTokens) }
-    val tokens = if (darkFraction == targetFraction) targetTokens else settledTokens
-    SideEffect { settledTokens = tokens }
+    val tokens = blendTokens(lightTokens(), darkTokens(), darkFraction)
     val lightScheme = remember { intentionalReadingColorScheme(lightTokens(), darkTheme = false) }
     val darkScheme = remember { intentionalReadingColorScheme(darkTokens(), darkTheme = true) }
     CompositionLocalProvider(

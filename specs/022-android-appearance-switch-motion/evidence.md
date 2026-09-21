@@ -2,20 +2,27 @@
 
 Measured 2026-09-20 in `news-agregator-022`, branch `feat/022-android-appearance-switch-motion`.
 
-## Result and D4 checkpoint
+## Result and owner decision
 
-The code passes the JVM/build gates and implements the corrected D3: derive each endpoint scheme using the
-unchanged Boolean factory, then blend all 48 roles with one progress float. Rung 1 and rung 2 of D4 were
-measured in order. **The retained candidate is rung 2:** a dynamic token local, a 300ms Material 3 Standard
-scheme fade, and direct token readers settling at the end. Reduced motion selects `snap()` and uses the
-resolved endpoint in the same composition. Initial composition starts at the selected palette.
+**Rung 1 is the retained candidate by owner decision on 2026-09-20.** The token local is a dynamic
+`compositionLocalOf`; both all 26 tokens and all 48 derived `ColorScheme` roles fade across the same
+progress float over 300ms on Material 3 Standard easing. Each endpoint scheme is derived with the unchanged
+Boolean factory before blending. Reduced motion selects `snap()` and uses the resolved endpoint in the
+same composition. Initial composition starts at the selected palette.
 
-**Performance acceptance remains an owner checkpoint.** Rung 2 did not eliminate first-use jank:
-10/74 frames (13.51%) on the first switch after launch. Warm runs recorded 2/82–83 janky frames apiece.
-These are unoptimised release measurements (`isMinifyEnabled = false`); R8 has not been enabled and no
-app-specific baseline profile has been added. Per D4 rung 3, this is reported to the owner before any
-instant-switch decision. **Rung 4 was not taken.** No claim of a jank-free fade or completed owner taste
-walkthrough is made.
+The owner rejected rung 2 because 17 production files read `LocalIntentionalReadingTokens.current`
+directly. Keeping those readers at the old palette until the end makes most of the surface snap after a
+300ms delay while Material surfaces fade. That split transition costs the whole-surface cross-fade, and
+the first-switch figures (rung 1: 9/72; rung 2: 10/74) do not establish a performance benefit for it.
+All three measurement records below remain intact.
+
+The owner accepted the fade on the characterisation of rung 1's cost as **first-use dominated**: across
+its first three switches jank falls **12.50% → 5.13% → 2.56%**, and the recorded frame-time tail falls
+**48ms → 31ms → 21ms**. Those times are the captured `gfxinfo` p99 values, rather than independently
+measured absolute maxima. Later warm misses remain in the per-run table; this is not a zero-jank claim.
+R8 remains disabled (`isMinifyEnabled = false`) and an app-specific baseline profile remains disabled/not
+configured. Both are untried levers against the first-use cost and remain outside this item's scope.
+The D4 rung 3 decision is resolved in favour of retaining the full fade. **Rung 4 was not taken.**
 
 ## RED history and test authority
 
@@ -54,7 +61,7 @@ export ANDROID_HOME=$HOME/Library/Android/sdk
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-The final rung 2 JVM/build command completed:
+The earlier rung 2 JVM/build command completed (historical gate record):
 
 ```text
 > Task :app:assembleDebug
@@ -67,7 +74,7 @@ BUILD SUCCESSFUL in 1s
 391 JVM tests, zero failures/errors/skips; all six appearance-transition tests pass.
 `ThemeDerivationTest`: 8 tests, zero failures, file unedited.
 
-The final rung 2 device gate completed:
+The earlier rung 2 device gate completed (historical gate record):
 
 ```text
 Starting 19 tests on Pixel_10(AVD) - 17
@@ -81,7 +88,50 @@ BUILD SUCCESSFUL in 46s
 - `AppearanceConfigurationInstrumentedTest.systemStillFollowsThePhoneWhileTheAppIsOpenWithoutRecreatingTheActivity`
 - `ReaderAppearanceConfigurationInstrumentedTest.choosingADifferentAppearanceDoesNotRestartTheScreen`
 
+### Retained rung 1 gates after owner decision
+
+All four gates were rerun on the restored rung 1 source, with both required environment exports:
+
+```text
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+> Task :app:assembleDebug
+> Task :app:assembleDebugAndroidTest UP-TO-DATE
+> Task :app:testDebugUnitTest
+BUILD SUCCESSFUL in 1s
+72 actionable tasks: 9 executed, 63 up-to-date
+
+./gradlew :app:connectedDebugAndroidTest
+Starting 19 tests on Pixel_10(AVD) - 17
+Finished 19 tests on Pixel_10(AVD) - 17
+BUILD SUCCESSFUL in 52s
+68 actionable tasks: 1 executed, 67 up-to-date
+```
+
+391 JVM tests and 19 instrumented tests, zero failures/errors/skips. Both slice 1 appearance guards pass;
+`ThemeDerivationTest` passes unedited. All 55 pre-existing test files are byte-identical to the original
+baseline, and `AppearanceTransitionTest.kt` is byte-identical to corrected RED `0975ea2`. No test changed
+for this owner decision. All three device animation scales remain `1.0`.
+
+Logs: `/tmp/022-retained-rung1-gates.log`, `/tmp/022-retained-rung1-connected.log`, and
+`/tmp/022-retained-rung1-release.log`.
+
 These are local Pixel_10/API 37 results, not hosted CI evidence. No push, PR, merge, or deployment was made.
+
+## Retained build matches the earlier rung 1 measurement
+
+The owner-selected source restores the exact `Theme.kt` used for the earlier rung 1 measurement; the
+dynamic `Tokens.kt` is unchanged from that measured variant. `:app:assembleRelease` was rerun after the
+restoration (`BUILD SUCCESSFUL in 3s`, 47 tasks: 8 executed, 39 up-to-date).
+
+The rebuilt unsigned release APK was compared entry by entry with `/tmp/022-rung1-release.apk`:
+**all 129 APK content entries are byte-identical**, including every DEX, resource, manifest and native
+library. The only extra entries in the old signed APK are `META-INF/ANDROIDD.RSA`, `META-INF/ANDROIDD.SF`
+and `META-INF/MANIFEST.MF`, its signing metadata. No runtime/build-content difference exists.
+**The earlier rung 1 figures apply to what now lands; `gfxinfo` was not rerun.**
+
+- Earlier measured, signed APK SHA-256: `d3d1dd38a82818147ae6346ffb74ed383db3c4d12ed54331c4468e8f5def03c0`.
+- Rebuilt unsigned APK SHA-256: `9042a647963bfc55c6c1af11c0056bdf1754880a3034a1a5f52aa106a28a0139`.
+- Local entry comparison: `/tmp/022-retained-rung1-apk-comparison.json`.
 
 ## Release measurement method
 
@@ -117,10 +167,10 @@ These are local Pixel_10/API 37 results, not hosted CI evidence. No push, PR, me
 | Rung 1: dynamic local, tokens fade | 9/72 (12.50%) | 48ms | 24/781 (3.07%) | 18–25 ms |
 | Rung 2: scheme fade, tokens settle | 10/74 (13.51%) | 46ms | 20/822 (2.43%) | 19–22 ms |
 
-The static run's first switch and later misses triggered rung 1. Rung 1 did not remove the misses, so rung 2
-was taken. Rung 2 improved the consistency of warm runs in this sample but does not establish first-use smoothness.
-The short sequential runs and unequal launch-to-first-switch delays do not establish statistical superiority. This
-is the pre-authorised ladder's rung 3 reporting point, not a reason to silently disable the fade or enable R8.
+The static run's first switch and later misses triggered measurement of rung 1 and then rung 2 in order.
+Rung 2's warm aggregate was numerically lower, but the short sequential runs and unequal launch-to-first-switch
+delays do not establish statistical superiority. At the D4 rung 3 checkpoint, the owner rejected its visual
+cost and selected rung 1 on 2026-09-20. Rung 2 is preserved here as a rejected measured candidate.
 
 | Candidate | Run | Direction | Frames | Janky | p50 | p90 | p95 | p99 | Missed vsync | Slow UI |
 | --- | ---: | --- | ---: | --- | --- | --- | --- | --- | ---: | ---: |
@@ -168,7 +218,7 @@ runs overlapped a build, and reduced motion changes the existing sheet insets/po
 using the original coordinates missed alternate controls and was discarded. The animation scale was restored
 to `1.0`, with transition/window scales also `1.0` and the original system night mode still `yes`.
 
-## Implementation decisions and remaining review
+## Implementation decisions
 
 - Oklab interiors preserve precision for almost identical endpoints such as tertiary. At `0f` and `1f`,
   both blend helpers return their input objects, avoiding any endpoint colour-space round trip. The tint
@@ -180,11 +230,11 @@ to `1.0`, with transition/window scales also `1.0` and the original system night
   paths exclude the caller; no preference resolver or threading outside the theme was changed.
 - A fixed light/dark progress axis gives cold starts the selected endpoint and lets an interrupted switch
   reverse from its current colour. No second content tree, layout animation, spring, pulse, or bounce is added.
-- Rung 2 deliberately keeps direct token readers at their last settled palette until the scheme reaches
-  its target. That is a measured fallback, not the original all-token fade; it needs to be considered in
-  the owner's visual walkthrough.
+- The retained rung 1 animates direct token readers and Material roles together. Rung 2's delayed token
+  settlement was removed by owner decision; no delayed snap remains in the theme.
 - Release endpoint screenshots were captured at `/tmp/022-rung2-dark.png` and `/tmp/022-rung2-light.png`.
-  They establish the selected endpoint and retained Settings layout, not subjective smoothness. The
+  These historical rung 2 screenshots establish endpoint colours and Settings layout, not the retained
+  candidate's motion or subjective smoothness. The
   existing instrumented guards establish System-following and Activity survival.
 - Raw per-switch reports and JSON summaries remain locally in `/tmp/022-gfxinfo/{static,rung1,rung2}/`;
   the reproducer is `/tmp/022-measure.py`. Build/test logs are `/tmp/022-corrected-red.log`,
