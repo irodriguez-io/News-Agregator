@@ -117,7 +117,7 @@ Logs: `/tmp/022-retained-rung1-gates.log`, `/tmp/022-retained-rung1-connected.lo
 
 These are local Pixel_10/API 37 results, not hosted CI evidence. No push, PR, merge, or deployment was made.
 
-## Retained build matches the earlier rung 1 measurement
+## Retained build at `342e925` matched the earlier rung 1 measurement
 
 The owner-selected source restores the exact `Theme.kt` used for the earlier rung 1 measurement; the
 dynamic `Tokens.kt` is unchanged from that measured variant. `:app:assembleRelease` was rerun after the
@@ -127,7 +127,8 @@ The rebuilt unsigned release APK was compared entry by entry with `/tmp/022-rung
 **all 129 APK content entries are byte-identical**, including every DEX, resource, manifest and native
 library. The only extra entries in the old signed APK are `META-INF/ANDROIDD.RSA`, `META-INF/ANDROIDD.SF`
 and `META-INF/MANIFEST.MF`, its signing metadata. No runtime/build-content difference exists.
-**The earlier rung 1 figures apply to what now lands; `gfxinfo` was not rerun.**
+**This comparison established equivalence for `342e925`; `gfxinfo` was not rerun.**
+The later preference-injection review fix below preserves production behaviour and leaves these figures unchanged.
 
 - Earlier measured, signed APK SHA-256: `d3d1dd38a82818147ae6346ffb74ed383db3c4d12ed54331c4468e8f5def03c0`.
 - Rebuilt unsigned APK SHA-256: `9042a647963bfc55c6c1af11c0056bdf1754880a3034a1a5f52aa106a28a0139`.
@@ -226,8 +227,9 @@ to `1.0`, with transition/window scales also `1.0` and the original system night
   Oklab components directly.
 - The endpoint scheme factory is byte-identical to its pre-slice version. No seed, authored palette,
   dependency, manifest, screen, component, ViewModel, container, resource, pipeline or web file changed.
-- The theme reads the already-existing container reduced-motion callback locally because the allowed
-  paths exclude the caller; no preference resolver or threading outside the theme was changed.
+- Following the slice 2 review, the theme accepts `reducedMotion: () -> Boolean = { false }` and
+  `IntentionalReadingApp` passes its existing callback. The theme has no Context/Application/DI lookup;
+  direct test hosts use the deterministic default. The production callback and its interpretation are unchanged.
 - A fixed light/dark progress axis gives cold starts the selected endpoint and lets an interrupted switch
   reverse from its current colour. No second content tree, layout animation, spring, pulse, or bounce is added.
 - The retained rung 1 animates direct token readers and Material roles together. Rung 2's delayed token
@@ -245,3 +247,74 @@ Measured, locally signed release APK SHA-256 values:
 - `022-static-release.apk`: `707a395605ec5f5f55147fca8d0f511af172df0a56f455956102f5d149fd8830`
 - `022-rung1-release.apk`: `d3d1dd38a82818147ae6346ffb74ed383db3c4d12ed54331c4468e8f5def03c0`
 - `022-rung2-release.apk`: `632ecf481b8762746c89d9fcb1b144ec92bf075446c55b090729a52260ceb739`
+
+## Slice 2 review follow-up — inject the reduced-motion preference
+
+The theme now takes `reducedMotion: () -> Boolean = { false }`, matching existing component signatures.
+`IntentionalReadingApp` supplies the same callback already resolved in its scope. Each theme composition
+invokes that callback to select the spec and the immediate endpoint; it no longer reaches through Context
+or Application into DI. The production flag source and runtime meaning are unchanged. Blend helpers,
+Boolean scheme factory, fixed light-to-dark axis and rung 1 dynamic local are unchanged. No release
+measurement was repeated and no recorded measurement figure was edited for this wiring change.
+
+The new `ThemeReducedMotionInstrumentedTest` exercises the actual theme composition rather than only the
+pure spec selector. Instrumentation is used because the existing plain JVM dependencies do not host an
+Android Compose UI/animation clock. No dependency was added. The test supplies a mutable fake callback,
+fixes `MotionDurationScale` at 1 in its test effect context, and manually controls the frame clock. It
+checks both directions, immediate endpoints when the fake returns true, intermediate token and scheme
+values when it returns false, and a false → true → false sequence in one composition. It inherits neither
+the Application callback nor the emulator animation scale.
+
+RED test commit: `7ed8d07f3c6b0978306bdc4d51e7a48394135248`.
+
+```text
+> Task :app:compileDebugAndroidTestKotlin FAILED
+ThemeReducedMotionInstrumentedTest.kt:43:17 No parameter with name 'reducedMotion' found.
+BUILD FAILED in 1s
+```
+
+After adding the injectable API, the flag wire was temporarily disconnected with
+`val reducedMotionEnabled = false`, leaving the committed test unchanged. This proved the behavioural
+assertion catches an ignored callback:
+
+```text
+java.lang.AssertionError: Injected reduced motion must select the endpoint immediately
+> Task :app:connectedDebugAndroidTest FAILED
+BUILD FAILED in 13s
+```
+
+The real callback invocation was then restored. All pre-existing test files remain byte-identical,
+including the original 55 and the corrected `AppearanceTransitionTest`. No assertion was changed to pass.
+
+All four gates passed with the required Java/Android environment exports:
+
+```text
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+BUILD SUCCESSFUL in 1s
+72 actionable tasks: 8 executed, 64 up-to-date
+
+./gradlew :app:connectedDebugAndroidTest
+Starting 20 tests on Pixel_10(AVD) - 17
+Finished 20 tests on Pixel_10(AVD) - 17
+BUILD SUCCESSFUL in 48s
+68 actionable tasks: 1 executed, 67 up-to-date
+```
+
+391 JVM tests and 20 instrumented tests, zero failures/errors/skips. The device count is the original 19
+plus the new wiring guard; both slice 1 guards remain green. `ThemeDerivationTest` remains unedited and
+passing. The full instrumented XML is retained locally at `/tmp/022-injection-full-suite.xml`.
+
+The new guard was also run alone with the device's `animator_duration_scale` explicitly set to `0`:
+
+```text
+Starting 1 tests on Pixel_10(AVD) - 17
+Finished 1 tests on Pixel_10(AVD) - 17
+BUILD SUCCESSFUL in 11s
+```
+
+It still passed, including its normal-motion intermediate-palette assertions. The test's injected flag and
+effect-context clock scale therefore do not inherit that device setting. The original device scale `1.0`
+was restored in `finally`. The diagnostic log is `/tmp/022-injection-scale-zero.log`.
+
+Local logs: `/tmp/022-injection-red.log`, `/tmp/022-injection-disconnected-red.log`,
+`/tmp/022-injection-green-gates.log`, `/tmp/022-injection-green-connected.log`.

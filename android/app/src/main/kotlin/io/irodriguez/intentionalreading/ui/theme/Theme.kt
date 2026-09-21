@@ -16,13 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
-import io.irodriguez.intentionalreading.IntentionalReadingApplication
 import io.irodriguez.intentionalreading.domain.model.Appearance
 
 @Composable
 fun IntentionalReadingTheme(
     appearance: Appearance,
+    reducedMotion: () -> Boolean = { false },
     content: @Composable () -> Unit,
 ) {
     val darkTheme = when (appearance) {
@@ -30,18 +29,17 @@ fun IntentionalReadingTheme(
         Appearance.DARK -> true
         Appearance.SYSTEM -> isSystemInDarkTheme()
     }
-    val application = LocalContext.current.applicationContext as? IntentionalReadingApplication
-    val reducedMotion = application?.container?.reducedMotion?.invoke() ?: false
+    val reducedMotionEnabled = reducedMotion()
     val targetFraction = if (darkTheme) 1f else 0f
     // A fixed light-to-dark axis also lets an interrupted switch reverse from its current colour.
     // animateFloatAsState starts at the first target, so a cold start never fades from another scheme.
     val animatedFraction by animateFloatAsState(
         targetValue = targetFraction,
-        animationSpec = appearanceTransitionSpec(reducedMotion),
+        animationSpec = appearanceTransitionSpec(reducedMotionEnabled),
         label = "appearance scheme",
     )
     // Snap in this composition too, without waiting for the animation's next frame.
-    val darkFraction = if (reducedMotion) targetFraction else animatedFraction
+    val darkFraction = if (reducedMotionEnabled) targetFraction else animatedFraction
     val tokens = blendTokens(lightTokens(), darkTokens(), darkFraction)
     val lightScheme = remember { intentionalReadingColorScheme(lightTokens(), darkTheme = false) }
     val darkScheme = remember { intentionalReadingColorScheme(darkTokens(), darkTheme = true) }
