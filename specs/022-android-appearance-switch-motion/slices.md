@@ -83,6 +83,39 @@ authored values.
   unit-tested at both endpoints and an interior point; the reduced-motion branch asserted; **and the
   release-build `gfxinfo` measurement from `design.md` D4 recorded in `evidence.md`** — with the fallback
   taken and recorded if the measurement demands it.
+- **Status: done.** RED `a61e302`, corrected RED `0975ea2`, GREEN `440d4f1`, owner decision `342e925`,
+  review follow-up `7ed8d07` + `82bc5e1`. 391 JVM and 20 instrumented tests green, re-run independently
+  with `--rerun-tasks`; `ThemeDerivationTest` and all 55 pre-existing test files byte-identical.
+
+  **Three things went wrong here and all three were design errors of mine, caught by the implementer
+  refusing to paper over them.** Worth reading before the next motion item:
+
+  1. **D3 offered two blend shapes as equivalent and they are not** (corrected in `7cc1e17`). `surfaceTint`
+     is the one role computed from different source tokens in each scheme, so blending tokens *then*
+     deriving pulls near-white `light.bg` into the tint mid-fade and overshoots both endpoints. Deriving
+     both schemes and blending *those* makes every role monotonic by construction.
+  2. **The RED tests then encoded the rejected shape**, so the corrected design could not compile against
+     them. Resolved by explicitly authorising two scoped test edits — the removed call sites and the one
+     assertion demanding the rejected calculation — while requiring the endpoint-bounds test to survive
+     and get stricter. `a61e302` was kept in history; `0975ea2` supersedes it and was verified red first.
+  3. **D4's ladder optimised a number without weighing what it looked like.** Rung 2 measured best on warm
+     runs but splits the transition: **17 files read `LocalIntentionalReadingTokens` directly**, so the
+     card, bottom bar, chips and Settings sheet would hard-cut at 300ms behind a fading backdrop. The
+     owner chose rung 1 on 2026-09-20 — whole-surface fade, dynamic local. Rung 1 and rung 2 were
+     statistically indistinguishable on first-switch anyway (9/72 against 10/74).
+
+  **The fade's residual cost is first-use only** and is characterised in `evidence.md`: 12.50% → 5.13% →
+  2.56% janky across successive switches, worst frame 48 → 31 → 21 ms, on an unoptimised release build.
+  **R8 and a baseline profile are both still disabled and are the untried levers**; neither is in scope
+  here. Do not reopen the fade decision on the 12.5% figure alone.
+
+  The slice review found one thing: `Theme.kt` resolved `reducedMotion` by casting `LocalContext` to the
+  Application and reading the DI container, which inverted the layering, made §79.3's required assertion
+  impossible to write, and silently made six existing instrumented layout tests depend on the emulator's
+  `animator_duration_scale` — `execution-model.md` §8.3 again. Fixed by injecting
+  `reducedMotion: () -> Boolean = { false }`, matching `SettingsSheet.kt:78`, `DiscoverScreen.kt:52` and
+  `ArticleCard.kt:69` and item 010's D4. The new guard establishes its own value and passes at animation
+  scale both `1.0` and `0`.
 
 ---
 
