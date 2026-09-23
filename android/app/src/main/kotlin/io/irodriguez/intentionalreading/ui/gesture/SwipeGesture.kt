@@ -16,6 +16,11 @@ object SwipeGesture {
     // docs/v1/06-ui-ux.md §44.2 — 023 D1 uses item 021's 300ms Emphasized motion.
     const val EXIT_DURATION_MS = 300
 
+    // docs/v1/06-ui-ux.md §79.5 — the replacement rises and fades into place over 300ms.
+    const val ENTRANCE_DURATION_MS = 300
+    // docs/v1/06-ui-ux.md §79.5 — 023 D3 starts the replacement 12dp below its resting position.
+    const val ENTRANCE_RISE_DP = 12f
+
     // docs/v1/06-ui-ux.md §44.2 — Material 3 Emphasized, copied from item 021's destination transition.
     internal object ExitEmphasizedEasing : Easing {
         // Defer the Android Path until animation; selecting a spec needs no Android runtime.
