@@ -1,5 +1,8 @@
 package io.irodriguez.intentionalreading.ui.gesture
 
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.PathEasing
+import androidx.compose.ui.graphics.Path
 import kotlin.math.abs
 
 object SwipeGesture {
@@ -10,7 +13,24 @@ object SwipeGesture {
     const val MAX_ROTATION_DEGREES = 4.5f
     const val EXIT_FRACTION = 0.82f
     const val EXIT_MINIMUM_DP = 620f
-    const val EXIT_DURATION_MS = 280
+    // docs/v1/06-ui-ux.md §44.2 — 023 D1 uses item 021's 300ms Emphasized motion.
+    const val EXIT_DURATION_MS = 300
+
+    // docs/v1/06-ui-ux.md §44.2 — Material 3 Emphasized, copied from item 021's destination transition.
+    internal object ExitEmphasizedEasing : Easing {
+        // Defer the Android Path until animation; selecting a spec needs no Android runtime.
+        private val pathEasing by lazy {
+            PathEasing(
+                Path().apply {
+                    moveTo(0f, 0f)
+                    cubicTo(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f)
+                    cubicTo(0.208333f, 0.82f, 0.25f, 1f, 1f, 1f)
+                },
+            )
+        }
+
+        override fun transform(fraction: Float): Float = pathEasing.transform(fraction)
+    }
 
     enum class Intent {
         PENDING,
@@ -48,6 +68,10 @@ object SwipeGesture {
 
         var exitTranslationX: Float = 0f
             private set
+
+        // docs/v1/06-ui-ux.md §79.5 / §48 — fade only a departing card with motion enabled.
+        val alpha: Float
+            get() = if (reducedMotion || exitTranslationX == 0f) 1f else 0f
 
         var commitInFlight: Boolean = false
             private set

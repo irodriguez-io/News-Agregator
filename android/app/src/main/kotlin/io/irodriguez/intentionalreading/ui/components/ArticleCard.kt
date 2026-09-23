@@ -3,7 +3,7 @@ package io.irodriguez.intentionalreading.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -99,15 +99,9 @@ fun ArticleCard(
             ),
             translationX = Animatable(0f),
             rotationDegrees = Animatable(0f),
+            alpha = Animatable(1f),
             swipeCue = mutableStateOf<SwipeGesture.Action?>(null),
-            motionSpec = tween(
-                durationMillis = if (reducedMotionEnabled) {
-                    0
-                } else {
-                    SwipeGesture.EXIT_DURATION_MS
-                },
-                easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f),
-            ),
+            motionSpec = articleSwipeMotionSpec(reducedMotionEnabled),
         )
     }
     val restoreScope = rememberCoroutineScope()
@@ -178,6 +172,7 @@ fun ArticleCard(
             .graphicsLayer {
                 this.translationX = gestureValues.translationX.value
                 rotationZ = gestureValues.rotationDegrees.value
+                alpha = gestureValues.alpha.value
             }
             .shadow(
                 elevation = DeckCardShadowElevation,
@@ -255,11 +250,18 @@ fun ArticleCard(
     }
 }
 
+internal fun articleSwipeMotionSpec(reducedMotion: Boolean): AnimationSpec<Float> =
+    if (reducedMotion) snap() else tween(
+        durationMillis = SwipeGesture.EXIT_DURATION_MS,
+        easing = SwipeGesture.ExitEmphasizedEasing,
+    )
+
 private class ArticleGestureValues(
     val article: Article,
     val gestureState: SwipeGesture.State,
     val translationX: Animatable<Float, AnimationVector1D>,
     val rotationDegrees: Animatable<Float, AnimationVector1D>,
+    val alpha: Animatable<Float, AnimationVector1D>,
     val swipeCue: MutableState<SwipeGesture.Action?>,
     val motionSpec: AnimationSpec<Float>,
 )
@@ -267,12 +269,14 @@ private class ArticleGestureValues(
 private suspend fun ArticleGestureValues.snapToGestureState() {
     translationX.snapTo(gestureState.translationX)
     rotationDegrees.snapTo(gestureState.rotationDegrees)
+    alpha.snapTo(gestureState.alpha)
 }
 
 private suspend fun ArticleGestureValues.animateToGestureState() {
     coroutineScope {
         launch { translationX.animateTo(gestureState.translationX, motionSpec) }
         launch { rotationDegrees.animateTo(gestureState.rotationDegrees, motionSpec) }
+        launch { alpha.animateTo(gestureState.alpha, motionSpec) }
     }
 }
 
