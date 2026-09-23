@@ -1,16 +1,27 @@
 package io.irodriguez.intentionalreading
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -24,6 +35,8 @@ import io.irodriguez.intentionalreading.domain.model.ArticleSource
 import io.irodriguez.intentionalreading.domain.model.ArticleTag
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.ui.components.ArticleCard
+import io.irodriguez.intentionalreading.ui.gesture.SwipeGesture
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverLayoutTags
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverScreen
@@ -40,6 +53,155 @@ import org.junit.runner.RunWith
 class DiscoverScreenLayoutTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Test
+    fun theArrivingCardAcceptsAndTracksASwipeWhileItsEntranceIsRunning() {
+        // Given a committed departure and an arriving article still rising and fading.
+        val host = startReplacementEntrance()
+        val arriving = composeTestRule.onNodeWithText(host.arriving.title)
+        val before = arriving.fetchSemanticsNode().positionInRoot
+        val firstTravel = host.intentSlopPx + 1f
+        val secondTravel = host.density * 4f
+
+        // When the reader starts moving immediately, without advancing the entrance clock.
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(firstTravel, 0f))
+        }
+        composeTestRule.waitForIdle()
+
+        // Then the arriving article follows the first pointer movement, and the next one too.
+        val firstPosition = arriving.fetchSemanticsNode().positionInRoot
+        assertTrue("The arriving article must track the first movement", firstPosition.x > before.x + firstTravel / 2f)
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            moveBy(Offset(secondTravel, 0f))
+        }
+        composeTestRule.waitForIdle()
+        val secondPosition = arriving.fetchSemanticsNode().positionInRoot
+        assertTrue("The arriving article must keep following the pointer", secondPosition.x > firstPosition.x + secondTravel / 2f)
+        assertEquals(host.entranceObservedAt, composeTestRule.mainClock.currentTime)
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+        composeTestRule.onNodeWithText(host.leaving.title).assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput { cancel() }
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun aSwipeCommittedDuringAnEntranceIsAttributedToTheArrivingArticle() {
+        // Given the old article has committed and the replacement entrance is still running.
+        val host = startReplacementEntrance()
+
+        // When the reader crosses the threshold and releases before that entrance finishes.
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(-(host.thresholdPx + host.intentSlopPx + 1f), 0f))
+            up()
+        }
+        composeTestRule.waitForIdle()
+        assertEquals(host.entranceObservedAt, composeTestRule.mainClock.currentTime)
+        assertEquals("The arriving action must still wait for its exit", 1, host.commits.size)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+
+        // Then the action belongs to the arriving article, exactly once, after the departure's action.
+        assertEquals(
+            listOf(host.leaving.id to ArticleAction.SAVE, host.arriving.id to ArticleAction.DISMISS),
+            host.commits,
+        )
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    private fun startReplacementEntrance(): EntranceHost {
+        val template = longDatasetCardState().article.copy(excerpt = "", tags = emptyList())
+        val leaving = template.copy(id = "leaving", title = "Leaving article")
+        val arriving = template.copy(id = "arriving", title = "Arriving article")
+        val host = EntranceHost(leaving, arriving, mutableStateOf(leaving))
+        composeTestRule.setContent {
+            DeviceConfigurationOverride(
+                DeviceConfigurationOverride.ForcedSize(DpSize(360.dp, 640.dp)),
+            ) {
+                host.density = LocalDensity.current.density
+                host.intentSlopPx = with(LocalDensity.current) { SwipeGesture.INTENT_SLOP_DP.dp.toPx() }
+                host.thresholdPx = with(LocalDensity.current) { SwipeGesture.THRESHOLD_DP.dp.toPx() }
+                IntentionalReadingTheme(appearance = Appearance.LIGHT) {
+                    Box(
+                        Modifier.fillMaxSize().background(Color.Magenta).testTag(ENTRANCE_ROOT_TAG),
+                    ) {
+                        Box(Modifier.padding(24.dp)) {
+                            ArticleCard(
+                                state = longDatasetCardState().copy(article = host.current.value),
+                                onDismiss = {},
+                                onReadArticle = {},
+                                onSave = {},
+                                onMarkRead = {},
+                                onSwipeCommit = { article, action, complete ->
+                                    host.commits += article.id to action
+                                    complete(true)
+                                    if (article.id == leaving.id) host.current.value = arriving
+                                },
+                                reducedMotion = { false },
+                                modifier = Modifier.testTag(ENTRANCE_CARD_TAG),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        val restingTop = composeTestRule.onNodeWithText(leaving.title).fetchSemanticsNode().positionInRoot.y
+        val opaquePixel = entranceFillPixel(host)
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(host.thresholdPx + host.intentSlopPx + 1f, 0f))
+            up()
+        }
+        // Stop on the frame that processes the state action; never sleep through the arrival.
+        var frames = 0
+        while (host.current.value.id != arriving.id && frames < 25) {
+            composeTestRule.mainClock.advanceTimeByFrame()
+            composeTestRule.waitForIdle()
+            frames++
+        }
+        assertEquals("The departure must process the old article", arriving.id, host.current.value.id)
+        composeTestRule.mainClock.advanceTimeBy(64)
+        composeTestRule.waitForIdle()
+        host.entranceObservedAt = composeTestRule.mainClock.currentTime
+
+        // Establish the actual entrance, so the gesture assertions cannot pass with no animation.
+        val arrivingTop = composeTestRule.onNodeWithText(arriving.title).fetchSemanticsNode().positionInRoot.y
+        assertTrue(
+            "The arriving article must still be below rest during its entrance: rest=$restingTop, arriving=$arrivingTop",
+            arrivingTop > restingTop + 0.5f && arrivingTop < restingTop + 12f * host.density,
+        )
+        val entrancePixel = entranceFillPixel(host)
+        assertTrue("The arriving card must still be fading", colorDistance(opaquePixel, entrancePixel) > 0.01f)
+        assertTrue("The arriving card must already be partly visible", colorDistance(Color.Magenta, entrancePixel) > 0.01f)
+        return host
+    }
+
+    private fun entranceFillPixel(host: EntranceHost): Color {
+        // The fixed host owns this geometry: centre width, below the card edge and above its content.
+        val pixels = composeTestRule.onNodeWithTag(ENTRANCE_ROOT_TAG).captureToImage().toPixelMap()
+        return pixels[(180f * host.density).toInt(), (48f * host.density).toInt()]
+    }
+
+    private fun colorDistance(first: Color, second: Color): Float =
+        kotlin.math.abs(first.red - second.red) + kotlin.math.abs(first.green - second.green) +
+            kotlin.math.abs(first.blue - second.blue)
+
+    private data class EntranceHost(
+        val leaving: Article,
+        val arriving: Article,
+        val current: MutableState<Article>,
+        val commits: MutableList<Pair<String, ArticleAction>> = mutableListOf(),
+        var density: Float = 0f,
+        var intentSlopPx: Float = 0f,
+        var thresholdPx: Float = 0f,
+        var entranceObservedAt: Long = 0L,
+    )
 
     @Test
     fun mastheadCardAndOperationalBlockKeepAmendmentSevenOrder() {
@@ -204,6 +366,8 @@ class DiscoverScreenLayoutTest {
     )
 
     private companion object {
+        const val ENTRANCE_ROOT_TAG = "card-entrance-root"
+        const val ENTRANCE_CARD_TAG = "card-entrance"
         val ORDERING_VIEWPORT_HEIGHT = 640.dp
         val HANDSET_360_CONTENT_HEIGHT = 444.dp
         val HANDSET_411_CONTENT_HEIGHT = 693.dp

@@ -2,6 +2,7 @@ package io.irodriguez.intentionalreading.ui.components
 
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.VectorConverter
@@ -20,6 +21,69 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class ArticleCardTest {
+    @Test
+    fun `replacement and restored heads share one entrance without changing gesture ownership`() {
+        // Given either replacement or undo presents a different head article.
+        val card = functionSource("ArticleCard")
+        val surface = articleCardSurface()
+
+        // When the existing six-member key rebuilds the gesture values, it owns the entrance too.
+        assertTrue(card.contains("entranceProgress = Animatable(0f)"), "the head must own entrance progress")
+        assertTrue(
+            Regex("""remember\(\s*article.id,\s*thresholdPx,\s*intentSlopPx,\s*viewportWidthPx,\s*exitMinimumPx,\s*reducedMotionEnabled,?\s*\)""")
+                .containsMatchIn(card),
+        )
+        assertTrue(card.contains("LaunchedEffect(gestureValues)"))
+        assertTrue(card.contains("gestureValues.entranceProgress.animateTo(1f, articleEntranceMotionSpec(reducedMotionEnabled))"))
+        assertTrue(card.contains("articleEntranceRiseDp(reducedMotionEnabled).dp.toPx()"))
+
+        // Then the same layer combines the entrance with the frozen exit, including frame-zero reduced motion.
+        assertTrue(surface.contains("val entranceProgress = if (reducedMotionEnabled) 1f else gestureValues.entranceProgress.value"))
+        assertTrue(surface.contains("alpha = gestureValues.alpha.value * entranceProgress"))
+        assertTrue(surface.contains("translationY = entranceRisePx * (1f - entranceProgress)"))
+        assertTrue(surface.contains("this.translationX = gestureValues.translationX.value"))
+        assertTrue(surface.contains("rotationZ = gestureValues.rotationDegrees.value"))
+        assertTrue(surface.contains(".pointerInput(Unit)"))
+        assertTrue(surface.contains("val gesture = currentGestureValues"))
+    }
+
+    @Test
+    fun `the replacement rises and fades into place on the selected decelerated motion`() {
+        // Given normal motion, when the replacement selects its entrance.
+        val selected = assertIs<TweenSpec<Float>>(articleEntranceMotionSpec(reducedMotion = false))
+
+        // Then it selects §79.5's duration and the existing §79.2 decelerated curve.
+        assertEquals(300, selected.durationMillis)
+        assertEquals(0, selected.delay)
+        assertSame(LinearOutSlowInEasing, selected.easing)
+        val rise = articleEntranceRiseDp(reducedMotion = false)
+        assertEquals(12f, rise)
+        val spec = selected.vectorize(Float.VectorConverter)
+        val start = AnimationVector1D(0f)
+        val end = AnimationVector1D(1f)
+        val velocity = AnimationVector1D(0f)
+        assertEquals(300_000_000L, spec.getDurationNanos(start, end, velocity))
+        assertEquals(0f, spec.getValueFromNanos(0L, start, end, velocity).value)
+        val midway = spec.getValueFromNanos(150_000_000L, start, end, velocity).value
+        assertTrue(midway > 0.5f && midway < 1f, "the arrival must decelerate toward rest")
+        assertEquals(1f, spec.getValueFromNanos(300_000_000L, start, end, velocity).value)
+    }
+
+    @Test
+    fun `a reduced-motion preference removes the entrance fade and rise immediately`() {
+        // Given reduced motion, when the replacement selects its entrance.
+        val selected = assertIs<SnapSpec<Float>>(articleEntranceMotionSpec(reducedMotion = true))
+        val spec = selected.vectorize(Float.VectorConverter)
+        val start = AnimationVector1D(0f)
+        val end = AnimationVector1D(1f)
+        val velocity = AnimationVector1D(0f)
+
+        // Then both the selected travel and animation time vanish, with full opacity at time zero.
+        assertEquals(0f, articleEntranceRiseDp(reducedMotion = true))
+        assertEquals(0L, spec.getDurationNanos(start, end, velocity))
+        assertEquals(1f, spec.getValueFromNanos(0L, start, end, velocity).value)
+    }
+
     @Test
     fun `the exit uses Android's curve not the browser's`() {
         // Given normal motion, when the card selects its swipe animation spec.
