@@ -12,7 +12,13 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-08-31, at **wave D's close**. All four items merged; the backlog holds only wave E.
+Last reviewed: 2026-09-22, with **wave E implemented and its close outstanding**. Items 017–022 are all
+merged; the backlog holds item **023** and the wave-close work itself.
+
+**On PR numbers.** The repository moved from `~/Documents/VS Code/` to `~/Documents/Repos/` and its remote
+changed to `irodriguez-io` on 2026-09-18, which restarted PR numbering at #1. PRs #30–#34 and PRs #1–#4
+therefore both exist and are not out of order — anything numbered below #5 is later than anything numbered
+above #29.
 
 ---
 
@@ -35,6 +41,13 @@ Last reviewed: 2026-08-31, at **wave D's close**. All four items merged; the bac
 | 012 | The Discover card leads the viewport | Android | PR #21, 2026-08-31 |
 | 014 | The undo offer follows the reversible action, not the gesture | Android | PR #22, 2026-08-31 |
 | 016 | Widen what is reversible | Android | PR #24, 2026-08-31 |
+| 017 | M3 design tokens and theme, with a derived dark scheme | Android | PR #30, 2026-09-01 |
+| 018 | M3 shared components — app bar, bottom bar, chips, buttons | Android | PR #31, 2026-09-01 |
+| — | Instrumented tests in CI (not a numbered item) | Android | PR #32, 2026-09-01 |
+| 019 | M3 Discover — deck card, truncation rules | Android | PR #33, 2026-09-02 |
+| 020 | M3 Read Later and History — Queue Row, StatBand, empty state | Android | PR #34, 2026-09-02 |
+| 021 | M3 motion — directional tab slide, modal sheet reveal | Android | PR #3, 2026-09-19 |
+| 022 | The appearance switch changes colour, not the screen | Android | PR #4, 2026-09-20 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -42,26 +55,32 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-**Five items in one planned wave.** Wave D closed on 2026-08-31 and **the backlog now holds only wave
-E** — items 017–021, the Material 3 Expressive redesign. Every Android parity gap the shipped items
-deferred was closed by 006, and every undo defect the owner found by using the app was closed by wave D.
+**One item, and a wave close.** Wave E's five items are implemented and merged, and so is **022**, the
+first defect the owner's wave-E walkthrough found. The queue holds **023** — the second defect from that
+same walkthrough — and the wave-close bookkeeping 021's evidence itemised.
 
-**017–021** are wave E's decomposition, allocated in `waves/wave-e.md`. **Imagery is out of scope by owner
-decision** — `ArticleDataset v1` has no image field and adding one is a frozen-contract change.
+**Wave E's close is outstanding, and it is three distinct pieces of work.** `waves/wave-e-note.md` is
+unwritten, this document's wave row is the only record that the wave finished, and **the thirteen legacy
+token names item 017 kept alive for the wave's duration have not been retired** — they are still the first
+thirteen fields of `ui/theme/Tokens.kt`. That debt was scoped to the wave and came due at its close.
+*(021 `evidence.md`, §Wave-close work that outlives this item.)*
 
-**Item 019 inherits item 012's 360 dp finding.** 012's first scenario demanded the Discover card's full
-action rail be visible at 360 dp, which no header arrangement can deliver because card height is unbounded
-in the article title. The measurements and the limitation are in
-`specs/012-android-discover-card-first/spec.md` §1.4.
+**The walkthrough itself was performed**, on a signed release build, on 2026-09-20. It found two defects,
+both motion and both on Android: the appearance flash (**022**, shipped) and the card swipe exit and
+entrance (**023**, designed, below). That is the fourth wave running in which the owner using the app found
+the defects no gate did — see `waves/wave-c-note.md` and `waves/wave-d-note.md` for the same headline.
 
-**Both wave E checkpoints are closed.** The palette and the derived dark scheme were approved on
-2026-09-01 (ten seeds, recorded in `06-ui-ux.md` §77.4/§77.5) and the type families ship as bundled
-`res/font/` assets, with `08-security-dependencies.md` §7 scoped by surface to match. **Amendment 9 and the
-second edition of `06-ui-ux.md` are merged**, and all five items are designed.
+**Item 012's 360 dp finding carried into 019 and still stands after it.** The Discover card's full action
+rail cannot be visible at 360 dp under any header arrangement, because card height is unbounded in the
+article title. The measurements and the limitation are in
+`specs/012-android-discover-card-first/spec.md` §1.4. The redesign did not change that and was not expected
+to.
 
-**Waves A, B, C and D are done.** `waves/wave-b-note.md` records what wave B cost and
-`waves/wave-c-note.md` what wave C cost. Their shared headline lesson, now three waves running: the most
-valuable defects were found by the owner using the app — none by reading diffs, and none by any gate.
+**All five waves are done.** `waves/wave-b-note.md` records what wave B cost and `waves/wave-c-note.md`
+what wave C cost; **wave E's note is the piece of the close that is still missing.** Their shared headline
+lesson, now four waves running: the most valuable defects were found by the owner using the app — none by
+reading diffs, and none by any gate. Wave E is the clearest case yet, because it ran with the instrumented
+suite in CI for the first time and the two defects it shipped were still found by hand.
 
 | Wave | Items | Runs after | Brief |
 |---|---|---|---|
@@ -69,7 +88,12 @@ valuable defects were found by the owner using the app — none by reading diffs
 | ~~B~~ | ~~008 Swipe · 009 Import/export~~ | **merged 2026-08-26** | `waves/wave-b.md`, `waves/wave-b-note.md` |
 | ~~C~~ | ~~005 Learning · 006 Diversity~~ | **merged 2026-08-31** | `waves/wave-c.md`, `waves/wave-c-note.md` |
 | ~~D~~ | ~~015 Undo race · 012 Card first · 014 Raise the offer · 016 Widen what is reversible~~ | **merged 2026-08-31** | `waves/wave-d.md`, `waves/wave-d-note.md`, `waves/wave-d-amendments.md` |
-| E | ~~017 Tokens~~ · ~~018 Components~~ · ~~019 Discover~~ · ~~020 Read Later + History~~ · ~~021 Motion~~ | **all five implemented — 017–020 merged, 021 in review; wave close pending** | `waves/wave-e.md`, `waves/wave-e-amendment.md` |
+| ~~E~~ | ~~017 Tokens · 018 Components · 019 Discover · 020 Read Later + History · 021 Motion~~ | **all five merged 2026-09-01 → 2026-09-19; wave-close work still open** | `waves/wave-e.md`, `waves/wave-e-amendment.md` |
+
+**Items 022 and 023 run outside the waves**, as unplanned defect items cut from `main` after wave E's
+walkthrough. Both are Android motion; neither collides with the other — 022's surface is
+`AndroidManifest.xml`, `ui/theme/Theme.kt` and `ui/theme/Tokens.kt`, and 023's is
+`ui/components/ArticleCard.kt`, `ui/gesture/SwipeGesture.kt` and `ui/screens/discover/**`.
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
@@ -237,7 +261,7 @@ little left for it to correct.
 
 *Evidence:* `specs/012-android-discover-card-first/evidence.md`.
 
-### 017–021 — Material 3 Expressive redesign  ·  *wave E*
+### ~~017–021 — Material 3 Expressive redesign~~  ·  *wave E*  ·  **Shipped**
 
 The Android client redesigned onto **Material 3 Expressive**: new palette, Playfair Display for editorial
 type against Roboto Flex for functional, 24dp card radii, pill chips, an expressive bottom bar, and
@@ -272,7 +296,77 @@ Gradle dependency, rather than `androidx.compose.ui.text.googlefonts`, which is 
 in kind to Amendment 6 than to the narrow amendments 012 and 016 need. Five items each amending the same
 document on five branches is a merge nobody should be asked to review.
 
+**All five shipped.** 297 → **391** JVM tests across the wave, and the instrumented suite grew 4 → **20**.
+Both checkpoints held: the palette is ten seeds derived in Oklch with the dark scheme derived from the same
+seeds (`06-ui-ux.md` §77.4/§77.5), and both type families ship as bundled `res/font/` assets with no Gradle
+dependency. **No behaviour changed** — wave D's undo tests passed unedited through all five items.
+
+**The wave left three things behind, and they are wave E's close, not new items:** `waves/wave-e-note.md`,
+the thirteen legacy token names, and ~160 `dp` literals still sitting in the components that 017 gave a
+scale to move to. See the Queued preamble above and the Debt section below.
+
 *Raised by the owner, 2026-08-31. Brief: `waves/wave-e.md`.*
+*Evidence:* `specs/017-…/evidence.md` through `specs/021-android-m3-motion/evidence.md`.
+
+### ~~022 — The appearance switch changes colour, not the screen~~  ·  **Shipped**
+
+Choosing Light, Dark or System made the whole screen flash white or black. In the owner's words, reporting
+it on 2026-09-20: *"the screen flickers then changes color scheme. The UX feels like an unfinished
+product."*
+
+**The cause was a manifest omission, not a theming bug.** `MainActivity` declared no
+`android:configChanges`, so `UiModeManager.setApplicationNightMode(...)` recreated the Activity and the
+flash was that recreation. Nothing in `ui/theme/Theme.kt` was wrong.
+
+**Item 010's design.md D5 predicted this exactly and wrote down the remedy**, declining it on scope rather
+than on merit — *"If D2's fallback is ever taken, this is the next thing to try, and the reasoning above is
+why it is written down."* This item took D5's own recommendation and paid its stated cost. It authored
+**Amendment 10**, which specifies the transition §79 did not cover: a 300 ms cross-fade of the resolved
+colour scheme on M3 Standard easing, colour only, immediate under reduced motion.
+
+385 → 391 JVM tests, 17 → 20 instrumented.
+
+**It also left an open question, recorded rather than written off:** the hosted instrumented job failed
+twice on a head whose app code was byte-identical to a passing one. The case that it is environmental —
+emulator boot warnings, `adb` retries, seven prior consecutive successes — is strong but not closed, and
+both failures belong to the same workflow run, so they are not two independent samples. It belongs in
+verification debt if it recurs.
+
+*Found by the owner's wave-E walkthrough, 2026-09-20.*
+*Evidence:* `specs/022-android-appearance-switch-motion/evidence.md`.
+
+### 023 — The card leaves, and the next one arrives  ·  **Designed, next**
+
+Reported 2026-09-20 in the same walkthrough: a swiped card *"moves horizontally and when it reaches the
+border suddenly disappears and a new card appears in the center of Discovery, without any transition."*
+
+**The first diagnosis was wrong and is recorded so it is not re-derived.** The exit *distance* is not the
+fault — `js/ui/swipe.js:108`'s `Math.max(window.innerWidth * 0.82, 620)` and item 008's Android port agree
+closely in viewport-relative terms. Three other things are:
+
+1. **The Android exit runs the browser's curve.** `06-ui-ux.md` §80 records that §44 was split on curve only
+   for the second edition; §44.2 requires M3 Emphasized easing on Android, and `ArticleCard.kt:103-110` uses
+   §44.1's `CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)` at 280 ms. **A compliance gap needing no amendment** —
+   item 008 shipped before the second edition and wave E's collision matrix gave motion to 021, whose scope
+   was destinations and the Settings sheet. The card fell between the two.
+2. **The card never fades.** The browser animates to `opacity: 0` alongside translate and rotate; Android's
+   `graphicsLayer` sets `translationX` and `rotationZ` only. That is most of *"suddenly disappears"*.
+3. **Nothing specifies the entrance, on either surface.** §43 step 3 says only *"the next eligible card
+   appears"*. Authoring it is new motion where the specification is silent, which `AGENTS.md` forbids
+   filling in from an implementation — so this item authors **Amendment 11**. The owner chose a
+   rise-and-fade in place, with no lateral movement, on 2026-09-20.
+
+**This is the fourth item in a row on the swipe surface**, after 008, 013 and 015, and that governs the
+design. Two instrumented guards exist because of those items — `ArticleCardGestureTest` and
+`ArticleCardScrollGestureTest` — and both must survive untouched. The settled behaviour that the card
+accepts a swipe from the first frame it is on screen is load-bearing: §79.5 states explicitly that the
+entrance does not gate input, including while the card is still transparent.
+
+**Rebased onto `main` at `22ef12d` on 2026-09-22**, resolving the two expected conflicts in `docs/v1/**`
+additively — Amendment 10 and Amendment 11 both stand, and §79.4 and §79.5 both stand. Its code citations
+were re-verified against post-022 `main` and still resolve exactly; 022 never touched `ArticleCard.kt`.
+
+*Found by the owner's wave-E walkthrough, 2026-09-20. Branch: `feat/023-android-card-swipe-motion`.*
 
 ---
 
@@ -282,9 +376,12 @@ Deliberate non-goals, recorded so they are not rediscovered as oversights.
 
 - **Background and periodic refresh.** No `WorkManager`, `JobScheduler`, alarms, or push. The app fetches
   on cold start and on request, and never while closed. (*004 §3*)
-- **Instrumented tests in CI.** They need an emulator; the path-filtered CI job stays emulator-free and
-  runs the JVM suite plus `assembleDebug`. `MainActivityLaunchSmokeTest` is the local, on-demand startup
-  guard. Decision, not oversight. (*002 slice 4*)
+- ~~**Instrumented tests in CI.**~~ **Un-parked and shipped, PR #32, 2026-09-01.** `android.yml` now runs
+  `connectedDebugAndroidTest` on a `reactivecircus/android-emulator-runner` emulator in a second job, with
+  KVM enabled and test reports uploaded; the first job still runs the JVM suite, `assembleDebug` and
+  `assembleDebugAndroidTest`. 002 slice 4's decision stood for eleven items and was reversed on the
+  exposure 013 documented. Kept here, struck through, because it was a recorded non-goal and reversing one
+  is worth seeing.
 - **A second dataset endpoint.** One compile-time HTTPS URL: no user-editable address, no environment
   switching, no mirror, no publisher fetching (`08-security-dependencies.md` §52). (*004 §3*)
 - **Delta or partial dataset updates.** Whole dataset or nothing. (*004 §3*)
@@ -308,6 +405,17 @@ Not items. Things a future item should absorb when it touches the same ground.
   likelier to be a *deletion* than a merge. If D12 goes, the window 013 fixed stops occurring at all, and
   013's fix becomes belt-and-braces rather than the only thing holding. Do not read that as licence to
   revert it. (*008 D11/D12; `specs/013-android-undo-gesture-reset/investigation/step0-undo-window.md`*)
+- **The thirteen legacy token names are still the first thirteen fields of `ui/theme/Tokens.kt`.** Item 017
+  kept them alive deliberately — 17 files held 205 call sites at the time — and scoped that to wave E's
+  duration. For as long as they remain, two names exist for several colours. **This is wave-close work that
+  came due**, not open-ended debt; it is listed here so it survives the close if the close slips.
+  (*017 `spec.md` §6; 021 `evidence.md`*)
+- **~160 `dp` literals remain in the components.** Item 017 gave them a scale to move to and deliberately
+  did not move them. Absorb them per file, when something next edits that file. (*017 `spec.md` §6*)
+- **A release-signed APK on the emulator makes every later `connectedDebugAndroidTest` fail** with
+  `INSTALL_FAILED_UPDATE_INCOMPATIBLE` — debug and release carry different certificates. It cost one
+  implementer session a wasted run during 022. **Uninstall the package after any release-build
+  walkthrough.** (*022 `evidence.md`*)
 - **The recovery notice still says *"Reset local data in Settings to recover."*** Import is now also a
   recovery path and the copy does not say so. Left alone deliberately: changing it means authoring copy
   the specification does not provide. (*009 §Outstanding*)
@@ -329,6 +437,11 @@ Not items. Things a future item should absorb when it touches the same ground.
 ---
 
 ## Verification debt
+
+**Wave E was walked through on 2026-09-20, on a signed release build, and 022 was walked through after
+it.** That pass is what produced items 022 and 023; its record is in
+`specs/022-android-appearance-switch-motion/evidence.md`. Wave E's five items have no *individual*
+walkthroughs — the wave was walked as a whole, which is what a redesign wave admits.
 
 Owner walkthroughs — `spec.md` §5 in each item — performed for **003**, **004**, wave A's **010**, and
 wave B's **008** and **009**, all driven over `adb` by the orchestrator and recorded in each item's
@@ -364,17 +477,36 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   controlled). Reported as "smooth and nice" during testing, but that was before the landing defects were
   fixed, so it is worth one more pass. **Still open after 013**, and now more clearly worth doing: 013
   changed when a gesture is *adopted*, not how it animates, but it is the third item in a row to touch
-  the swipe surface.
+  the swipe surface. **Item 023 is the first item that changes how it animates**, and answering this is
+  part of its walkthrough rather than a separate pass.
 
 **Added by 013, 2026-08-28:**
 
-- **The instrumented suite is now three classes and four tests, and still out of CI** (see Parked, *002
-  slice 4*). `MainActivityLaunchSmokeTest`, `ArticleCardGestureTest` (gesture across a head-article
-  change) and `ArticleCardScrollGestureTest` (two tests: a horizontal swipe is heard through a running
-  ancestor scroll; a vertical drag still belongs to the scroll). **A local
-  `connectedDebugAndroidTest` run is the only thing that exercises any of them** — nothing in CI will
-  notice if all four break. That is a deliberate decision, but the exposure grows with each item that
-  parks a guard here, and 013's whole history is defects a green JVM gate could not see.
+- ~~**The instrumented suite is now three classes and four tests, and still out of CI.**~~ **Closed
+  2026-09-01 by PR #32.** The exposure this entry described — a local `connectedDebugAndroidTest` run being
+  the only thing that exercised any guard — is gone; `android.yml` runs the suite on an emulator. The suite
+  has since grown 4 → **20** tests. The original reasoning is kept above, struck through, because it is
+  the argument that eventually won.
+
+**Added by wave E's close, 2026-09-22:**
+
+- **The hosted instrumented job failed twice on a head whose app code was byte-identical to a passing
+  one**, during 022. The environmental case is strong — emulator boot warnings, three `adb` exit-code-1
+  retries, seven prior consecutive successes on `android.yml` — but not closed, and both failures belong to
+  the same workflow run, so they are **not two independent samples**. Removing the theme animation was not
+  shown to fix anything and was not attempted. **Recorded as an open question. If it recurs, it becomes an
+  item.** (*022 `evidence.md`*)
+- **The three wave-E screens have no individual walkthrough record**, only the whole-wave pass of
+  2026-09-20 that found 022 and 023. Once 023 lands, the swipe surface will have changed for the fifth
+  time and a Discover-specific pass is worth one sitting.
+- **Discover's triage controls lost their visible text labels in item 019, and that is an open owner
+  decision, not a finding.** *"Not interested"* and *"Save for later"* now travel only as
+  `accessibleName` content descriptions, so a **sighted** reader sees bare `←` and `→`. §76.5 authorises
+  icon-only controls carrying accessible names and those names are present and asserted; §35's *"must not
+  replace the labelled semantic understanding of the action"* reads against it. It is also **plausibly
+  load-bearing for the fold fix** — the labels cost vertical space at exactly the width that was tight, and
+  *whether the rail would still fit at 360 dp with them restored is unmeasured.* 019 raised it for the
+  owner rather than deciding it at review. (*019 `evidence.md` §7*)
 
 - **A residual Undo-window measurement, recorded as a measurement and not as intended behaviour.** After
   013's fix every delay from 0.05 s to 1.2 s commits against the restored article. At a nominal delay of
