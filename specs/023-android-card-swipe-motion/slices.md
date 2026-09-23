@@ -73,7 +73,12 @@ opacity fade the browser has and Android does not.
 
 ---
 
-## Slice 2: the next card rises and fades into place
+## ~~Slice 2: the next card rises and fades into place~~  ·  **done**
+
+**RED `d4844d7`, GREEN `0e48ad8`, harness correction `37d46db`, review finding `5dbf8a8`.** Slice gate
+returned one finding — the restored-card scenario was covered only by a structural argument — and closing it
+needed **no production change**. 397 → 400 JVM, 20 → 23 instrumented, all four gates re-run independently.
+See `evidence.md` §3.
 
 **Objective.** Give the replacement card an entrance — opacity `0 → 1` and a `12dp` rise to its resting
 position over `300ms` on a decelerated curve — with no lateral movement, and without gating input.

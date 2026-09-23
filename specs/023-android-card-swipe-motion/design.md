@@ -119,6 +119,38 @@ Recorded here so that a "feels slow" finding has a named cause and a named lever
 
 ## D8 — No new dependency, and no new constant file
 
-`Animatable`, `tween`, `snap` and the M3 easing set are already imported in this file. The two new values
-(entrance duration, entrance rise) join `SwipeGesture`'s existing constant block, which is already the
-JVM-testable home for this surface's numbers and already carries a citation per constant. Cite §79.5.
+**Corrected 2026-09-22, at implementation. Both of this decision's factual claims were wrong, and the
+original text is kept below so the correction is visible rather than silent.**
+
+The decision itself stands: no new dependency, no new file, and the two new values (entrance duration,
+entrance rise) join `SwipeGesture`'s constant block, which is the JVM-testable home for this surface's
+numbers. Cite §79.5.
+
+**What was wrong:**
+
+1. *"`Animatable`, `tween`, `snap` and the M3 easing set are already imported in this file."*
+   `ArticleCard.kt:3-7` imported `Animatable`, `AnimationSpec`, `AnimationVector1D`, `CubicBezierEasing`
+   and `tween` — **not `snap`, and no M3 easing of any kind.** Slice 1 added the `snap` import and slice 2
+   added `LinearOutSlowInEasing`.
+2. *"…already carries a citation per constant."* `SwipeGesture.kt:6-13` was **eight bare `const val`
+   declarations with no comments at all.** There was no citation style to match, so slice 1 established one
+   from `ui/theme/Theme.kt:60-61`, the closest precedent in the codebase.
+
+**Neither error changed the decision, and both cost a dispatch.** The first implementer session refused to
+start on them and was right to. **The transferable lesson is in `evidence.md` §1:** a design note's factual
+claims about a file are exactly the claims that go stale between the design pass and the implementation, and
+no gate distinguishes a claim that was true when written from one that was never true.
+
+**What D8 did not anticipate, and slice 1 had to decide:** §44.2 names "Material 3 Emphasized" and this
+codebase had no shared definition of it. Item 021's `PathEasing` at `ui/IntentionalReadingApp.kt:271-279` is
+the only one, and duplicating it into `SwipeGesture.kt` was chosen over editing 021's file, which is outside
+this item's boundary. **The easing is therefore defined twice, deliberately and disclosed** — see
+`evidence.md` §2.
+
+---
+
+### The original text, superseded
+
+> `Animatable`, `tween`, `snap` and the M3 easing set are already imported in this file. The two new values
+> (entrance duration, entrance rise) join `SwipeGesture`'s existing constant block, which is already the
+> JVM-testable home for this surface's numbers and already carries a citation per constant. Cite §79.5.
