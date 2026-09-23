@@ -108,14 +108,44 @@ follow the same branch — no fade, not a fast fade. §48 says *effectively imme
 
 ## D7 — The total gesture is now about 600 ms, and the walkthrough judges it
 
-Exit `300ms`, then the state action, then entrance `300ms`. Sequential by D2, so they add.
+**Corrected 2026-09-23, after the walkthrough. This decision's prediction was tested and did not survive
+it**, and the original text is kept below so the correction is visible rather than silent — the treatment
+D8 in this file already received.
 
-§43 says the active card *"exits briefly"* and sets no budget for the whole sequence. 600 ms is longer than
-today's 280 ms-plus-nothing, and it is the price of the replacement arriving rather than materialising.
-**This is the first thing to look at if the walkthrough finds the swipe sluggish**, and the lever is the
-entrance duration, not the exit — the exit is fixed by §44.2 and D1.
+**What still stands.** Exit `300ms`, then the state action, then entrance `300ms`, sequential by D2, so they
+add. §43 says the active card *"exits briefly"* and sets no budget for the whole sequence. Recording a
+budget here so that a "feels slow" finding has a named cause rather than a re-design was the right instinct.
 
-Recorded here so that a "feels slow" finding has a named cause and a named lever rather than a re-design.
+**What was wrong: the named lever.** D7 predicted that a sluggish verdict would point at the **entrance
+duration**. The walkthrough returned a sluggish verdict on 2026-09-22 and **the entrance duration is not the
+lever.** Neither animation is too long. The cost is the roughly half a second of *nothing* between them:
+`ArticleCard.kt:146-150` awaits `animateToGestureState()`, and only then does `onSwipeCommit` run the
+transition, `saveLocalState` — a disk write — and `adoptPersistedState`'s full deck re-rank, all on
+`Dispatchers.Main.immediate`. The head article changes after that, and the entrance starts after that.
+
+**Acting on D7 as written would make the defect worse.** A shorter entrance leaves the dead gap untouched
+while making it a larger share of the total wait, and weakens the only motion that tells the eye a card
+arrived. The real lever is the commit path's sequencing — which is **D2**, this item's central constraint,
+so it is a design pass and not a value change. `evidence.md` §4 carries the full finding.
+
+**Why this correction exists at all.** D8 was wrong about a file and was corrected at implementation. D7 was
+wrong about a prediction and was *not* corrected at the walkthrough, so for one merge it stood as live
+guidance to the next item on this surface. That is the same failure `evidence.md` §1 names as this item's
+transferable lesson — **a claim written when true and stale when used, with no gate that distinguishes the
+two** — reappearing in the one file that had already learned it.
+
+---
+
+### The original text, superseded
+
+> Exit `300ms`, then the state action, then entrance `300ms`. Sequential by D2, so they add.
+>
+> §43 says the active card *"exits briefly"* and sets no budget for the whole sequence. 600 ms is longer
+> than today's 280 ms-plus-nothing, and it is the price of the replacement arriving rather than
+> materialising. **This is the first thing to look at if the walkthrough finds the swipe sluggish**, and the
+> lever is the entrance duration, not the exit — the exit is fixed by §44.2 and D1.
+>
+> Recorded here so that a "feels slow" finding has a named cause and a named lever rather than a re-design.
 
 ## D8 — No new dependency, and no new constant file
 

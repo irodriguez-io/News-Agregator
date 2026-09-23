@@ -294,20 +294,38 @@ any of items 008, 013 or 015 left behind.
 
 ---
 
-## 5. Outstanding
+## 5. Outstanding at close
 
-- **The owner walkthrough, `spec.md` §6.4.** Not performed. It requires a **release** build and
-  `animator_duration_scale` **non-zero** — both preconditions cost this project a misdiagnosis on
-  2026-09-20. The scale currently reads `1.0`.
-- **It carries §44's character judgement** — *tactile, quiet, controlled* — which `backlog.md` has held open
-  since wave B and which items 008, 013 and 015 did not close. **This is the fourth item on this surface and
-  the first to change how it animates; closing that judgement is the deliverable.**
-- **If the finding is "sluggish", the lever is the entrance duration, not the exit** (D7). The exit is fixed
-  by §44.2 and D1. The total gesture is now about 600 ms — exit 300, state action, entrance 300 — because
-  D2 makes them sequential.
-- **Hosted CI green on the exact final head**, then final review.
+**Rewritten 2026-09-23, at merge, and the superseded text is kept at the end of this section.** This list
+was written before the walkthrough and was not revised when `9cc69ee` inserted §4 above it. It therefore
+contradicted §4 on its first line — *"Not performed"* against a section titled *"performed 2026-09-22"* —
+and it repeated D7's lever after §4 had disproved it. Both are corrected here.
+
+- **The walkthrough is done; §4 is the record.** Performed 2026-09-22 on a signed release build with
+  `animator_duration_scale` = `1.0`. Every mechanical step of `spec.md` §6.4 holds. §6.5's character
+  judgement does not.
+- **Hosted CI green on the exact final head — done.** Android run `35817630661` and Test run `35817630699`
+  on `3d0cb7c`: 400 JVM, 23 instrumented, 0 failures, 0 skipped. Merged as PR #6, `1198cbc`.
+- **§44's character judgement remains open**, and for the first time with a named cause. **It is not
+  reachable by tuning this item's motion values.** The lever is the exit→entrance gap in the commit path,
+  per §4 — not the entrance duration, which is what D7 predicted before the walkthrough and what this
+  section previously repeated. Shortening the entrance would make the gap a larger share of the wait and
+  remove the only motion that signals arrival.
 - **The Emphasized easing is defined twice** — `SwipeGesture.ExitEmphasizedEasing` and item 021's
   `IntentionalReadingApp.kt:271-279`. Belongs in `backlog.md`'s Debt section; absorb it when something next
   touches `IntentionalReadingApp.kt`.
 - **`ArticleCardTest` asserts against source-file text in many places**, a convention that predates this
   item — eleven such assertions on `main` — and which this item followed and extended. Also Debt.
+
+### The original text, superseded
+
+> - **The owner walkthrough, `spec.md` §6.4.** Not performed. It requires a **release** build and
+>   `animator_duration_scale` **non-zero** — both preconditions cost this project a misdiagnosis on
+>   2026-09-20. The scale currently reads `1.0`.
+> - **It carries §44's character judgement** — *tactile, quiet, controlled* — which `backlog.md` has held
+>   open since wave B and which items 008, 013 and 015 did not close. **This is the fourth item on this
+>   surface and the first to change how it animates; closing that judgement is the deliverable.**
+> - **If the finding is "sluggish", the lever is the entrance duration, not the exit** (D7). The exit is
+>   fixed by §44.2 and D1. The total gesture is now about 600 ms — exit 300, state action, entrance 300 —
+>   because D2 makes them sequential.
+> - **Hosted CI green on the exact final head**, then final review.

@@ -111,5 +111,13 @@ It carries §44's character judgement — *tactile, quiet, controlled* — which
 wave B and which item 013 did not close. This is the fourth item on this surface; closing it is the
 deliverable.
 
-If the finding is "sluggish", the lever is the **entrance** duration, not the exit (D7). The exit is fixed by
-§44.2.
+~~If the finding is "sluggish", the lever is the **entrance** duration, not the exit (D7). The exit is fixed
+by §44.2.~~
+
+**Corrected 2026-09-23, after the walkthrough.** The walkthrough did find the gesture slow, and **the lever
+above is the wrong one.** The cost is not either animation's duration — it is the roughly half a second of
+nothing between them, created by `ArticleCard.kt:146-150` awaiting the exit before `onSwipeCommit` runs the
+transition, `saveLocalState` and a full deck re-rank on `Dispatchers.Main.immediate`. **Shortening the
+entrance makes it worse**, not better: the dead gap becomes a larger share of the wait and the only motion
+that signals arrival gets weaker. See `evidence.md` §4, and `design.md` D7, corrected in place. The struck
+text is left visible rather than deleted, per D8's precedent in this item.
