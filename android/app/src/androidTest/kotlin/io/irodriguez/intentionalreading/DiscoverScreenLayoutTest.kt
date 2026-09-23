@@ -119,6 +119,62 @@ class DiscoverScreenLayoutTest {
         composeTestRule.mainClock.autoAdvance = true
     }
 
+    @Test
+    fun anUndoRestoredCardRisesAndFadesAndImmediatelyTracksASwipe() {
+        // Given a committed swipe and its replacement settled at rest.
+        val host = startReplacementEntrance()
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+        val restingTop = composeTestRule.onNodeWithText(host.arriving.title).fetchSemanticsNode().positionInRoot.y
+        val opaquePixel = entranceFillPixel(host)
+
+        // When undo makes the committed article the head again, through the card's normal input.
+        composeTestRule.runOnIdle { host.current.value = host.leaving }
+        composeTestRule.mainClock.advanceTimeBy(64)
+        composeTestRule.waitForIdle()
+        host.entranceObservedAt = composeTestRule.mainClock.currentTime
+
+        // Then the restored head has the same bounded rise and partial fade as a replacement.
+        assertEquals(host.leaving.id, host.current.value.id)
+        composeTestRule.onNodeWithText(host.arriving.title).assertDoesNotExist()
+        val restored = composeTestRule.onNodeWithText(host.leaving.title)
+        val before = restored.fetchSemanticsNode().positionInRoot
+        assertTrue(
+            "The restored article must still be below rest during its entrance: rest=$restingTop, restored=${before.y}",
+            before.y > restingTop + 0.5f && before.y < restingTop + SwipeGesture.ENTRANCE_RISE_DP * host.density,
+        )
+        val entrancePixel = entranceFillPixel(host)
+        assertTrue("The restored card must still be fading", colorDistance(opaquePixel, entrancePixel) > 0.01f)
+        assertTrue("The restored card must already be partly visible", colorDistance(Color.Magenta, entrancePixel) > 0.01f)
+
+        // And it tracks the first pointer movement and the next without waiting for its entrance.
+        val firstTravel = host.intentSlopPx + 1f
+        val secondTravel = host.density * 4f
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(firstTravel, 0f))
+        }
+        composeTestRule.waitForIdle()
+        val firstPosition = restored.fetchSemanticsNode().positionInRoot
+        assertTrue("The restored article must track the first movement", firstPosition.x > before.x + firstTravel / 2f)
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            moveBy(Offset(secondTravel, 0f))
+        }
+        composeTestRule.waitForIdle()
+        val secondPosition = restored.fetchSemanticsNode().positionInRoot
+        assertTrue("The restored article must keep following the pointer", secondPosition.x > firstPosition.x + secondTravel / 2f)
+        assertTrue(
+            "the swipe must land while the entrance is still running",
+            composeTestRule.mainClock.currentTime - host.entranceObservedAt < SwipeGesture.ENTRANCE_DURATION_MS,
+        )
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput { cancel() }
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+    }
+
     private fun startReplacementEntrance(): EntranceHost {
         val template = longDatasetCardState().article.copy(excerpt = "", tags = emptyList())
         val leaving = template.copy(id = "leaving", title = "Leaving article")
