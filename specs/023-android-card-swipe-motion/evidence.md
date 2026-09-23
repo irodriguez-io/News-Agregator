@@ -229,7 +229,72 @@ GREEN commit message, and left alone.**
 
 ---
 
-## 4. Outstanding
+## 4. The owner walkthrough — performed 2026-09-22, and it did not pass
+
+Signed **release** build on the Pixel_10 emulator, `animator_duration_scale` = **1.0**, live dataset (209
+articles, content age 1d). Both preconditions §6.4 demands were satisfied and recorded before the pass
+began. `keystore.properties` was copied into the worktree for the build and deleted immediately after; the
+release package was uninstalled afterwards so the next `connectedDebugAndroidTest` is not blocked.
+
+**Every mechanical claim in §6.4 holds. §6.5's character judgement does not.** The owner's verdict, in the
+owner's own terms:
+
+| § | Step | Verdict |
+|---|---|---|
+| 1 | The card fades as it leaves | **Visible, and better than before — but still too fast**, and the exit *speeds up* on release rather than continuing at the speed the gesture had. |
+| 2 | The replacement rises and fades | **Present but barely perceptible.** *"The movement is so fast that the human brain barely recognises there was one"* — rise and fade are not distinguishable from each other. |
+| 3 | A swipe during the entrance is accepted | **True, and confirmed by hand.** A tap timed to the card's arrival is read and acted on. A tap during the *gap before* it is not — because there is no card yet. |
+| 4 | Undo restores and is immediately swipeable | **True, and it is the benchmark.** *"If we could reduce the gap between swipes to be similar to the gap between the undo and the restored card appearing, we will have an optimal UX."* |
+| 5 | Reduced motion | Not separately reported; superseded by the finding below. |
+| 6 | A vertical drag still scrolls | No regression reported. |
+
+### The finding: the gap between exit and entrance, and it is not a motion defect
+
+**The two animations do not overlap, and roughly half a second of nothing sits between them** — long enough,
+in the owner's words, *"for my brain to doubt whether a new card will arrive."*
+
+**The cause is in the commit path, not in any animation value.** `ArticleCard.kt:146-150` waits for
+`animateToGestureState()` to complete, *then* calls `onSwipeCommit` →
+`AppViewModel.launchArticleAction` → `onArticleAction`, which takes `stateMutex`, runs the transition, and
+calls **`saveLocalState`** — a disk write — followed by `adoptPersistedState`, which re-ranks the whole
+deck. All of it on `Dispatchers.Main.immediate`. Only when that returns does the head article change, the
+`remember(article.id, …)` rebuild, and the entrance begin.
+
+**The exit's 300 ms and the persistence are sequential when they could be concurrent.** The main thread is
+largely idle while the exit animates on the frame clock, and the expensive work is queued behind it instead
+of alongside it.
+
+**This is why undo feels right and a swipe does not.** Undo persists too — `performUndo` takes the same
+lock and the same `persistUndoTransition` path. What it lacks is a *preceding animation*: it is tap → state
+change → entrance, with no dead zone between two moving things. The swipe path serialises
+exit → persist → entrance, and the dead zone is what the eye reads as the card having gone missing.
+
+**Item 023 did not create this gap. It made it legible.** Before this item the replacement simply
+materialised, so there was nothing to wait for; now there is an entrance, and the wait in front of it has a
+shape.
+
+### Three findings, none of them inside this item's scope
+
+1. **The exit→entrance gap.** Fixing it means starting the commit concurrently with the exit and swapping
+   the head only when both have finished. That changes the commit sequencing, which is **D2** — this item's
+   central constraint, adopted specifically to keep items 013 and 015 closed. It is a design pass, not a
+   value change.
+2. **The exit discards the gesture's velocity.** It is a fixed-duration `tween`, so a slow drag released
+   at the threshold snaps to full speed. The browser does the same, which is why item 008 ported it that
+   way. `Animatable` supports `animateDecay`, or `animateTo` with an `initialVelocity`, so the owner's
+   *"smooth movement for the card vanishing"* is reachable — but §44.2 fixes the exit's curve and duration,
+   so carrying velocity needs an amendment.
+3. **Destination transitions show both tabs' text at once.** New, raised during this pass: moving between
+   Read Later, Discover and History renders the outgoing and incoming labels simultaneously for an instant.
+   That is item **021**'s `AnimatedContent` in `IntentionalReadingApp.kt:280-310`, not this item's ground.
+
+**§6.5's second checkpoint — §44's *tactile, quiet, controlled*, open in `backlog.md` since wave B —
+remains open.** It is now open with a named cause and a named lever for the first time, which is more than
+any of items 008, 013 or 015 left behind.
+
+---
+
+## 5. Outstanding
 
 - **The owner walkthrough, `spec.md` §6.4.** Not performed. It requires a **release** build and
   `animator_duration_scale` **non-zero** — both preconditions cost this project a misdiagnosis on
