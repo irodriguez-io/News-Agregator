@@ -46,7 +46,12 @@ and may be implemented in either order.
 
 ---
 
-## Slice 1: the card leaves on Android's curve, and fades as it goes
+## ~~Slice 1: the card leaves on Android's curve, and fades as it goes~~  ·  **done**
+
+**RED `95cd908`, GREEN `cc927d1`.** Slice gate PASS, 2026-09-22. 391 → 397 JVM tests, 20 instrumented, all
+four gates re-run independently. Three implementer stops preceded it, all correct — two on `design.md` D8's
+false claims, one on `SwipeGestureTest.kt:139`'s `280` assertion, which took a bounded exception. See
+`evidence.md` §§1-2.
 
 **Objective.** Bring the exit into compliance with §44.2 — Material 3 Emphasized at `300ms` — and add the
 opacity fade the browser has and Android does not.
