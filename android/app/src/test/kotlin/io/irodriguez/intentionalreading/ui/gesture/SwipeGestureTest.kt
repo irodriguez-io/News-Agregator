@@ -136,7 +136,7 @@ class SwipeGestureTest {
         assertEquals(SwipeGesture.Action.SAVE, rightAction)
         assertEquals(0.82f, SwipeGesture.EXIT_FRACTION)
         assertEquals(620f, SwipeGesture.EXIT_MINIMUM_DP)
-        assertEquals(280, SwipeGesture.EXIT_DURATION_MS)
+        assertEquals(300, SwipeGesture.EXIT_DURATION_MS)
         assertEquals(-820f, left.exitTranslationX)
         assertEquals(620f, right.exitTranslationX)
     }

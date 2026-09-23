@@ -3,7 +3,8 @@ package io.irodriguez.intentionalreading.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -23,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,6 +82,7 @@ fun ArticleCard(
     val viewportWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
     val exitMinimumPx = with(density) { SwipeGesture.EXIT_MINIMUM_DP.dp.toPx() }
     val reducedMotionEnabled = reducedMotion()
+    val entranceRisePx = with(density) { articleEntranceRiseDp(reducedMotionEnabled).dp.toPx() }
     val gestureValues = remember(
         article.id,
         thresholdPx,
@@ -99,16 +102,14 @@ fun ArticleCard(
             ),
             translationX = Animatable(0f),
             rotationDegrees = Animatable(0f),
+            alpha = Animatable(1f),
+            entranceProgress = Animatable(0f),
             swipeCue = mutableStateOf<SwipeGesture.Action?>(null),
-            motionSpec = tween(
-                durationMillis = if (reducedMotionEnabled) {
-                    0
-                } else {
-                    SwipeGesture.EXIT_DURATION_MS
-                },
-                easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f),
-            ),
+            motionSpec = articleSwipeMotionSpec(reducedMotionEnabled),
         )
+    }
+    LaunchedEffect(gestureValues) {
+        gestureValues.entranceProgress.animateTo(1f, articleEntranceMotionSpec(reducedMotionEnabled))
     }
     val restoreScope = rememberCoroutineScope()
     val currentOnSwipeCommit by rememberUpdatedState(onSwipeCommit)
@@ -176,8 +177,11 @@ fun ArticleCard(
                 }
             }
             .graphicsLayer {
+                val entranceProgress = if (reducedMotionEnabled) 1f else gestureValues.entranceProgress.value
                 this.translationX = gestureValues.translationX.value
                 rotationZ = gestureValues.rotationDegrees.value
+                alpha = gestureValues.alpha.value * entranceProgress
+                translationY = entranceRisePx * (1f - entranceProgress)
             }
             .shadow(
                 elevation = DeckCardShadowElevation,
@@ -255,11 +259,28 @@ fun ArticleCard(
     }
 }
 
+internal fun articleSwipeMotionSpec(reducedMotion: Boolean): AnimationSpec<Float> =
+    if (reducedMotion) snap() else tween(
+        durationMillis = SwipeGesture.EXIT_DURATION_MS,
+        easing = SwipeGesture.ExitEmphasizedEasing,
+    )
+
+internal fun articleEntranceMotionSpec(reducedMotion: Boolean): AnimationSpec<Float> =
+    if (reducedMotion) snap() else tween(
+        durationMillis = SwipeGesture.ENTRANCE_DURATION_MS,
+        easing = LinearOutSlowInEasing,
+    )
+
+internal fun articleEntranceRiseDp(reducedMotion: Boolean): Float =
+    if (reducedMotion) 0f else SwipeGesture.ENTRANCE_RISE_DP
+
 private class ArticleGestureValues(
     val article: Article,
     val gestureState: SwipeGesture.State,
     val translationX: Animatable<Float, AnimationVector1D>,
     val rotationDegrees: Animatable<Float, AnimationVector1D>,
+    val alpha: Animatable<Float, AnimationVector1D>,
+    val entranceProgress: Animatable<Float, AnimationVector1D>,
     val swipeCue: MutableState<SwipeGesture.Action?>,
     val motionSpec: AnimationSpec<Float>,
 )
@@ -267,12 +288,14 @@ private class ArticleGestureValues(
 private suspend fun ArticleGestureValues.snapToGestureState() {
     translationX.snapTo(gestureState.translationX)
     rotationDegrees.snapTo(gestureState.rotationDegrees)
+    alpha.snapTo(gestureState.alpha)
 }
 
 private suspend fun ArticleGestureValues.animateToGestureState() {
     coroutineScope {
         launch { translationX.animateTo(gestureState.translationX, motionSpec) }
         launch { rotationDegrees.animateTo(gestureState.rotationDegrees, motionSpec) }
+        launch { alpha.animateTo(gestureState.alpha, motionSpec) }
     }
 }
 
