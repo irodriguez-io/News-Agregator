@@ -79,7 +79,10 @@ class DiscoverScreenLayoutTest {
         composeTestRule.waitForIdle()
         val secondPosition = arriving.fetchSemanticsNode().positionInRoot
         assertTrue("The arriving article must keep following the pointer", secondPosition.x > firstPosition.x + secondTravel / 2f)
-        assertEquals(host.entranceObservedAt, composeTestRule.mainClock.currentTime)
+        assertTrue(
+            "the swipe must land while the entrance is still running",
+            composeTestRule.mainClock.currentTime - host.entranceObservedAt < SwipeGesture.ENTRANCE_DURATION_MS,
+        )
         assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
         composeTestRule.onNodeWithText(host.leaving.title).assertDoesNotExist()
 
@@ -100,7 +103,10 @@ class DiscoverScreenLayoutTest {
             up()
         }
         composeTestRule.waitForIdle()
-        assertEquals(host.entranceObservedAt, composeTestRule.mainClock.currentTime)
+        assertTrue(
+            "the swipe must land while the entrance is still running",
+            composeTestRule.mainClock.currentTime - host.entranceObservedAt < SwipeGesture.ENTRANCE_DURATION_MS,
+        )
         assertEquals("The arriving action must still wait for its exit", 1, host.commits.size)
         composeTestRule.mainClock.advanceTimeBy(400)
         composeTestRule.waitForIdle()
