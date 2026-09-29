@@ -8,6 +8,51 @@ import kotlin.test.assertTrue
 
 class SwipeGestureTest {
     @Test
+    fun `the commit never starts while the card is still visible in either direction`() {
+        // An off-centre card proves that departure uses the measured left, not half the viewport.
+        listOf(0f, 2f, SwipeGesture.MAX_ROTATION_DEGREES).forEach { rotation ->
+            listOf(-1f, 1f).forEach { direction ->
+                val radians = Math.toRadians(rotation.toDouble())
+                val halfExtent = (150 * kotlin.math.cos(radians) + 240 * kotlin.math.sin(radians)).toFloat()
+                val centre = 30f + 150f
+                val boundary = if (direction > 0f) 411f - centre + halfExtent else -centre - halfExtent
+                assertFalse(
+                    SwipeGesture.hasDepartedViewport(30f, 300f, 480f, boundary - direction, rotation * direction, 411f),
+                    "A rotated edge is still inside: rotation=$rotation direction=$direction",
+                )
+                assertTrue(
+                    SwipeGesture.hasDepartedViewport(30f, 300f, 480f, boundary + direction, rotation * direction, 411f),
+                    "All rotated edges have left: rotation=$rotation direction=$direction",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `the commit starts when the card has left the viewport including the boundary`() {
+        assertFalse(SwipeGesture.hasDepartedViewport(18f, 324f, 400f, 341f, 0f, 360f))
+        assertTrue(SwipeGesture.hasDepartedViewport(18f, 324f, 400f, 342f, 0f, 360f))
+        assertFalse(SwipeGesture.hasDepartedViewport(18f, 324f, 400f, -341f, 0f, 360f))
+        assertTrue(SwipeGesture.hasDepartedViewport(18f, 324f, 400f, -342f, 0f, 360f))
+    }
+
+    @Test
+    fun `where the card cannot leave the curves completion starts the commit`() {
+        listOf(-1f, 1f).forEach { direction ->
+            val gesture = gesture(viewportWidthPx = 840f)
+            gesture.down(0f, 0f)
+            gesture.move(direction * SwipeGesture.THRESHOLD_DP, 0f)
+            gesture.release()
+            // Use the real exit target; even its farthest frame leaves a trailing edge visible.
+            assertFalse(
+                SwipeGesture.hasDepartedViewport(
+                    18f, 804f, 400f, gesture.exitTranslationX, gesture.rotationDegrees, 840f,
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `a touch that has barely moved locks no intent`() {
         // Given
         val gesture = gesture()
