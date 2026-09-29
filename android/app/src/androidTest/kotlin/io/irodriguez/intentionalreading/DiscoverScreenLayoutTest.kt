@@ -1,9 +1,11 @@
 package io.irodriguez.intentionalreading
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -11,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
@@ -317,25 +320,30 @@ class DiscoverScreenLayoutTest {
         val host = EntranceHost(leaving, arriving, mutableStateOf(leaving))
         composeTestRule.setContent {
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(width, 640.dp))) {
-                host.density = LocalDensity.current.density
-                host.intentSlopPx = with(LocalDensity.current) { SwipeGesture.INTENT_SLOP_DP.dp.toPx() }
-                host.thresholdPx = with(LocalDensity.current) { SwipeGesture.THRESHOLD_DP.dp.toPx() }
-                IntentionalReadingTheme(appearance = Appearance.LIGHT) {
-                    Box(Modifier.fillMaxSize().background(Color.Magenta).testTag(ENTRANCE_ROOT_TAG)) {
-                        Box(Modifier.padding(24.dp)) {
-                            ArticleCard(
-                                state = longDatasetCardState().copy(article = host.current.value),
-                                onDismiss = {},
-                                onReadArticle = {},
-                                onSave = {},
-                                onMarkRead = {},
-                                onSwipeCommit = { article, action, complete ->
-                                    host.commits += article.id to action
-                                    onCommit(host, article, complete)
-                                },
-                                reducedMotion = { reducedMotion },
-                                modifier = Modifier.testTag(ENTRANCE_CARD_TAG),
-                            )
+                val configuration = Configuration(LocalConfiguration.current).apply {
+                    screenWidthDp = width.value.toInt()
+                }
+                CompositionLocalProvider(LocalConfiguration provides configuration) {
+                    host.density = LocalDensity.current.density
+                    host.intentSlopPx = with(LocalDensity.current) { SwipeGesture.INTENT_SLOP_DP.dp.toPx() }
+                    host.thresholdPx = with(LocalDensity.current) { SwipeGesture.THRESHOLD_DP.dp.toPx() }
+                    IntentionalReadingTheme(appearance = Appearance.LIGHT) {
+                        Box(Modifier.fillMaxSize().background(Color.Magenta).testTag(ENTRANCE_ROOT_TAG)) {
+                            Box(Modifier.padding(24.dp)) {
+                                ArticleCard(
+                                    state = longDatasetCardState().copy(article = host.current.value),
+                                    onDismiss = {},
+                                    onReadArticle = {},
+                                    onSave = {},
+                                    onMarkRead = {},
+                                    onSwipeCommit = { article, action, complete ->
+                                        host.commits += article.id to action
+                                        onCommit(host, article, complete)
+                                    },
+                                    reducedMotion = { reducedMotion },
+                                    modifier = Modifier.testTag(ENTRANCE_CARD_TAG),
+                                )
+                            }
                         }
                     }
                 }
