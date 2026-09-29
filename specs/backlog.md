@@ -12,12 +12,12 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-09-22, with **wave E implemented and its close outstanding**. Items 017–022 are all
-merged; the backlog holds item **023** and the wave-close work itself.
+Last reviewed: 2026-09-29, with **wave E implemented and its close outstanding**. Items 017–023 are all
+merged; the backlog holds item **024** and the wave-close work itself.
 
 **On PR numbers.** The repository moved from `~/Documents/VS Code/` to `~/Documents/Repos/` and its remote
-changed to `irodriguez-io` on 2026-09-18, which restarted PR numbering at #1. PRs #30–#34 and PRs #1–#4
-therefore both exist and are not out of order — anything numbered below #5 is later than anything numbered
+changed to `irodriguez-io` on 2026-09-18, which restarted PR numbering at #1. PRs #30–#34 and PRs #1–#7
+therefore both exist and are not out of order — anything numbered below #8 is later than anything numbered
 above #29.
 
 ---
@@ -48,6 +48,7 @@ above #29.
 | 020 | M3 Read Later and History — Queue Row, StatBand, empty state | Android | PR #34, 2026-09-02 |
 | 021 | M3 motion — directional tab slide, modal sheet reveal | Android | PR #3, 2026-09-19 |
 | 022 | The appearance switch changes colour, not the screen | Android | PR #4, 2026-09-20 |
+| 023 | The card leaves, and the next one arrives | Android | PR #6, 2026-09-23 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -55,9 +56,9 @@ Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>
 
 ## Queued
 
-**One item, and a wave close.** Wave E's five items are implemented and merged, and so is **022**, the
-first defect the owner's wave-E walkthrough found. The queue holds **023** — the second defect from that
-same walkthrough — and the wave-close bookkeeping 021's evidence itemised.
+**One item, and a wave close.** Wave E's five items are implemented and merged, and so are **022** and
+**023**, the two defects the owner's wave-E walkthrough found. The queue holds **024** — the defect 023's
+own walkthrough found — and the wave-close bookkeeping 021's evidence itemised.
 
 **Wave E's close is outstanding, and it is three distinct pieces of work.** `waves/wave-e-note.md` is
 unwritten, this document's wave row is the only record that the wave finished, and **the thirteen legacy
@@ -67,8 +68,10 @@ thirteen fields of `ui/theme/Tokens.kt`. That debt was scoped to the wave and ca
 
 **The walkthrough itself was performed**, on a signed release build, on 2026-09-20. It found two defects,
 both motion and both on Android: the appearance flash (**022**, shipped) and the card swipe exit and
-entrance (**023**, designed, below). That is the fourth wave running in which the owner using the app found
+entrance (**023**, shipped). That is the fourth wave running in which the owner using the app found
 the defects no gate did — see `waves/wave-c-note.md` and `waves/wave-d-note.md` for the same headline.
+**023's own walkthrough, on 2026-09-22, repeated it:** every mechanical check passed and the owner still
+found **024**.
 
 **Item 012's 360 dp finding carried into 019 and still stands after it.** The Discover card's full action
 rail cannot be visible at 360 dp under any header arrangement, because card height is unbounded in the
@@ -93,7 +96,9 @@ suite in CI for the first time and the two defects it shipped were still found b
 **Items 022 and 023 run outside the waves**, as unplanned defect items cut from `main` after wave E's
 walkthrough. Both are Android motion; neither collides with the other — 022's surface is
 `AndroidManifest.xml`, `ui/theme/Theme.kt` and `ui/theme/Tokens.kt`, and 023's is
-`ui/components/ArticleCard.kt`, `ui/gesture/SwipeGesture.kt` and `ui/screens/discover/**`.
+`ui/components/ArticleCard.kt`, `ui/gesture/SwipeGesture.kt` and `ui/screens/discover/**`. **Item 024 also
+runs outside the waves**, and nothing else is in flight for it to collide with. Expect its surface to be
+wider than 023's — the commit path runs through the view model, not the card.
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
@@ -335,38 +340,71 @@ verification debt if it recurs.
 *Found by the owner's wave-E walkthrough, 2026-09-20.*
 *Evidence:* `specs/022-android-appearance-switch-motion/evidence.md`.
 
-### 023 — The card leaves, and the next one arrives  ·  **Designed, next**
+### ~~023 — The card leaves, and the next one arrives~~  ·  **Shipped**
 
 Reported 2026-09-20 in the same walkthrough: a swiped card *"moves horizontally and when it reaches the
 border suddenly disappears and a new card appears in the center of Discovery, without any transition."*
 
-**The first diagnosis was wrong and is recorded so it is not re-derived.** The exit *distance* is not the
+**The first diagnosis was wrong and is recorded so it is not re-derived.** The exit *distance* was not the
 fault — `js/ui/swipe.js:108`'s `Math.max(window.innerWidth * 0.82, 620)` and item 008's Android port agree
-closely in viewport-relative terms. Three other things are:
+closely in viewport-relative terms. Three other things were, and this item fixed all three:
 
-1. **The Android exit runs the browser's curve.** `06-ui-ux.md` §80 records that §44 was split on curve only
-   for the second edition; §44.2 requires M3 Emphasized easing on Android, and `ArticleCard.kt:103-110` uses
-   §44.1's `CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)` at 280 ms. **A compliance gap needing no amendment** —
-   item 008 shipped before the second edition and wave E's collision matrix gave motion to 021, whose scope
-   was destinations and the Settings sheet. The card fell between the two.
-2. **The card never fades.** The browser animates to `opacity: 0` alongside translate and rotate; Android's
-   `graphicsLayer` sets `translationX` and `rotationZ` only. That is most of *"suddenly disappears"*.
-3. **Nothing specifies the entrance, on either surface.** §43 step 3 says only *"the next eligible card
-   appears"*. Authoring it is new motion where the specification is silent, which `AGENTS.md` forbids
-   filling in from an implementation — so this item authors **Amendment 11**. The owner chose a
-   rise-and-fade in place, with no lateral movement, on 2026-09-20.
+1. **The Android exit ran the browser's curve.** §44.2 requires M3 Emphasized easing on Android; item 008
+   shipped §44.1's curve at 280 ms, before the second edition, and wave E's collision matrix gave motion to
+   021, so the card fell between the two. It now runs Emphasized at 300 ms.
+2. **The card never faded.** It now fades as it leaves, alongside translate and rotate.
+3. **Nothing specified the entrance.** This item authored **Amendment 11** (§79.5): the next card rises and
+   fades in place, with no lateral movement, as the owner chose on 2026-09-20. The entrance does not gate
+   input — a card accepts a swipe from its first frame, including while still transparent.
 
-**This is the fourth item in a row on the swipe surface**, after 008, 013 and 015, and that governs the
-design. Two instrumented guards exist because of those items — `ArticleCardGestureTest` and
-`ArticleCardScrollGestureTest` — and both must survive untouched. The settled behaviour that the card
-accepts a swipe from the first frame it is on screen is load-bearing: §79.5 states explicitly that the
-entrance does not gate input, including while the card is still transparent.
+Two slices. 391 → **400** JVM tests, 20 → **23** instrumented. `ArticleCardGestureTest` and
+`ArticleCardScrollGestureTest`, the guards items 013 and 015 left, survived untouched.
 
-**Rebased onto `main` at `22ef12d` on 2026-09-22**, resolving the two expected conflicts in `docs/v1/**`
-additively — Amendment 10 and Amendment 11 both stand, and §79.4 and §79.5 both stand. Its code citations
-were re-verified against post-022 `main` and still resolve exactly; 022 never touched `ArticleCard.kt`.
+**Its walkthrough, 2026-09-22 on a signed release build, did not pass.** Every mechanical step held; the
+character judgement did not, and the reason is **024**. **023 did not create that gap — it made it
+legible:** before it, the replacement simply materialised, so there was nothing to wait for.
 
-*Found by the owner's wave-E walkthrough, 2026-09-20. Branch: `feat/023-android-card-swipe-motion`.*
+*Found by the owner's wave-E walkthrough, 2026-09-20.*
+*Evidence:* `specs/023-android-card-swipe-motion/evidence.md` — §4 is the walkthrough.
+
+### 024 — The next card arrives without a pause  ·  **Next, not yet designed**
+
+Found by 023's walkthrough, 2026-09-22. **Roughly half a second of nothing sits between the card leaving and
+the replacement arriving** — in the owner's words, *"enough for my brain to doubt whether a new card will
+arrive."*
+
+**It is not a motion value, and the first move is not to shorten anything.** `ArticleCard.kt:146-150`
+waits for the exit animation to finish, *then* calls `onSwipeCommit` → `AppViewModel.launchArticleAction`
+→ `onArticleAction`, which takes `stateMutex`, runs the transition, writes to disk (`saveLocalState`) and
+re-ranks the deck (`adoptPersistedState`), all on `Dispatchers.Main.immediate`. Only then does the head
+article change and the entrance begin. The exit's 300 ms and the persistence run one after the other when
+they could run together. Shortening the entrance — 023's D7 prediction, since corrected — makes the gap a
+larger share of the wait.
+
+**Undo is the benchmark.** It persists through the same lock and the same path, but has no animation in
+front of it, so it reads as immediate. The owner: *"if we could reduce the gap between swipes to be similar
+to the gap between the undo and the restored card appearing, we will have an optimal UX."*
+
+**It is a design pass, and it carries two constraints from 023.** The likely shape — start the commit
+alongside the exit and swap the head when both have finished — changes the commit sequencing that 023's
+**D2** fixed to keep items **013** and **015** closed. Reopening D2 means re-proving both with instrumented
+tests, not structural arguments. And **`AnimatedContent`, `Crossfade` or a second composed card stay
+rejected**: D2 rejected them because the overlap they create reopens 013 and 015, and that still holds.
+
+*Branch: not yet cut. Evidence of the finding:* `specs/023-android-card-swipe-motion/evidence.md` §4.
+
+### Also found by 023's walkthrough, and not part of 024
+
+Neither is numbered yet; numbers are allocated at design time.
+
+- **The exit discards the gesture's release velocity.** It is a fixed-duration `tween`, so a slow drag
+  released at the threshold snaps to full speed; the owner wants *"a smooth movement for the card
+  vanishing."* Reachable with `Animatable.animateDecay` or `animateTo` with an `initialVelocity`, but
+  **§44.2 fixes the exit's curve and duration, so this needs an amendment** — an owner decision before it
+  is an item. The browser does the same, which is why item 008 ported it that way.
+- **Destination transitions show both tabs' text at once.** Moving between Read Later, Discover and History
+  renders the outgoing and incoming labels together for an instant. That is item **021**'s ground —
+  `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310` — and it was in no scenario.
 
 ---
 
@@ -419,6 +457,12 @@ Not items. Things a future item should absorb when it touches the same ground.
 - **The recovery notice still says *"Reset local data in Settings to recover."*** Import is now also a
   recovery path and the copy does not say so. Left alone deliberately: changing it means authoring copy
   the specification does not provide. (*009 §Outstanding*)
+- **The M3 Emphasized easing is defined twice** — `SwipeGesture.ExitEmphasizedEasing` (023) and item 021's
+  `IntentionalReadingApp.kt:271-279`. Deliberate and disclosed; absorb it when something next touches
+  `IntentionalReadingApp.kt`. (*023 `evidence.md` §5*)
+- **`ArticleCardTest` asserts against source-file text in many places** — eleven such assertions on `main`
+  before 023, which followed the convention and extended it. It breaks on refactors that change no
+  behaviour. (*023 `evidence.md` §5*)
 - **`SettingsSheet`'s body sits one indent level shallower than its nesting** after the status message was
   pinned outside the scrollable column. Cosmetic, and no formatter gate exists to catch it; fix it when
   something next edits that file. (*009 s3 walkthrough fix*)
@@ -478,7 +522,9 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   fixed, so it is worth one more pass. **Still open after 013**, and now more clearly worth doing: 013
   changed when a gesture is *adopted*, not how it animates, but it is the third item in a row to touch
   the swipe surface. **Item 023 is the first item that changes how it animates**, and answering this is
-  part of its walkthrough rather than a separate pass.
+  part of its walkthrough rather than a separate pass. **Answered 2026-09-22: not yet.** 023's walkthrough
+  found the swipe still does not read as *controlled*, and for the first time named the cause — the
+  exit→entrance gap, now item **024**. This stays open until 024's walkthrough.
 
 **Added by 013, 2026-08-28:**
 
@@ -495,10 +541,13 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   retries, seven prior consecutive successes on `android.yml` — but not closed, and both failures belong to
   the same workflow run, so they are **not two independent samples**. Removing the theme animation was not
   shown to fix anything and was not attempted. **Recorded as an open question. If it recurs, it becomes an
-  item.** (*022 `evidence.md`*)
+  item.** (*022 `evidence.md`*) **Two more clean passes since**, both during 023 — Android runs
+  `35817066156` on `9cc69ee` and `35817630661` on `3d0cb7c`, 23 instrumented tests, no `adb` retries on
+  either.
 - **The three wave-E screens have no individual walkthrough record**, only the whole-wave pass of
-  2026-09-20 that found 022 and 023. Once 023 lands, the swipe surface will have changed for the fifth
-  time and a Discover-specific pass is worth one sitting.
+  2026-09-20 that found 022 and 023. 023 has landed and was walked on 2026-09-22, but that pass looked at
+  the swipe, not the whole screen. **024 will change the swipe surface for the sixth time**, so a
+  Discover-specific pass after it is worth one sitting.
 - **Discover's triage controls lost their visible text labels in item 019, and that is an open owner
   decision, not a finding.** *"Not interested"* and *"Save for later"* now travel only as
   `accessibleName` content descriptions, so a **sighted** reader sees bare `←` and `→`. §76.5 authorises
