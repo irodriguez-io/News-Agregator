@@ -97,8 +97,8 @@ suite in CI for the first time and the two defects it shipped were still found b
 walkthrough. Both are Android motion; neither collides with the other — 022's surface is
 `AndroidManifest.xml`, `ui/theme/Theme.kt` and `ui/theme/Tokens.kt`, and 023's is
 `ui/components/ArticleCard.kt`, `ui/gesture/SwipeGesture.kt` and `ui/screens/discover/**`. **Item 024 also
-runs outside the waves**, and nothing else is in flight for it to collide with. Expect its surface to be
-wider than 023's — the commit path runs through the view model, not the card.
+runs outside the waves**, and nothing else is in flight for it to collide with. Its surface turned out
+narrower than 023's — `ArticleCard.kt` and `SwipeGesture.kt` only.
 
 **Item 013 ran outside the waves**, as an unplanned defect item cut from `main` at `2613959` while wave C
 was open. It touched **no file item 006 touches** — confirmed at close: 013's surface is
@@ -367,31 +367,29 @@ legible:** before it, the replacement simply materialised, so there was nothing 
 *Found by the owner's wave-E walkthrough, 2026-09-20.*
 *Evidence:* `specs/023-android-card-swipe-motion/evidence.md` — §4 is the walkthrough.
 
-### 024 — The next card arrives without a pause  ·  **Next, not yet designed**
+### 024 — The next card arrives without a pause  ·  **Designed, next**
 
 Found by 023's walkthrough, 2026-09-22. **Roughly half a second of nothing sits between the card leaving and
 the replacement arriving** — in the owner's words, *"enough for my brain to doubt whether a new card will
-arrive."*
+arrive."* **Undo is the benchmark**: it reads as immediate, and the owner called it optimal.
 
-**It is not a motion value, and the first move is not to shorten anything.** `ArticleCard.kt:146-150`
-waits for the exit animation to finish, *then* calls `onSwipeCommit` → `AppViewModel.launchArticleAction`
-→ `onArticleAction`, which takes `stateMutex`, runs the transition, writes to disk (`saveLocalState`) and
-re-ranks the deck (`adoptPersistedState`), all on `Dispatchers.Main.immediate`. Only then does the head
-article change and the entrance begin. The exit's 300 ms and the persistence run one after the other when
-they could run together. Shortening the entrance — 023's D7 prediction, since corrected — makes the gap a
-larger share of the wait.
+**The gap has two parts, and the first is most of it.** `ArticleCard.kt:147-155` requests the commit only
+after the exit's full `300ms` curve. That curve is Material 3 Emphasized, which front-loads its travel, so on a
+phone the card is off-screen **55–60 ms** into the exit and the remaining ~245 ms draws nothing. Then comes
+the save — an `fsync`'d write on `Dispatchers.IO`, then `publish()`'s re-rank — which undo pays too.
 
-**Undo is the benchmark.** It persists through the same lock and the same path, but has no animation in
-front of it, so it reads as immediate. The owner: *"if we could reduce the gap between swipes to be similar
-to the gap between the undo and the restored card appearing, we will have an optimal UX."*
+**Corrected at design, 2026-09-29.** This entry previously said the write and the re-rank ran on
+`Dispatchers.Main.immediate` and that the re-rank was in `adoptPersistedState`; neither is right. It also
+named the fix as starting the save alongside the exit, which removes only the second, smaller part.
 
-**It is a design pass, and it carries two constraints from 023.** The likely shape — start the commit
-alongside the exit and swap the head when both have finished — changes the commit sequencing that 023's
-**D2** fixed to keep items **013** and **015** closed. Reopening D2 means re-proving both with instrumented
-tests, not structural arguments. And **`AnimatedContent`, `Crossfade` or a second composed card stay
-rejected**: D2 rejected them because the overlap they create reopens 013 and 015, and that still holds.
+**The owner chose to commit on departure:** the save starts the moment the card is no longer visible, not
+when its curve ends. **Amendment 12** says so in §79.5. One slice, in `ArticleCard.kt` and `SwipeGesture.kt`
+only — **narrower** than 023's, not wider; the view model and `ui/screens/discover/**` are untouched. 023's
+D2 is reopened in one respect — the head changes once the card is gone rather than once its curve ends — so
+items **013** and **015** are re-proved with instrumented tests. Landscape and viewports above ~615 dp keep
+today's timing (`spec.md` §4).
 
-*Branch: not yet cut. Evidence of the finding:* `specs/023-android-card-swipe-motion/evidence.md` §4.
+*Branch: `feat/024-android-card-arrival-gap`. Design:* `specs/024-android-card-arrival-gap/`.
 
 ### Also found by 023's walkthrough, and not part of 024
 
