@@ -35,8 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -114,10 +117,22 @@ fun ArticleCard(
     val restoreScope = rememberCoroutineScope()
     val currentOnSwipeCommit by rememberUpdatedState(onSwipeCommit)
     val currentGestureValues by rememberUpdatedState(gestureValues)
+    val currentViewportWidthPx by rememberUpdatedState(viewportWidthPx)
+    var cardBounds by remember { mutableStateOf<Rect?>(null) }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .onPlaced { coordinates ->
+                // Measure outside the graphics layer so drag and exit transforms are not counted twice.
+                val position = coordinates.positionInRoot()
+                cardBounds = Rect(
+                    left = position.x,
+                    top = position.y,
+                    right = position.x + coordinates.size.width,
+                    bottom = position.y + coordinates.size.height,
+                )
+            }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -144,14 +159,36 @@ fun ArticleCard(
                                     SwipeGesture.Action.DISMISS -> ArticleAction.DISMISS
                                     SwipeGesture.Action.SAVE -> ArticleAction.SAVE
                                 }
+                                val departingBounds = cardBounds
+                                val exitViewportWidthPx = currentViewportWidthPx
                                 restoreScope.launch {
-                                    gesture.animateToGestureState()
-                                    currentOnSwipeCommit(gesture.article, articleAction) { persisted ->
-                                        gesture.gestureState.releaseCommitLock()
-                                        if (!persisted) {
-                                            restoreScope.launch { gesture.restoreCard() }
+                                    var commitRequested = false
+                                    fun requestCommit() {
+                                        if (commitRequested) return
+                                        commitRequested = true
+                                        currentOnSwipeCommit(gesture.article, articleAction) { persisted ->
+                                            gesture.gestureState.releaseCommitLock()
+                                            if (!persisted) {
+                                                restoreScope.launch { gesture.restoreCard() }
+                                            }
                                         }
                                     }
+                                    // The old gesture owns its invisible tail even after the head changes.
+                                    gesture.animateExit {
+                                        if (departingBounds != null && SwipeGesture.hasDepartedViewport(
+                                                cardLeftPx = departingBounds.left,
+                                                cardWidthPx = departingBounds.width,
+                                                cardHeightPx = departingBounds.height,
+                                                translationX = gesture.translationX.value,
+                                                rotationDegrees = gesture.rotationDegrees.value,
+                                                viewportWidthPx = exitViewportWidthPx,
+                                            )
+                                        ) {
+                                            requestCommit()
+                                        }
+                                    }
+                                    // Wide viewports and reduced motion complete without geometric departure.
+                                    requestCommit()
                                 }
                             }
                             break
@@ -296,6 +333,18 @@ private suspend fun ArticleGestureValues.animateToGestureState() {
         launch { translationX.animateTo(gestureState.translationX, motionSpec) }
         launch { rotationDegrees.animateTo(gestureState.rotationDegrees, motionSpec) }
         launch { alpha.animateTo(gestureState.alpha, motionSpec) }
+    }
+}
+
+private suspend fun ArticleGestureValues.animateExit(onTranslationFrame: () -> Unit) {
+    val targetTranslation = gestureState.translationX
+    val targetRotation = gestureState.rotationDegrees
+    val targetAlpha = gestureState.alpha
+    coroutineScope {
+        // Update rotation first so the translation frame tests this frame's actual rotated bounds.
+        launch { rotationDegrees.animateTo(targetRotation, motionSpec) }
+        launch { alpha.animateTo(targetAlpha, motionSpec) }
+        launch { translationX.animateTo(targetTranslation, motionSpec) { onTranslationFrame() } }
     }
 }
 
