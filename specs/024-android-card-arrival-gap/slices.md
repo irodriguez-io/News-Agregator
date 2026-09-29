@@ -25,7 +25,13 @@ plan gate — the pattern items 022 and 023 used.
 
 ---
 
-## Slice 1: the card requests its commit once it has left the viewport
+## ~~Slice 1: the card requests its commit once it has left the viewport~~  ·  **done**
+
+**RED `ecc6892`, harness correction `e884150`, GREEN `123528a`.** Slice gate PASS, 2026-09-29. 400 → 403 JVM,
+23 → 28 instrumented, all four gates re-run independently. One implementer stop, correct: the wide-viewport
+RED test laid out 840 dp while `LocalConfiguration` still reported 411 dp; corrected in the harness only.
+One superseded `ArticleCardTest` assertion removed in RED — it encoded the wait for the whole exit that
+Amendment 12 replaces.
 
 **Objective.** Request the swipe commit on the first frame the departing card's rotated bounds are wholly
 outside the viewport, or when the exit curve completes if that never happens — exactly once — without
@@ -55,7 +61,7 @@ declines a swipe.
 - **Definition of done:** all four gates green; the five tests in item 5 above passing **unedited**; the
   three new instrumented tests passing on the emulator job; the departure function covered for both
   directions, maximum rotation, and the wide-viewport fallback.
-- **Status:** pending.
+- **Status:** done.
 
 ---
 
