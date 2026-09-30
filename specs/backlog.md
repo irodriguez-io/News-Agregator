@@ -527,8 +527,8 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   part of its walkthrough rather than a separate pass. **Answered 2026-09-22: not yet.** 023's walkthrough
   found the swipe still does not read as *controlled*, and for the first time named the cause — the
   exit→entrance gap, now item **024**. This stays open until 024's walkthrough. **024's walkthrough,
-  2026-09-29, found the gap gone and nothing else wrong**; the owner did not separately state the character
-  judgement, so it is recorded as unobjected rather than closed.
+  2026-09-29, found the gap gone and nothing else wrong, and the owner closed the judgement:** *"i consider
+  it passed."* **Closed**, after five items on this surface.
 
 **Added by 013, 2026-08-28:**
 

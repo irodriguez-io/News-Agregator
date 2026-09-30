@@ -94,8 +94,8 @@ held in reserve — starting the save before departure — is not needed.
   travel, so the curve-completion fallback governs (`spec.md` §4). Not a regression; not walked.
 - **The exit still discards the gesture's release velocity**, and destination transitions still show both
   tabs' text at once — both recorded in `backlog.md`, neither this item's.
-- **§44's *tactile, quiet, controlled* judgement.** The named cause the walkthrough of 023 found is gone and
-  the owner found nothing else wrong; the owner did not separately state the character judgement.
+- ~~**§44's *tactile, quiet, controlled* judgement.**~~ **Closed 2026-09-29 by the owner:** *"i consider it
+  passed."* Open in `backlog.md` since wave B, through items 008, 013, 015 and 023.
 - **Hosted CI on the exact final head** — recorded in the PR once green.
 - **Environment, new this item:** the Android SDK, emulator and AVD were installed on this machine for the
   first time (2026-09-29). Codex's workspace sandbox cannot write a linked worktree's git index even with the
