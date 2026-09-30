@@ -69,10 +69,11 @@ Ordered. Numbers are allocated at design time, so only the next one is named.
 | 1 | **025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
 | 2 | **Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history. | docs | Wave-close work that came due on 2026-09-19. |
 | 3 | **Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`). | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
-| 4 | **Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured. | decision | Deferred to wave close since 019. Done §2.5. |
-| 5 | **Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.** | decision | Done §2.5. |
-| 6 | **The second-edition sweep, bounded to one sitting.** §80 records sections *"split"* for the second edition; check whether any besides §44 was left unimplemented on Android. Findings go through the freeze test. | audit | Raised by 023. The card's curve was a real compliance gap nobody owned; there may be another. |
-| 7 | **Final acceptance pass**, on a signed release build: §73 at all five widths, §72, §75, §76, a **TalkBack** pass over Discover, Read Later, History, Settings and import/export (closes wave B's debt), §81, 002's three unobserved History checks, and 001's browser walkthrough (fetch `data/articles.json` from production first). SAF round trip on real hardware if a device is available; if not, recorded as a known limitation. | acceptance | Done §2.3, §2.4, §2.6. The last thing on the list. |
+| 4 | **Stop destination transitions showing both tabs' text at once.** Moving between Read Later, Discover and History shows the outgoing and incoming labels together. **Not a defect under the freeze test** — §79.1 specifies the outgoing destination's *"fade to 0.8 opacity"* while the incoming one slides in — so the fix **needs an amendment to §79.1** before it can be built. Item 021's ground: `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310`. | item + amendment | **Added by the owner by name, 2026-09-29** (`definition-of-done.md` §3). Found by 023's walkthrough. |
+| 5 | **Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured. | decision | Deferred to wave close since 019. Done §2.5. |
+| 6 | **Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.** | decision | Done §2.5. |
+| 7 | **The second-edition sweep, bounded to one sitting.** §80 records sections *"split"* for the second edition; check whether any besides §44 was left unimplemented on Android. Findings go through the freeze test. | audit | Raised by 023. The card's curve was a real compliance gap nobody owned; there may be another. |
+| 8 | **Final acceptance pass**, on a signed release build: §73 at all five widths, §72, §75, §76, a **TalkBack** pass over Discover, Read Later, History, Settings and import/export (closes wave B's debt), §81, 002's three unobserved History checks, and 001's browser walkthrough (fetch `data/articles.json` from production first). SAF round trip on real hardware if a device is available; if not, recorded as a known limitation. | acceptance | Done §2.3, §2.4, §2.6. The last thing on the list. |
 
 **Superseded by this list:** the Reminders item *"Watch for the byte-identical CI instrumented failure"* is now
 row 1.
@@ -81,10 +82,7 @@ row 1.
 
 Recorded so they are not rediscovered as oversights; **not worked** until the owner opens a new version.
 
-- **The exit discards the gesture's release velocity** — unless row 5 decides otherwise.
-- **Destination transitions show both tabs' text at once.** This is **not a defect**: §79.1 specifies an
-  outgoing *"fade to 0.8 opacity"* while the incoming destination slides in, so both are visible by design.
-  Changing it means amending §79.1.
+- **The exit discards the gesture's release velocity** — unless row 6 decides otherwise.
 - **Landscape and viewports above ~615 dp keep the old exit-to-entrance timing** (024 `spec.md` §4).
 - **R8 and a baseline profile**, the untried levers against first-use jank.
 - **Everything in Debt below**, absorbed only when something next edits the same file.
