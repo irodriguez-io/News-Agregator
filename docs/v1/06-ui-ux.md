@@ -2341,6 +2341,12 @@ rotation of §44, **the departing card fades to fully transparent across the exi
 browser reference implementation has always had. A card that holds full opacity until it leaves the
 viewport reads as vanishing rather than leaving, which fails §44's *controlled*.
 
+**For §43's sequence, the exit is complete once the departing card is no longer visible** — when its
+rotated bounds have left the viewport — **or when its curve completes, whichever is first.** The state
+action is processed from that point. The remainder of the curve draws nothing on screen and does not delay
+it. §43's order is unchanged: the card visibly exits before the state action is processed, and the next
+card appears after it. *(Amendment 12.)*
+
 **Entrance.**
 
 ```text

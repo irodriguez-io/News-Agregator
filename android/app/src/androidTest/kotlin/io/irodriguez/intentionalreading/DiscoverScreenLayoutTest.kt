@@ -1,9 +1,11 @@
 package io.irodriguez.intentionalreading
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -11,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
@@ -173,6 +176,203 @@ class DiscoverScreenLayoutTest {
         composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput { cancel() }
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun theCommitStartsWhenTheCardHasLeftTheViewportExactlyOnce() {
+        val host = departureHost()
+        val releasedAt = releaseDepartureSwipe(host)
+        assertEquals("A visible card must not commit at release", 0, host.commits.size)
+
+        awaitEarlyDeparture(host, releasedAt)
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals("Curve completion must not request a second commit", 1, host.commits.size)
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    @Test
+    fun aSwipeOnTheArrivingCardWhileTheOldExitIsStillFinishing() {
+        val host = departureHost { current, article, complete ->
+            complete(true)
+            if (article.id == current.leaving.id) current.current.value = current.arriving
+        }
+        val releasedAt = releaseDepartureSwipe(host)
+        awaitEarlyDeparture(host, releasedAt)
+        composeTestRule.mainClock.advanceTimeBy(32)
+        composeTestRule.waitForIdle()
+        val arriving = composeTestRule.onNodeWithText(host.arriving.title)
+        val before = arriving.fetchSemanticsNode().positionInRoot
+        val firstTravel = host.intentSlopPx + 1f
+
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(-firstTravel, 0f))
+        }
+        composeTestRule.waitForIdle()
+        assertTrue(
+            "The replacement must track its very first movement during the old exit",
+            arriving.fetchSemanticsNode().positionInRoot.x < before.x - firstTravel / 2f,
+        )
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            moveBy(Offset(-host.thresholdPx, 0f))
+            up()
+        }
+        composeTestRule.waitForIdle()
+        assertTrue(
+            "The replacement swipe must finish before the old exit curve would finish",
+            composeTestRule.mainClock.currentTime - releasedAt < SwipeGesture.EXIT_DURATION_MS,
+        )
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(
+            listOf(host.leaving.id to ArticleAction.SAVE, host.arriving.id to ArticleAction.DISMISS),
+            host.commits,
+        )
+        composeTestRule.onNodeWithText(host.leaving.title).assertDoesNotExist()
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    @Test
+    fun aFailedSaveReturnsTheCardWhereverTheExitHadReached() {
+        var finishSave: ((Boolean) -> Unit)? = null
+        val host = departureHost { _, _, complete -> finishSave = complete }
+        val restingPosition = composeTestRule.onNodeWithText(host.leaving.title).fetchSemanticsNode().positionInRoot
+        val opaquePixel = entranceFillPixel(host)
+        val releasedAt = releaseDepartureSwipe(host)
+        awaitEarlyDeparture(host, releasedAt)
+        composeTestRule.mainClock.advanceTimeByFrame()
+        assertTrue(composeTestRule.mainClock.currentTime - releasedAt < SwipeGesture.EXIT_DURATION_MS)
+        composeTestRule.runOnIdle { checkNotNull(finishSave)(false) }
+
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(host.leaving.id, host.current.value.id)
+        composeTestRule.onNodeWithText(host.arriving.title).assertDoesNotExist()
+        val restoredPosition = composeTestRule.onNodeWithText(host.leaving.title).fetchSemanticsNode().positionInRoot
+        assertEquals(restingPosition.x, restoredPosition.x, 0.5f)
+        assertEquals(restingPosition.y, restoredPosition.y, 0.5f)
+        assertTrue("A failed save restores full opacity", colorDistance(opaquePixel, entranceFillPixel(host)) < 0.01f)
+        assertEquals("The cancelled exit must not commit again", 1, host.commits.size)
+
+        releaseDepartureSwipe(host, direction = -1f)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(
+            listOf(host.leaving.id to ArticleAction.SAVE, host.leaving.id to ArticleAction.DISMISS),
+            host.commits,
+        )
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    @Test
+    fun whereTheCardCannotLeaveTheCurvesCompletionStartsTheCommit() {
+        val host = departureHost(width = 840.dp)
+        releaseDepartureSwipe(host)
+        composeTestRule.mainClock.advanceTimeBy(200)
+        composeTestRule.waitForIdle()
+        assertEquals("The wide card is still partly in the viewport", 0, host.commits.size)
+        composeTestRule.mainClock.advanceTimeBy(160)
+        composeTestRule.waitForIdle()
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(1, host.commits.size)
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    @Test
+    fun reducedMotionIsUnchangedForDepartureAndArrival() {
+        val host = departureHost(reducedMotion = true) { current, _, complete ->
+            complete(true)
+            current.current.value = current.arriving
+        }
+        val restingTop = composeTestRule.onNodeWithText(host.leaving.title).fetchSemanticsNode().positionInRoot.y
+        val opaquePixel = entranceFillPixel(host)
+        val releasedAt = releaseDepartureSwipe(host)
+        // Touch injection itself advances the clock; allow only frame dispatch, not an exit curve.
+        composeTestRule.mainClock.advanceTimeBy(32)
+        composeTestRule.waitForIdle()
+        assertTrue(composeTestRule.mainClock.currentTime - releasedAt < 100)
+        assertEquals(listOf(host.leaving.id to ArticleAction.SAVE), host.commits)
+        assertEquals(host.arriving.id, host.current.value.id)
+        assertEquals(
+            restingTop,
+            composeTestRule.onNodeWithText(host.arriving.title).fetchSemanticsNode().positionInRoot.y,
+            0.5f,
+        )
+        assertTrue("Reduced motion has no arrival fade", colorDistance(opaquePixel, entranceFillPixel(host)) < 0.01f)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.waitForIdle()
+        assertEquals(1, host.commits.size)
+        composeTestRule.mainClock.autoAdvance = true
+    }
+
+    private fun departureHost(
+        width: Dp = 360.dp,
+        reducedMotion: Boolean = false,
+        onCommit: (EntranceHost, Article, (Boolean) -> Unit) -> Unit = { _, _, _ -> },
+    ): EntranceHost {
+        val template = longDatasetCardState().article.copy(excerpt = "", tags = emptyList())
+        val leaving = template.copy(id = "leaving", title = "Leaving article")
+        val arriving = template.copy(id = "arriving", title = "Arriving article")
+        val host = EntranceHost(leaving, arriving, mutableStateOf(leaving))
+        composeTestRule.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(width, 640.dp))) {
+                val configuration = Configuration(LocalConfiguration.current).apply {
+                    screenWidthDp = width.value.toInt()
+                }
+                CompositionLocalProvider(LocalConfiguration provides configuration) {
+                    host.density = LocalDensity.current.density
+                    host.intentSlopPx = with(LocalDensity.current) { SwipeGesture.INTENT_SLOP_DP.dp.toPx() }
+                    host.thresholdPx = with(LocalDensity.current) { SwipeGesture.THRESHOLD_DP.dp.toPx() }
+                    IntentionalReadingTheme(appearance = Appearance.LIGHT) {
+                        Box(Modifier.fillMaxSize().background(Color.Magenta).testTag(ENTRANCE_ROOT_TAG)) {
+                            Box(Modifier.padding(24.dp)) {
+                                ArticleCard(
+                                    state = longDatasetCardState().copy(article = host.current.value),
+                                    onDismiss = {},
+                                    onReadArticle = {},
+                                    onSave = {},
+                                    onMarkRead = {},
+                                    onSwipeCommit = { article, action, complete ->
+                                        host.commits += article.id to action
+                                        onCommit(host, article, complete)
+                                    },
+                                    reducedMotion = { reducedMotion },
+                                    modifier = Modifier.testTag(ENTRANCE_CARD_TAG),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.autoAdvance = false
+        return host
+    }
+
+    private fun releaseDepartureSwipe(host: EntranceHost, direction: Float = 1f): Long {
+        // Record before injection, conservatively including its 16–32 ms in the exit deadline.
+        val releasedAt = composeTestRule.mainClock.currentTime
+        composeTestRule.onNodeWithTag(ENTRANCE_CARD_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(direction * (host.thresholdPx + host.intentSlopPx + 1f), 0f))
+            up()
+        }
+        composeTestRule.waitForIdle()
+        return releasedAt
+    }
+
+    private fun awaitEarlyDeparture(host: EntranceHost, releasedAt: Long) {
+        while (host.commits.isEmpty() && composeTestRule.mainClock.currentTime - releasedAt < 192) {
+            composeTestRule.mainClock.advanceTimeByFrame()
+            composeTestRule.waitForIdle()
+        }
+        assertEquals("Departure must request the commit before the 300 ms exit finishes", 1, host.commits.size)
+        assertTrue(composeTestRule.mainClock.currentTime - releasedAt < SwipeGesture.EXIT_DURATION_MS)
     }
 
     private fun startReplacementEntrance(): EntranceHost {

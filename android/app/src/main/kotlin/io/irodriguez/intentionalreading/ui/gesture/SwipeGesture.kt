@@ -4,6 +4,8 @@ import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.PathEasing
 import androidx.compose.ui.graphics.Path
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 object SwipeGesture {
     const val THRESHOLD_DP = 90f
@@ -35,6 +37,27 @@ object SwipeGesture {
         }
 
         override fun transform(fraction: Float): Float = pathEasing.transform(fraction)
+    }
+
+    // docs/v1/06-ui-ux.md §79.5 / Amendment 12 — commit once the rotated bounds leave the viewport.
+    fun hasDepartedViewport(
+        cardLeftPx: Float,
+        cardWidthPx: Float,
+        cardHeightPx: Float,
+        translationX: Float,
+        rotationDegrees: Float,
+        viewportWidthPx: Float,
+    ): Boolean {
+        val radians = Math.toRadians(rotationDegrees.toDouble())
+        val halfExtent = (cardWidthPx / 2f * cos(radians) + cardHeightPx / 2f * sin(abs(radians))).toFloat()
+        val translatedCentre = cardLeftPx + cardWidthPx / 2f + translationX
+        return if (translationX > 0f) {
+            translatedCentre - halfExtent >= viewportWidthPx
+        } else if (translationX < 0f) {
+            translatedCentre + halfExtent <= 0f
+        } else {
+            false
+        }
     }
 
     enum class Intent {

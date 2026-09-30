@@ -167,7 +167,7 @@ class ArticleCardTest {
     }
 
     @Test
-    fun `the exit fade shares the animation completion before the state action`() {
+    fun `nothing else about the motion changes when departure starts the state action`() {
         // Given the one card and its existing coordinated animation.
         val animation = functionSource("ArticleGestureValues.animateToGestureState")
         val surface = articleCardSurface()
@@ -178,11 +178,8 @@ class ArticleCardTest {
         assertTrue(animation.contains("launch { alpha.animateTo(gestureState.alpha, motionSpec) }"))
         assertTrue(surface.contains("alpha = gestureValues.alpha.value"))
         assertTrue(functionSource("ArticleCard").contains("alpha = Animatable(1f)"))
-        assertTrue(
-            Regex("""gesture\.animateToGestureState\(\)\s+currentOnSwipeCommit\(gesture\.article, articleAction\)""")
-                .containsMatchIn(surface),
-            "the state action must still wait for the entire exit",
-        )
+        // Amendment 12 supersedes waiting for the entire exit. The instrumented departure tests
+        // prove the new timing; these checks retain the coordinated restore and draw-time fade.
     }
 
     @Test
