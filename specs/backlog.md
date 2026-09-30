@@ -367,7 +367,7 @@ legible:** before it, the replacement simply materialised, so there was nothing 
 *Found by the owner's wave-E walkthrough, 2026-09-20.*
 *Evidence:* `specs/023-android-card-swipe-motion/evidence.md` — §4 is the walkthrough.
 
-### 024 — The next card arrives without a pause  ·  **Designed, next**
+### 024 — The next card arrives without a pause  ·  **Implemented, in review**
 
 Found by 023's walkthrough, 2026-09-22. **Roughly half a second of nothing sits between the card leaving and
 the replacement arriving** — in the owner's words, *"enough for my brain to doubt whether a new card will
@@ -389,7 +389,11 @@ D2 is reopened in one respect — the head changes once the card is gone rather 
 items **013** and **015** are re-proved with instrumented tests. Landscape and viewports above ~615 dp keep
 today's timing (`spec.md` §4).
 
-*Branch: `feat/024-android-card-arrival-gap`. Design:* `specs/024-android-card-arrival-gap/`.
+**Implemented 2026-09-29 in one slice**, 400 → 403 JVM tests, 23 → 28 instrumented. **The owner walkthrough
+passed the same day** on a signed release build: *"no pause between new card and old card"*, and against
+undo, *"is the same lapse."* The design's prediction held — what remains is the save, and it reads like undo.
+
+*Branch: `feat/024-android-card-arrival-gap`. Evidence:* `specs/024-android-card-arrival-gap/evidence.md`.
 
 ### Also found by 023's walkthrough, and not part of 024
 
@@ -522,7 +526,9 @@ pinned-3.13 concern turns out not to block the suite. What remains missing for 0
   the swipe surface. **Item 023 is the first item that changes how it animates**, and answering this is
   part of its walkthrough rather than a separate pass. **Answered 2026-09-22: not yet.** 023's walkthrough
   found the swipe still does not read as *controlled*, and for the first time named the cause — the
-  exit→entrance gap, now item **024**. This stays open until 024's walkthrough.
+  exit→entrance gap, now item **024**. This stays open until 024's walkthrough. **024's walkthrough,
+  2026-09-29, found the gap gone and nothing else wrong**; the owner did not separately state the character
+  judgement, so it is recorded as unobjected rather than closed.
 
 **Added by 013, 2026-08-28:**
 
