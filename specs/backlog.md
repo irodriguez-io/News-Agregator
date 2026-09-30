@@ -12,8 +12,8 @@ supersedes `future-items.md`'s "allocated at design time". Anything added below 
 inside each wave. Per-wave briefs are in `specs/waves/`, each self-contained enough to hand to a fresh
 session.
 
-Last reviewed: 2026-09-29, with **wave E implemented and its close outstanding**. Items 017–023 are all
-merged; the backlog holds item **024** and the wave-close work itself.
+Last reviewed: 2026-09-29, after **024 shipped** and **`definition-of-done.md` was adopted**. The work left
+is the closed list in **Road to done** below, and nothing else.
 
 **On PR numbers.** The repository moved from `~/Documents/VS Code/` to `~/Documents/Repos/` and its remote
 changed to `irodriguez-io` on 2026-09-18, which restarted PR numbering at #1. PRs #30–#34 and PRs #1–#7
@@ -49,12 +49,52 @@ above #29.
 | 021 | M3 motion — directional tab slide, modal sheet reveal | Android | PR #3, 2026-09-19 |
 | 022 | The appearance switch changes colour, not the screen | Android | PR #4, 2026-09-20 |
 | 023 | The card leaves, and the next one arrives | Android | PR #6, 2026-09-23 |
+| 024 | The next card arrives without a pause | Android | PR #9, 2026-09-29 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
 ---
 
-## Queued
+## Road to done
+
+**The closed list.** `definition-of-done.md` §2 says when the project is done; this is everything that stands
+between here and there. **Nothing joins it except a severity-blocking defect** — one that breaks a rule
+`docs/v1/**` already states, or loses the reader's data — **or an item the owner adds by name** (§3). Everything
+else goes to **After done**.
+
+Ordered. Numbers are allocated at design time, so only the next one is named.
+
+| # | Work | Kind | Why it is on the list |
+|---|---|---|---|
+| 1 | **025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
+| 2 | **Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history. | docs | Wave-close work that came due on 2026-09-19. |
+| 3 | **Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`). | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
+| 4 | **Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured. | decision | Deferred to wave close since 019. Done §2.5. |
+| 5 | **Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.** | decision | Done §2.5. |
+| 6 | **The second-edition sweep, bounded to one sitting.** §80 records sections *"split"* for the second edition; check whether any besides §44 was left unimplemented on Android. Findings go through the freeze test. | audit | Raised by 023. The card's curve was a real compliance gap nobody owned; there may be another. |
+| 7 | **Final acceptance pass**, on a signed release build: §73 at all five widths, §72, §75, §76, a **TalkBack** pass over Discover, Read Later, History, Settings and import/export (closes wave B's debt), §81, 002's three unobserved History checks, and 001's browser walkthrough (fetch `data/articles.json` from production first). SAF round trip on real hardware if a device is available; if not, recorded as a known limitation. | acceptance | Done §2.3, §2.4, §2.6. The last thing on the list. |
+
+**Superseded by this list:** the Reminders item *"Watch for the byte-identical CI instrumented failure"* is now
+row 1.
+
+## After done
+
+Recorded so they are not rediscovered as oversights; **not worked** until the owner opens a new version.
+
+- **The exit discards the gesture's release velocity** — unless row 5 decides otherwise.
+- **Destination transitions show both tabs' text at once.** This is **not a defect**: §79.1 specifies an
+  outgoing *"fade to 0.8 opacity"* while the incoming destination slides in, so both are visible by design.
+  Changing it means amending §79.1.
+- **Landscape and viewports above ~615 dp keep the old exit-to-entrance timing** (024 `spec.md` §4).
+- **R8 and a baseline profile**, the untried levers against first-use jank.
+- **Everything in Debt below**, absorbed only when something next edits the same file.
+- Everything already in **Parked**.
+
+---
+
+## Queued — history
+
+*Kept as the record of how each item was scoped. The live queue is Road to done above.*
 
 **One item, and a wave close.** Wave E's five items are implemented and merged, and so are **022** and
 **023**, the two defects the owner's wave-E walkthrough found. The queue holds **024** — the defect 023's
@@ -367,7 +407,7 @@ legible:** before it, the replacement simply materialised, so there was nothing 
 *Found by the owner's wave-E walkthrough, 2026-09-20.*
 *Evidence:* `specs/023-android-card-swipe-motion/evidence.md` — §4 is the walkthrough.
 
-### 024 — The next card arrives without a pause  ·  **Implemented, in review**
+### ~~024 — The next card arrives without a pause~~  ·  **Shipped**
 
 Found by 023's walkthrough, 2026-09-22. **Roughly half a second of nothing sits between the card leaving and
 the replacement arriving** — in the owner's words, *"enough for my brain to doubt whether a new card will
@@ -389,7 +429,7 @@ D2 is reopened in one respect — the head changes once the card is gone rather 
 items **013** and **015** are re-proved with instrumented tests. Landscape and viewports above ~615 dp keep
 today's timing (`spec.md` §4).
 
-**Implemented 2026-09-29 in one slice**, 400 → 403 JVM tests, 23 → 28 instrumented. **The owner walkthrough
+**Shipped as PR #9 (`bf34fd7`), 2026-09-29, in one slice**, 400 → 403 JVM tests, 23 → 28 instrumented. **The owner walkthrough
 passed the same day** on a signed release build: *"no pause between new card and old card"*, and against
 undo, *"is the same lapse."* The design's prediction held — what remains is the save, and it reads like undo.
 
