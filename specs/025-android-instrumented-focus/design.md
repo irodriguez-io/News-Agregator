@@ -21,19 +21,25 @@ device) and the predictive-back path (`targetSdk = 36` on API 36+ devices) end a
 This is the only test in the suite that covers back (`grep BackHandler|onBackPressed` in `src/test` and
 `src/androidTest` finds nothing else), so the coverage matters and is kept.
 
-## D2 — Make the bad condition permanent in the test
+## D2 — The bad condition is reproduced on demand, outside the test (amended 2026-09-30)
 
-The ANR dialog appears only sometimes. A fix that passes on a clean emulator proves nothing about the
-condition that failed. So the test **expands the notification shade immediately before the back step**,
-using the test's existing `runShellCommand` (`cmd statusbar expand-notifications`), and collapses it
-(`cmd statusbar collapse`) in `finally`, alongside the existing `animator_duration_scale` restore.
+**As approved:** the test would expand the notification shade itself just before back and collapse it in
+`finally`, giving a committed RED and a permanent check.
 
-That gives the item an honest RED (the unchanged `Espresso.pressBack()` fails every time with the shade
-expanded) and keeps *"back works without window focus"* checked on every run from now on.
+**What happened:** the first RED attempt passed. Expanded from inside the test, the shade took focus and then
+lost it within 1–6 s (2 of 2 runs), inside Espresso's 10 s wait. Expanded over the app by hand, it held focus
+for 20 s; expanded **before** the test started, it failed the unchanged test 3 of 3 times. What closes it
+mid-test was not identified.
 
-**If the shade step turns out to be unreliable itself** — any of the 20 local runs fails for a reason other
-than the one being fixed — stop and report. Do not drop it quietly, and do not replace it with a different
-focus thief without saying so.
+**Owner's decision, 2026-09-30: fix only.** The test is not given a focus thief. The scenario is proved by a
+procedure, recorded in `evidence.md`: shade expanded before the run, unchanged test fails; same condition
+after the fix, passes 10 of 10 (`spec.md` §5.2). **What this gives up:** no permanent in-suite check that back
+works without focus. If a focus-dependent call is ever added again, nothing catches it except CI's
+occasional ANR.
+
+**Consequence for the commit pair:** this slice has no failing test commit. Its RED is the procedure run on
+the parent commit, recorded with output. That is a stated exception, not a precedent: the change is to a test,
+the one attempt to produce the condition from inside it failed, and the owner chose not to investigate further.
 
 ## D3 — Rejected
 

@@ -55,8 +55,14 @@ mCurrentFocus=Window{3340202 u0 Application Not Responding: com.android.systemui
 
 That is the system's own *"System UI isn't responding"* dialog, which cold-booted emulators are known to
 show. **Lines 58–65 of the test (a Compose click and four asserts) passed under the same dialog**; only the
-Espresso call failed. Expanding the notification shade (`cmd statusbar expand-notifications`) moves focus
-the same way and reproduces the failure on demand.
+Espresso call failed. Expanding the notification shade (`cmd statusbar expand-notifications`) **before the
+test starts** moves focus the same way and reproduces the failure on demand: 3 of 3 runs on the unchanged
+test, 2026-09-30.
+
+**Expanding the shade from inside the test does not.** Tried as this item's first RED (2 of 2 runs): the
+shade took focus, then lost it within 1–6 s, inside Espresso's 10 s wait, and the unchanged test passed. What
+closes it was not identified. That is why the on-demand reproduction is an evidence procedure (§5.2), not a
+step in the test (`design.md` D2, amended).
 
 **Limit, stated so it is not overclaimed:** the ANR dialog was observed locally, not in CI, because CI kept
 no logcat. The match is strong (cold boot, identical exception, line and root state) but it is an
@@ -85,8 +91,8 @@ merges count toward done §2.2 without a re-run.
 
 ### Scenario: back returns to Discover while another window holds input focus
 Given reduced motion is set
+And the notification shade was expanded before the test started, so the app's window never has input focus
 And the reader is on Read Later with Settings closed
-And the notification shade is expanded over the app, so the app's window does not have input focus
 When back is delivered
 Then the destination is Discover
 And Discover's eyebrow is displayed and Read Later's does not exist
@@ -96,11 +102,6 @@ And `uiState` equals its value before navigation
 Given the test as item 021 wrote it
 When it is changed by this item
 Then each assertion at lines 58–65 and 70–73 is still made, unweakened
-
-### Scenario: the shade does not outlive the test
-Given the shade was expanded for the back step
-When the test ends, passing or failing
-Then the shade is collapsed and the original `animator_duration_scale` is restored
 
 ---
 
@@ -113,17 +114,28 @@ With `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home` 
 `./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:connectedDebugAndroidTest`.
 Counts stay **403 JVM / 28 instrumented**: this item changes a test, it adds none.
 
-### 5.2 Repetition
+### 5.2 On-demand reproduction, before and after
 
-On a **cold-booted** emulator, run the target test **20 times in a row** via `am instrument`. All 20 pass.
-At least one run should happen with the natural SystemUI ANR dialog present, which is what today's cold
-boot showed. Record `mCurrentFocus` for that run.
+The scenario above is run as a procedure, not built into the test (`design.md` D2):
 
-### 5.3 No focus-dependent call remains
+1. Expand the shade with `adb shell cmd statusbar expand-notifications`, wait 2 s, and confirm
+   `dumpsys window | grep mCurrentFocus` names `NotificationShade`.
+2. Run the target test via `am instrument`. Collapse the shade with `cmd statusbar collapse` afterwards.
+
+**Before the fix**, on the parent commit: it fails with `RootViewWithoutFocusException` at the back call
+(3 of 3 recorded at design time). **After the fix**: it passes **10 of 10**.
+
+### 5.3 Repetition
+
+On a **cold-booted** emulator, with nothing expanded, run the target test **20 times in a row** via
+`am instrument`. All 20 pass. Record `mCurrentFocus` before the first run; if SystemUI's ANR dialog is
+present, say so.
+
+### 5.4 No focus-dependent call remains
 
 `grep -rn "Espresso\.\|onView(" android/app/src/androidTest` returns nothing.
 
-### 5.4 Hosted
+### 5.5 Hosted
 
 The PR's `android.yml` passes on its **first attempt**. That alone proves little: a 3-in-16 failure passes
 most single runs. The proof is §5.2's on-demand reproduction turning green. Done §2.2 itself is judged on the

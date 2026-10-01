@@ -1,6 +1,6 @@
 # 025 — slice plan
 
-**One slice.** One call in one test file changes. Splitting it would leave a slice with nothing to prove.
+**One slice, one commit.** One call in one test file changes. Splitting it would leave a slice with nothing to prove.
 
 ---
 
@@ -8,7 +8,8 @@
 
 1. **Back goes through `OnBackPressedDispatcher`** (`design.md` D1). Not `UiDevice`, not `dispatchKeyEvent`,
    not a retry.
-2. **The shade step stays in the test** (D2). If it proves unreliable, stop and report.
+2. **No focus thief in the test** (D2, amended: owner's decision 2026-09-30). The shade is used only in the
+   §5.2 procedure, from `adb`, outside the test.
 3. **No assertion is removed or loosened.** Lines 58–65 and 70–73 keep every check they make today.
 4. **Only `DestinationTransitionInstrumentedTest.kt` is edited.** If another file seems to need a change,
    stop.
@@ -30,13 +31,10 @@ intact.
   `android/gradle/libs.versions.toml`, `.github/workflows/**`, `pipeline/**`, `config/**`, the web runtime.
 - **Hub-file edges (execution-model §2.1):** writes — this slice only; asserted by — nothing; receives —
   nothing. It is a leaf.
-- **RED commit (`test(android): …`).** Expand the notification shade with the test's existing
-  `runShellCommand("cmd statusbar expand-notifications")` immediately **before** `Espresso.pressBack()`
-  (after line 65's assertions), and collapse it with `runShellCommand("cmd statusbar collapse")` in
-  `withReducedMotion`'s `finally`. Keep `Espresso.pressBack()`. **Evidence:** the test fails locally with
-  `RootViewWithoutFocusException` at the back call, and `dumpsys window | grep mCurrentFocus` names
-  `NotificationShade` during the run. If it fails anywhere else, or passes, stop.
-- **GREEN commit (`fix(android): …`).** Capture the dispatcher inside `setContent` via
+- **RED — a recorded procedure, not a commit** (D2, amended). On the parent commit `HEAD` as you receive it,
+  with the unchanged test: run `spec.md` §5.2's procedure (shade expanded before the run). It fails with
+  `RootViewWithoutFocusException` at the back call. Record the output. If it passes, stop.
+- **The one commit (`fix(android): …`).** Capture the dispatcher inside `setContent` via
   `LocalOnBackPressedDispatcherOwner.current` (`requireNotNull`), and replace `Espresso.pressBack()` with
   `composeTestRule.runOnUiThread { dispatcher.onBackPressed() }`. Remove the unused `Espresso` import.
   Leave `settleImmediateChange()` after it unchanged.
@@ -44,13 +42,14 @@ intact.
   it.
 - **Definition of done:**
   - all four gates green, **403 JVM / 28 instrumented** (unchanged counts);
-  - the target test passes **20 of 20** consecutive runs via `am instrument` on a **cold-booted** emulator,
-    with at least one run's `mCurrentFocus` recorded (SystemUI ANR, if it appears);
+  - §5.2's procedure, after the fix: **10 of 10** pass with the shade expanded before each run;
+  - §5.3: the target test passes **20 of 20** consecutive runs via `am instrument` on a **cold-booted**
+    emulator, `mCurrentFocus` recorded before the first;
   - `grep -rn "Espresso\.\|onView(" android/app/src/androidTest` returns nothing;
   - the PR's hosted `android.yml` passes on its first attempt.
 - **Stop and report if:** `LocalOnBackPressedDispatcherOwner.current` is null or unavailable on the pinned
-  stack; any Compose assertion fails with the shade expanded; the shade step fails any of the 20 runs; the
-  RED fails anywhere other than the back call.
+  stack; any Compose assertion fails with the shade expanded; any run of §5.2 or §5.3 fails after the fix;
+  the RED procedure passes, or fails anywhere other than the back call.
 - **Status:** pending.
 
 ---
