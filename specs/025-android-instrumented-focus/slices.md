@@ -18,7 +18,11 @@
 
 ---
 
-## Slice 1: back is delivered without depending on window focus
+## ~~Slice 1: back is delivered without depending on window focus~~  ·  **done**
+
+**Commit `b00712f`.** Slice gate PASS, 2026-09-30. 403 JVM / 28 instrumented, unchanged. Two implementer
+stops, both correct: the in-test shade RED passed (led to D2's amendment), and the sandbox could not start the
+emulator for the cold-boot runs, which the orchestrator ran instead.
 
 **Objective.** `reducedMotionComposesDestinationAndBackResultImmediately` delivers back to the app's
 `OnBackPressedDispatcher` and passes while another window holds input focus, with every existing assertion
@@ -50,7 +54,7 @@ intact.
 - **Stop and report if:** `LocalOnBackPressedDispatcherOwner.current` is null or unavailable on the pinned
   stack; any Compose assertion fails with the shade expanded; any run of §5.2 or §5.3 fails after the fix;
   the RED procedure passes, or fails anywhere other than the back call.
-- **Status:** pending.
+- **Status:** done.
 
 ---
 
