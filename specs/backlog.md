@@ -50,6 +50,7 @@ above #29.
 | 022 | The appearance switch changes colour, not the screen | Android | PR #4, 2026-09-20 |
 | 023 | The card leaves, and the next one arrives | Android | PR #6, 2026-09-23 |
 | 024 | The next card arrives without a pause | Android | PR #9, 2026-09-29 |
+| 025 | The instrumented suite does not depend on window focus | Android | PR #11, 2026-09-30 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -66,7 +67,7 @@ Ordered. Numbers are allocated at design time, so only the next one is named.
 
 | # | Work | Kind | Why it is on the list |
 |---|---|---|---|
-| 1 | **025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
+| 1 | **Shipped — PR #11, 2026-09-30.** ~~**025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head.~~ Cause: `Espresso.pressBack()`, the suite's only focus-dependent call; see `025/evidence.md`. Done §2.2 now counts merges from here. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
 | 2 | **Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history. | docs | Wave-close work that came due on 2026-09-19. |
 | 3 | **Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`). | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
 | 4 | **Stop destination transitions showing both tabs' text at once.** Moving between Read Later, Discover and History shows the outgoing and incoming labels together. **Not a defect under the freeze test** — §79.1 specifies the outgoing destination's *"fade to 0.8 opacity"* while the incoming one slides in — so the fix **needs an amendment to §79.1** before it can be built. Item 021's ground: `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310`. | item + amendment | **Added by the owner by name, 2026-09-29** (`definition-of-done.md` §3). Found by 023's walkthrough. |
