@@ -23,7 +23,11 @@ No design note: no new dependency, mechanism or structure. The decision is 017's
 
 ---
 
-## Slice 1: each colour in the token object has one name
+## ~~Slice 1: each colour in the token object has one name~~  ·  **done**
+
+**RED `ef69cd3`, GREEN `d288ceb`.** Slice gate PASS, 2026-10-01. RED reproduced in a throwaway worktree with
+`--rerun-tasks`: 404 tests, only the new one fails (*"Duplicate token fields still exist"*). GREEN gates
+reproduced the same way: **404 JVM / 28 instrumented, 0 failures**.
 
 **Objective.** `IntentionalReadingTokens` no longer declares `accent`, `accentSoft`, `quietInk` or
 `strongBorder`, and every former use reads the identically-valued replacement.
@@ -61,7 +65,7 @@ No design note: no new dependency, mechanism or structure. The decision is 017's
 - **Stop and report if:** any of the four names appears somewhere not listed in `spec.md` §1.3; any test
   other than the new one fails on the RED commit; a replacement name does not exist or the compiler
   reports a type mismatch; any change beyond a rename seems necessary.
-- **Status:** pending.
+- **Status:** done.
 
 ---
 
