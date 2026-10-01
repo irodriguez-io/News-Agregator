@@ -9,10 +9,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.graphics.Path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 
 internal enum class DestinationSlideDirection {
     FROM_LEFT,
@@ -85,6 +89,8 @@ internal fun DestinationTransition(
         modifier = modifier,
         label = "Destination transition",
     ) { targetDestination ->
-        content(targetDestination)
+        Box(Modifier.fillMaxSize().background(LocalIntentionalReadingTokens.current.bg)) {
+            content(targetDestination)
+        }
     }
 }
