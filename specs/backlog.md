@@ -51,6 +51,7 @@ above #29.
 | 023 | The card leaves, and the next one arrives | Android | PR #6, 2026-09-23 |
 | 024 | The next card arrives without a pause | Android | PR #9, 2026-09-29 |
 | 025 | The instrumented suite does not depend on window focus | Android | PR #11, 2026-09-30 |
+| 026 | One name for each colour — four duplicate token names retired | Android | PR #13, 2026-10-01 |
 
 Each has `spec.md`, `design.md`, `slices.md`, and `evidence.md` under `specs/<n>-<slug>/`.
 
@@ -69,7 +70,7 @@ Ordered. Numbers are allocated at design time, so only the next one is named.
 |---|---|---|---|
 | 1 | **Shipped — PR #11, 2026-09-30.** ~~**025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head.~~ Cause: `Espresso.pressBack()`, the suite's only focus-dependent call; see `025/evidence.md`. Done §2.2 now counts merges from here. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
 | 2 | **Shipped — PR #12, 2026-09-30.** ~~**Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history.~~ | docs | Wave-close work that came due on 2026-09-19. |
-| 3 | **Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`). | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
+| 3 | **Shipped — PR #13, 2026-10-01.** ~~**Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`).~~ Item 026. **Four retired, not thirteen:** `accent`, `accentSoft`, `quietInk`, `strongBorder`, the only names that duplicated another colour (`017/design.md` D1). The other nine have no twin and D1 marks them *"never"*; owner's decision, 2026-09-30. | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
 | 4 | **Stop destination transitions showing both tabs' text at once.** Moving between Read Later, Discover and History shows the outgoing and incoming labels together. **Not a defect under the freeze test** — §79.1 specifies the outgoing destination's *"fade to 0.8 opacity"* while the incoming one slides in — so the fix **needs an amendment to §79.1** before it can be built. Item 021's ground: `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310`. | item + amendment | **Added by the owner by name, 2026-09-29** (`definition-of-done.md` §3). Found by 023's walkthrough. |
 | 5 | **Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured. | decision | Deferred to wave close since 019. Done §2.5. |
 | 6 | **Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.** | decision | Done §2.5. |
