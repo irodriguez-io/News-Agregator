@@ -49,7 +49,7 @@ The brief made four structural bets, and every one paid.
 **The brief also bet that 017 could ship a theme and change no consumer.** It did: all thirteen legacy token
 names were kept with new values, and 205 call sites in 17 files compiled unchanged (`017/design.md` D1). The
 cost was accepted in writing — *"one colour under two names"* — and scoped to the wave. **It came due at the
-close and is still owed**: Road to done row 3.
+close and is still owed**: Road to done row 3. *(Correction, 2026-10-01: four of the thirteen were owed — the four that duplicated another colour. The other nine have no twin; D1 never scheduled them. Retired by item 026, PR #13.)*
 
 ## 2. Where the cost landed: in the orchestrator's own words
 
@@ -225,7 +225,7 @@ itself is durable enough to hold them.
 
 On the Road to done (`backlog.md`), and owed by this wave:
 
-- **Row 3** — retire the 13 legacy token names. 017's accepted cost; due since 2026-09-19.
+- **Row 3** — retire the 13 legacy token names. 017's accepted cost; due since 2026-09-19. *(Four, not thirteen; shipped as 026, PR #13.)*
 - **Row 4** — both tabs' labels at once. 021's ground; needs a §79.1 amendment.
 - **Row 5** — 019's triage labels, an owner decision. Whether the rail fits at 360 dp with labels restored is
   unmeasured.

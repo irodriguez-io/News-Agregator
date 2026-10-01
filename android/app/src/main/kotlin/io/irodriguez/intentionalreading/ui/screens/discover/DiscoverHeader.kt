@@ -102,7 +102,7 @@ fun DiscoverOperationalBar(
             Text(
                 text = stringResource(R.string.discover_context, availableCount, selectedLabel),
                 style = MaterialTheme.typography.labelMedium,
-                color = tokens.quietInk,
+                color = tokens.quiet,
             )
         }
         CategoryChipRow(

@@ -33,7 +33,7 @@ fun UndoToast(
         shape = RoundedCornerShape(12.dp),
         color = tokens.toastSurface,
         contentColor = tokens.toastInk,
-        border = BorderStroke(1.dp, tokens.strongBorder),
+        border = BorderStroke(1.dp, tokens.outlineControl),
     ) {
         Row(
             modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 8.dp, bottom = 6.dp),

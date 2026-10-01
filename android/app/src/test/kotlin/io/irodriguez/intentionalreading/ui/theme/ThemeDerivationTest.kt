@@ -14,6 +14,16 @@ import kotlin.test.assertTrue
 
 class ThemeDerivationTest {
     @Test
+    fun `the four duplicate names no longer exist`() {
+        val fieldNames = IntentionalReadingTokens::class.java.declaredFields.map { it.name }.toSet()
+        val replacementNames = setOf("primary", "primarySoft", "quiet", "outlineControl")
+        val duplicateNames = setOf("accent", "accentSoft", "quietInk", "strongBorder")
+
+        assertTrue(fieldNames.containsAll(replacementNames), "Missing replacements: ${replacementNames - fieldNames}")
+        assertEquals(emptySet(), fieldNames.intersect(duplicateNames), "Duplicate token fields still exist")
+    }
+
+    @Test
     fun `the authored light seeds are the approved values and there is no eleventh seed`() {
         val seeds = lightSeeds().namedColors()
 
@@ -164,11 +174,7 @@ class ThemeDerivationTest {
         assertEquals(seeds.fg.color, tokens.fg)
         assertEquals(seeds.muted.color, tokens.muted)
         assertEquals(seeds.border.color, tokens.border)
-        assertEquals(tokens.primary, tokens.accent)
-        assertEquals(tokens.primarySoft, tokens.accentSoft)
         assertEquals(mixOklch(seeds.fg, 0.05, seeds.surface), tokens.surfaceHover)
-        assertEquals(tokens.outlineControl, tokens.strongBorder)
-        assertEquals(tokens.quiet, tokens.quietInk)
         assertEquals(mixOklch(seeds.fg, 0.94, seeds.surface), tokens.toastSurface)
         assertEquals(mixOklch(seeds.surface, 0.96, seeds.fg), tokens.toastInk)
         assertEquals(seeds.fg.color.copy(alpha = 0.42f), tokens.backdrop)
