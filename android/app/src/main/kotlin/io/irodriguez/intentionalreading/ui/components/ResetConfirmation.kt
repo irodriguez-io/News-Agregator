@@ -60,7 +60,7 @@ fun ResetConfirmation(
                     enabled = !resetInProgress,
                     modifier = Modifier.focusRequester(cancelFocusRequester),
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = tokens.quietInk,
+                        contentColor = tokens.quiet,
                         disabledContentColor = tokens.muted,
                     ),
                 ) {
@@ -71,7 +71,7 @@ fun ResetConfirmation(
                     enabled = !resetInProgress,
                     border = BorderStroke(
                         width = 1.dp,
-                        color = if (resetInProgress) tokens.border else tokens.strongBorder,
+                        color = if (resetInProgress) tokens.border else tokens.outlineControl,
                     ),
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = tokens.surface.copy(alpha = 0f),

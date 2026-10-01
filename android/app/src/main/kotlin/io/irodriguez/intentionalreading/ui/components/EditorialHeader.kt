@@ -54,7 +54,7 @@ fun EditorialHeader(
             OutlinedButton(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
-                border = BorderStroke(EditorialHeaderOutlineWidth, tokens.strongBorder),
+                border = BorderStroke(EditorialHeaderOutlineWidth, tokens.outlineControl),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
             ) {
                 Text(actionLabel)

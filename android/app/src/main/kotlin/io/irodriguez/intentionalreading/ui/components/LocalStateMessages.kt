@@ -34,7 +34,7 @@ fun LocalStateRecoveryNotice(
         modifier = modifier
             .fillMaxWidth()
             .semantics { liveRegion = LiveRegionMode.Polite },
-        color = tokens.accentSoft,
+        color = tokens.primarySoft,
         contentColor = tokens.fg,
         border = BorderStroke(1.dp, tokens.border),
         shape = RoundedCornerShape(12.dp),
@@ -51,7 +51,7 @@ fun LocalStateRecoveryNotice(
             Text(
                 text = stringResource(R.string.local_state_load_failure_copy),
                 style = MaterialTheme.typography.bodyMedium,
-                color = tokens.quietInk,
+                color = tokens.quiet,
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -60,13 +60,13 @@ fun LocalStateRecoveryNotice(
             ) {
                 TextButton(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.textButtonColors(contentColor = tokens.quietInk),
+                    colors = ButtonDefaults.textButtonColors(contentColor = tokens.quiet),
                 ) {
                     Text(stringResource(R.string.dismiss_notice))
                 }
                 TextButton(
                     onClick = onOpenSettings,
-                    colors = ButtonDefaults.textButtonColors(contentColor = tokens.accent),
+                    colors = ButtonDefaults.textButtonColors(contentColor = tokens.primary),
                 ) {
                     Text(stringResource(R.string.open_settings))
                 }
@@ -86,7 +86,7 @@ fun LiveStatusMessage(
         shape = RoundedCornerShape(12.dp),
         color = tokens.toastSurface,
         contentColor = tokens.toastInk,
-        border = BorderStroke(1.dp, tokens.strongBorder),
+        border = BorderStroke(1.dp, tokens.outlineControl),
     ) {
         Text(
             text = message,

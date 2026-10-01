@@ -278,7 +278,7 @@ fun SettingsSheet(
                             containerColor = tokens.surface.copy(alpha = 0f),
                             contentColor = tokens.fg,
                         ),
-                        border = BorderStroke(1.dp, tokens.strongBorder),
+                        border = BorderStroke(1.dp, tokens.outlineControl),
                     ) {
                         Text(stringResource(R.string.reset_all_data))
                     }
@@ -299,7 +299,7 @@ fun SettingsSheet(
                             containerColor = tokens.surface.copy(alpha = 0f),
                             contentColor = tokens.fg,
                         ),
-                        border = BorderStroke(1.dp, tokens.strongBorder),
+                        border = BorderStroke(1.dp, tokens.outlineControl),
                     ) {
                         Text(stringResource(R.string.export_local_data))
                     }
@@ -310,7 +310,7 @@ fun SettingsSheet(
                             containerColor = tokens.surface.copy(alpha = 0f),
                             contentColor = tokens.fg,
                         ),
-                        border = BorderStroke(1.dp, tokens.strongBorder),
+                        border = BorderStroke(1.dp, tokens.outlineControl),
                     ) {
                         Text(stringResource(R.string.import_local_data))
                     }

@@ -29,7 +29,7 @@ class AppearanceTransitionTest {
             val start = blendTokens(from, to, 0f)
             val end = blendTokens(from, to, 1f)
 
-            // Then all 26 packed Color values are untouched, with no round-trip conversion.
+            // Then all 22 packed Color values are untouched, with no round-trip conversion.
             assertSame(from, start)
             assertSame(to, end)
             assertEquals(from.namedColors(), start.namedColors())
@@ -179,11 +179,7 @@ class AppearanceTransitionTest {
         "fg" to fg,
         "muted" to muted,
         "border" to border,
-        "accent" to accent,
-        "accentSoft" to accentSoft,
         "surfaceHover" to surfaceHover,
-        "strongBorder" to strongBorder,
-        "quietInk" to quietInk,
         "toastSurface" to toastSurface,
         "toastInk" to toastInk,
         "backdrop" to backdrop,
