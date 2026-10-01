@@ -26,7 +26,15 @@ plan gate — as Amendments 10–12 did.
 
 ---
 
-## Slice 1: the incoming destination covers the outgoing one
+## ~~Slice 1: the incoming destination covers the outgoing one~~  ·  **done**
+
+**RED `3b914cc`, GREEN `4e0841c`.** Slice gate PASS, 2026-10-01. RED reproduced in a throwaway worktree with
+`--rerun-tasks`: both new tests fail on *"Covered pixel must equal theme bg"*, actual `#FE12FF` (magenta
+through the incoming destination). GREEN gates reproduced the same way: **404 JVM / 30 instrumented, 0
+failures**. The first session (`codex-027-s1`) stopped correctly when its tests passed before the fix: its
+incoming slot emitted nothing, and an empty slot shows no bleed-through; a full-size slot, like the real
+screens, does (`codex-027-s1b`'s pixel log). The defect was confirmed on `main`'s build at 10× slowed motion
+before the follow-up.
 
 **Objective.** Part-way through any destination transition, nothing of the outgoing destination is visible
 inside the area the incoming destination has slid over.
@@ -77,7 +85,7 @@ inside the area the incoming destination has slid over.
 - **Stop and report if:** the incoming destination is not drawn above the outgoing one; the covered pixel is
   not `bg` after GREEN; either existing transition test needs editing; the extraction needs a parameter
   beyond the four named; any change to §79.1's values seems necessary.
-- **Status:** pending.
+- **Status:** done.
 
 ---
 
