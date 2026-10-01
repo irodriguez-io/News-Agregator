@@ -2271,12 +2271,17 @@ Indexed to bottom-bar position, so this section is defined by §18's fixed desti
 ```text
 duration   300ms
 easing     Material 3 Emphasized
-incoming   lateral slide, entering from the side the destination lies on
+incoming   lateral slide, entering from the side the destination lies on, opaque
 outgoing   subtle scale-down and fade to 0.8 opacity
 ```
 
 Moving toward `Read Later` and moving toward `History` are opposite directions, because they sit on
 opposite sides of `Discover`.
+
+**The incoming destination is opaque.** It is drawn on the page background (`bg`) and covers the outgoing
+destination as it slides in, so the outgoing destination is visible only where the incoming one has not yet
+arrived, and never through it: two destinations' text is never drawn over each other. At rest the page
+background is the one the scaffold already shows, so nothing changes outside the transition. *(Amendment 13.)*
 
 ## 79.2 Modal sheet reveal
 
