@@ -14,6 +14,16 @@ import kotlin.test.assertTrue
 
 class ThemeDerivationTest {
     @Test
+    fun `the four duplicate names no longer exist`() {
+        val fieldNames = IntentionalReadingTokens::class.java.declaredFields.map { it.name }.toSet()
+        val replacementNames = setOf("primary", "primarySoft", "quiet", "outlineControl")
+        val duplicateNames = setOf("accent", "accentSoft", "quietInk", "strongBorder")
+
+        assertTrue(fieldNames.containsAll(replacementNames), "Missing replacements: ${replacementNames - fieldNames}")
+        assertEquals(emptySet(), fieldNames.intersect(duplicateNames), "Duplicate token fields still exist")
+    }
+
+    @Test
     fun `the authored light seeds are the approved values and there is no eleventh seed`() {
         val seeds = lightSeeds().namedColors()
 
