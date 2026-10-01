@@ -58,9 +58,11 @@ focus-dependent call is added again, only CI's occasional ANR will catch it.
 The implementer could not start the emulator from its sandbox for the cold-boot runs and stopped there,
 correctly. The orchestrator ran §5.3 and the gates instead.
 
-## 4. Hosted
+## 4. Hosted — PR #11
 
-*Filled in at the PR.*
+On head `4b2f61c`, **first attempt, no re-run**: `android.yml` run `36806025389` (build `110190427309`,
+instrumented `110190427060`, 28/28) and `test.yml` run `36806025402` (job `110190427927`). This commit, which
+records them, is re-verified on the final head at review.
 
 ## 5. Outstanding at close
 
