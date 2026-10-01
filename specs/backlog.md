@@ -68,7 +68,7 @@ Ordered. Numbers are allocated at design time, so only the next one is named.
 | # | Work | Kind | Why it is on the list |
 |---|---|---|---|
 | 1 | **Shipped — PR #11, 2026-09-30.** ~~**025 — make the hosted instrumented job deterministic.** `DestinationTransitionInstrumentedTest.reducedMotionComposesDestinationAndBackResultImmediately` fails with `RootViewWithoutFocusException` on code that passes unchanged. Seen during 022 (twice, one run) and again on `bf34fd7`, whose tree is identical to the passing PR head.~~ Cause: `Espresso.pressBack()`, the suite's only focus-dependent call; see `025/evidence.md`. Done §2.2 now counts merges from here. | item | Done §2.2 needs three unrerun green merges. A gate that has to be re-run cannot prove it. |
-| 2 | **Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history. | docs | Wave-close work that came due on 2026-09-19. |
+| 2 | **Shipped — PR #12, 2026-09-30.** ~~**Close wave E, part 1: write `waves/wave-e-note.md`.** Every other wave has one; E's has never existed in git history.~~ | docs | Wave-close work that came due on 2026-09-19. |
 | 3 | **Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`). | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
 | 4 | **Stop destination transitions showing both tabs' text at once.** Moving between Read Later, Discover and History shows the outgoing and incoming labels together. **Not a defect under the freeze test** — §79.1 specifies the outgoing destination's *"fade to 0.8 opacity"* while the incoming one slides in — so the fix **needs an amendment to §79.1** before it can be built. Item 021's ground: `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310`. | item + amendment | **Added by the owner by name, 2026-09-29** (`definition-of-done.md` §3). Found by 023's walkthrough. |
 | 5 | **Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured. | decision | Deferred to wave close since 019. Done §2.5. |
@@ -99,8 +99,8 @@ Recorded so they are not rediscovered as oversights; **not worked** until the ow
 **023**, the two defects the owner's wave-E walkthrough found. The queue holds **024** — the defect 023's
 own walkthrough found — and the wave-close bookkeeping 021's evidence itemised.
 
-**Wave E's close is outstanding, and it is three distinct pieces of work.** `waves/wave-e-note.md` is
-unwritten, this document's wave row is the only record that the wave finished, and **the thirteen legacy
+**Wave E's close is outstanding, and it was three distinct pieces of work.** `waves/wave-e-note.md` is
+written (PR #12, 2026-09-30); this document's wave row is the only record that the wave finished, and **the thirteen legacy
 token names item 017 kept alive for the wave's duration have not been retired** — they are still the first
 thirteen fields of `ui/theme/Tokens.kt`. That debt was scoped to the wave and came due at its close.
 *(021 `evidence.md`, §Wave-close work that outlives this item.)*
@@ -119,7 +119,7 @@ article title. The measurements and the limitation are in
 to.
 
 **All five waves are done.** `waves/wave-b-note.md` records what wave B cost and `waves/wave-c-note.md`
-what wave C cost; **wave E's note is the piece of the close that is still missing.** Their shared headline
+what wave C cost; `waves/wave-e-note.md` records what wave E cost (PR #12). Their shared headline
 lesson, now four waves running: the most valuable defects were found by the owner using the app — none by
 reading diffs, and none by any gate. Wave E is the clearest case yet, because it ran with the instrumented
 suite in CI for the first time and the two defects it shipped were still found by hand.
