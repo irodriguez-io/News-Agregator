@@ -1,6 +1,8 @@
 package io.irodriguez.intentionalreading
 
 import android.os.ParcelFileDescriptor
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -9,7 +11,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.irodriguez.intentionalreading.data.DatasetRefreshResult
@@ -51,7 +52,9 @@ class DestinationTransitionInstrumentedTest {
         composeTestRule.mainClock.autoAdvance = false
         val viewModel = testViewModel()
         val stateBeforeNavigation = viewModel.uiState.value
+        lateinit var backDispatcher: OnBackPressedDispatcher
         composeTestRule.setContent {
+            backDispatcher = requireNotNull(LocalOnBackPressedDispatcherOwner.current).onBackPressedDispatcher
             IntentionalReadingApp(viewModel = viewModel)
         }
 
@@ -64,7 +67,7 @@ class DestinationTransitionInstrumentedTest {
         assertEquals(Destination.READ_LATER, viewModel.destination.value)
         assertEquals(stateBeforeNavigation, viewModel.uiState.value)
 
-        Espresso.pressBack()
+        composeTestRule.runOnUiThread { backDispatcher.onBackPressed() }
         settleImmediateChange()
 
         composeTestRule.onNodeWithText(DISCOVER_EYEBROW).assertIsDisplayed()
