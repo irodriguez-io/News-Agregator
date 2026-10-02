@@ -65,7 +65,7 @@ reduced motion, and a leaving copy cannot be tapped.
   listed files.
 - **Stop and report if:** a pixel or bounds read cannot be stabilised on a paused clock; the extraction
   changes the toast's position at rest by more than 1 px; any existing test changes result.
-- **Status:** pending.
+- **Status:** done. RED `1fbbd84`, GREEN `c98c3c2`. Gates 405 JVM / 55 instrumented (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
