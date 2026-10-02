@@ -218,7 +218,7 @@ private fun StatePanel(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
                 shape = shapes.filledPrimaryButton,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg, disabledContentColor = tokens.muted),
             ) {
                 Text(actionLabel)
             }
