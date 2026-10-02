@@ -14,6 +14,9 @@
     <string name="article_topics">Article topics</string>
     <string name="article_actions">Article actions</string>
     <string name="not_interested">Not interested</string>
+    <string name="skip">Skip</string>
+    <string name="save">Save</string>
+    <string name="skip_not_interested">Skip, not interested</string>
     <string name="read_article">Read article</string>
     <string name="read_article_external">Read article in the system browser</string>
     <string name="save_for_later">Save for later</string>
