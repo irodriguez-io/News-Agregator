@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SharedControlsTest {
     @Test
@@ -36,19 +37,43 @@ class SharedControlsTest {
     }
 
     @Test
-    fun `the circular triage control is 56 dp with the secondary outline`() {
+    fun `the inline triage control has a 48 dp minimum, 4 dp padding and the secondary label`() {
+        // Given the shared control source and the authored spacing and shape scales.
+        val source = Path.of(
+            "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/SharedControls.kt",
+        ).readText()
         val layout = sharedControlLayout(IntentionalReadingSpacing, IntentionalReadingShapes)
-        val tokens = lightTokens()
-        val colors = sharedControlColors(tokens)
 
-        assertEquals(56.dp, layout.triageSize)
-        assertEquals(1.5.dp, layout.triageOutlineWidth)
-        assertEquals(IntentionalReadingShapes.iconButton, layout.triageShape)
-        assertEquals(tokens.secondary, colors.triageOutline)
+        // Then the inline control is borderless, padded by one base unit and uses secondary.
+        assertTrue(source.contains("fun InlineTriageControl("), "InlineTriageControl is missing")
+        assertEquals(48.dp, layout.minimumTouchTarget)
+        assertEquals(4.dp, IntentionalReadingSpacing.baseUnit)
+        assertEquals(IntentionalReadingShapes.pill, layout.triageShape)
+        assertTrue(source.contains(".padding(horizontal = spacing.baseUnit)"), "4 dp padding is missing")
+        assertTrue(source.contains("triageLabel = tokens.secondary"), "secondary triage label is missing")
+        assertFalse(source.contains("BorderStroke"), "triage must have no outline")
     }
 
     @Test
-    fun `a circular triage control carries a non-empty accessible name`() {
+    fun `the inline triage control shows a visible focus indication`() {
+        // Given the inline triage control's function body.
+        val source = Path.of(
+            "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/SharedControls.kt",
+        ).readText()
+        val body = source.substringAfter("fun InlineTriageControl(")
+            .substringAfter(") {")
+            .substringBefore("\n}")
+
+        // Then keyboard and D-pad focus retain the Material 3 indication.
+        assertFalse(body.contains("indication = null"), "InlineTriageControl disables its focus indication")
+        assertTrue(
+            Regex("""\.clickable\([^)]*\bindication\s*=\s*ripple\(""").containsMatchIn(body),
+            "InlineTriageControl must pass Material 3 ripple() as its clickable indication",
+        )
+    }
+
+    @Test
+    fun `an inline triage control carries a non-empty accessible name`() {
         assertEquals("Save for later", triageAccessibleName("Save for later"))
         assertFailsWith<IllegalArgumentException> { triageAccessibleName(" ") }
     }

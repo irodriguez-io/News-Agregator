@@ -1026,6 +1026,10 @@ save
 **The explicit controls must remain usable independently of swipe gestures** (§3.4), and the rail must be
 reachable without hover (§72).
 
+**On Android the dismiss and save controls show the short words `Skip` and `Save`** (§35.2). The action
+names above, and their mapping to dismiss and save, are unchanged; the labelled meaning is carried by the
+visible word, its arrow and the accessible name together. *(Amendment 14.)*
+
 Presentation of the three controls is in §32, §35 and §76.5.
 
 ---
@@ -1100,23 +1104,32 @@ treatment in §33.2 for the row's leading action.
 
 Shared:
 
-- circular outlined controls with directional icons and **accessible names**;
-- they must not replace the labelled semantic understanding of the action (§31);
-- the outline is the control's only boundary, so it is subject to §78.3 on Android and to §73's contrast
-  requirement on both surfaces.
+- directional controls with **accessible names**;
+- they must not replace the labelled semantic understanding of the action (§31).
 
 ## 35.1 Browser
 
-`48px` circular outlined buttons.
+`48px` circular outlined buttons with directional icons. The outline is the control's only boundary, so it
+is subject to §73's contrast requirement.
 
 ## 35.2 Android
 
-`56dp` circular targets with a `1.5dp` outline in the `secondary` seed (§77.2).
+*(Amendment 14.)* **Inline text controls:** a directional arrow and a short visible word on one line —
+`← Skip` for dismiss, `Save →` for save — with **no outline and no fill**. The label is `labelLarge` in the
+`secondary` seed (§77.2); the arrow and the word are separated by `4dp`; the control's horizontal padding is
+`4dp`; its target is at least `48×48dp` (§72.2).
 
-**Why `secondary` and not the tonal colour:** these buttons have no fill, so the outline is the only thing
-identifying them as controls, which puts them under the 3:1 non-text contrast floor (§78.3). The Android
-design source's prose names a lighter periwinkle for this outline; it reaches only **2.9:1** against the
-card and fails. The `secondary` seed reaches **6.5:1**.
+**The accessible name begins with the visible word**, so a reader operating the phone by voice can name
+the control by what they see: dismiss is *"Skip, not interested"*, save is *"Save for later"*. The control
+exposes exactly that one name; the arrow and the word are not announced separately.
+
+**Why no outline:** the controls flank `Read article` on one row (§76.5), and at `360dp` the row has room
+for that only without a boundary's padding — measured in item 028's `spec.md`. The visible word identifies
+the control, so it is under the text contrast floor, not §73.1's boundary floor.
+
+**Why `secondary`:** it reaches **6.5:1** against the card, above the text floor in both schemes. It was the
+colour of the outline this control replaced; the design source's lighter periwinkle reaches only
+**2.9:1** and is not used.
 
 ---
 
@@ -1919,7 +1932,8 @@ usable target. Mobile navigation targets are at least `54px` high.
 
 **Minimum `48×48dp` for every interactive element, without exception.**
 
-The `56dp` icon buttons (§35.2) and the `52dp` primary button (§32.2) satisfy this directly. The `40dp`
+The `52dp` primary button (§32.2) satisfies this directly; the inline triage controls (§35.2) carry an
+explicit `48×48dp` minimum. The `40dp`
 category chip (§22.2) does **not** and must carry a `48dp` target around its shorter visible pill.
 
 **Nothing in the Android client may shrink a target below 48 dp**, including a compact row action (§34.2).
@@ -1949,8 +1963,8 @@ V1 requires:
 missed three times in one palette:
 
 **Where a control's boundary is the only thing identifying it as a control, that boundary must reach at
-least 3:1 against the surface behind it, in both schemes.** This applies to the unfilled triage buttons
-(§35), the unselected category chip (§22), and any outlined row action (§34).
+least 3:1 against the surface behind it, in both schemes.** This applies to the browser's unfilled triage
+buttons (§35.1; Android's are text controls, §35.2), the unselected category chip (§22), and any outlined row action (§34).
 
 A decorative divider — a rule between rows, a column separator inside the overview band — divides rather
 than identifies, and is not subject to this floor.
@@ -2070,8 +2084,9 @@ Small, centred `Intentional Reading` brand title in the editorial register, with
 The three controls of §31:
 
 - **filled primary** — `Read article`, per §32.2;
-- **two circular triage controls** — per §35.2, flanking or following the primary control;
-- icon-only controls carry accessible names (§73).
+- **two inline triage controls** — per §35.2, flanking the primary control, all three on **one row**;
+- no label in the row wraps or truncates at any supported width (§73);
+- every control carries an accessible name (§73). *(Amendment 14.)*
 
 ## 76.6 StatBand
 
@@ -2123,7 +2138,7 @@ everything it does not name here.
 why the seed set is ten rather than nine.
 
 **`secondary` = `#3856BF`** is DESIGN's own token-block `secondary`, which nothing else was using. It
-carries the triage-button outline, for the contrast reason in §35.2.
+carries the Android triage controls' label (§35.2; Amendment 14 — formerly their outline).
 
 ## 77.3 Prose colours, mapped
 
@@ -2244,8 +2259,8 @@ So there are two derived roles:
   reaches at least 3:1 against the card in this scheme*. Light resolves to `border`; dark resolves to
   `muted`. Used for the unselected category chip (§22.2) and outlined row actions (§34.2).
 
-The `1.5dp` triage-button outline uses the `secondary` seed rather than `outlineControl`, because the design
-gives that control a brand-coloured ring and `secondary` clears the floor at 6.5:1 (§35.2).
+The Android triage controls carry no outline (§35.2, Amendment 14); their label uses the `secondary` seed,
+which clears the text floor at 6.5:1.
 
 **The derivation must be computed and asserted, not eyeballed.** Every value in the failing column above
 looked fine on screen.
@@ -2420,7 +2435,7 @@ they were sent to still reads the way they expect.
 | 28 | Content-type badge | **Split** on presentation. The label-fidelity rule is unchanged and the real label list is extended to all ten shipped values. |
 | 29–30 | Reading time, publication age | Unchanged, both surfaces. §29 is identified as the null rule for every place reading time appears. |
 | 31 | Action rail | Unchanged. |
-| 32–35 | Buttons and triage controls | **Split** on values. §35.2 records why the Android triage outline uses `secondary` rather than the design's prose value. |
+| 32–35 | Buttons and triage controls | **Split** on values. §35.2 records why the Android triage outline uses `secondary` rather than the design's prose value. *Since Amendment 14, §35.2's Android controls are inline text controls without an outline; §31 records their short visible words.* |
 | 36 | Destructive treatment | Unchanged; adds that Android's `error` seed is not Reset's styling. |
 | 37 | Control states | **Renamed and widened** from "Button Active State". 37.1 keeps the browser's 1px nudge; 37.2 adds the Android pressed and disabled treatments. |
 | 38 | Focus treatment | Unchanged, both surfaces. |

@@ -1531,8 +1531,8 @@ control's visible treatment being compact has not made its target compact.
 
 ## 72.1 Control-boundary contrast
 
-Where a control's boundary is the only thing identifying it as a control — an unfilled triage button, an
-unselected category chip, an outlined row action — **verify that boundary reaches at least `3:1` against
+Where a control's boundary is the only thing identifying it as a control — the browser's unfilled triage
+button (Android's are text controls, `06-ui-ux.md` §35.2, Amendment 14), an unselected category chip, an outlined row action — **verify that boundary reaches at least `3:1` against
 the surface behind it, in both schemes** (`06-ui-ux.md` §73.1).
 
 This is measured, not judged. Three candidate values in the Android palette failed this floor and looked

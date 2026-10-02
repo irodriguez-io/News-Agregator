@@ -515,7 +515,7 @@ private fun ArticleActions(
 ) {
     val spacing = LocalIntentionalReadingSpacing.current
     val externalDescription = stringResource(R.string.read_article_external)
-    val notInterestedLabel = stringResource(R.string.not_interested)
+    val skipNotInterestedLabel = stringResource(R.string.skip_not_interested)
     val saveForLaterLabel = stringResource(R.string.save_for_later)
     Column(verticalArrangement = Arrangement.spacedBy(spacing.stackGap)) {
         Row(
@@ -523,13 +523,18 @@ private fun ArticleActions(
             horizontalArrangement = Arrangement.spacedBy(spacing.stackGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CircularTriageControl(
-                accessibleName = notInterestedLabel,
+            InlineTriageControl(
+                accessibleName = skipNotInterestedLabel,
                 onClick = { onDismiss(article) },
             ) {
                 Text(
                     text = "←",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Spacer(Modifier.width(spacing.baseUnit))
+                Text(
+                    text = stringResource(R.string.skip),
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
             FilledPrimaryControl(
@@ -542,13 +547,18 @@ private fun ArticleActions(
                 Spacer(Modifier.width(spacing.baseUnit))
                 Text("↗")
             }
-            CircularTriageControl(
+            InlineTriageControl(
                 accessibleName = saveForLaterLabel,
                 onClick = { onSave(article) },
             ) {
                 Text(
+                    text = stringResource(R.string.save),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Spacer(Modifier.width(spacing.baseUnit))
+                Text(
                     text = "→",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }
