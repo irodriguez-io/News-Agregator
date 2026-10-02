@@ -1,6 +1,7 @@
 package io.irodriguez.intentionalreading.ui.screens.discover
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.ArticleCard
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
+import io.irodriguez.intentionalreading.ui.layout.readingHorizontalPadding
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 import kotlin.math.roundToInt
@@ -109,60 +111,62 @@ fun DiscoverScreen(
             }
         }
     }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(spacing.mobileMargin),
-        verticalArrangement = Arrangement.spacedBy(spacing.sectionGap),
-    ) {
-        DiscoverMasthead(modifier = Modifier.testTag(DiscoverLayoutTags.MASTHEAD))
+    BoxWithConstraints {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = readingHorizontalPadding(maxWidth), vertical = spacing.mobileMargin),
+            verticalArrangement = Arrangement.spacedBy(spacing.sectionGap),
+        ) {
+            DiscoverMasthead(modifier = Modifier.testTag(DiscoverLayoutTags.MASTHEAD))
 
-        when (state) {
-            is DiscoverUiState.Loading -> LoadingPanel(state)
-            is DiscoverUiState.Error -> StatePanel(
-                title = state.title,
-                copy = state.copy,
-                actionLabel = state.actionLabel,
-                onAction = onRetry.takeUnless {
-                    state.refreshAffordance == DiscoverRefreshAffordance.IN_PROGRESS
-                },
-            )
-            is DiscoverUiState.Empty -> StatePanel(
-                title = state.title,
-                copy = state.copy,
-                actionLabel = state.actionLabel,
-                onAction = onViewReadLater,
-            )
-            is DiscoverUiState.Card -> CardBody(
-                state = state,
-                onDismiss = onDismiss,
-                onReadArticle = onReadArticle,
-                onSave = onSave,
-                onMarkRead = onMarkRead,
-                onSwipeCommit = onSwipeCommit,
-                reducedMotion = reducedMotion,
-                modifier = Modifier
-                    .testTag(DiscoverLayoutTags.CARD)
-                    .onGloballyPositioned { coordinates ->
-                        cardTopOffset = coordinates.positionInParent().y.roundToInt()
-                        cardBottomOffset =
-                            (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
+            when (state) {
+                is DiscoverUiState.Loading -> LoadingPanel(state)
+                is DiscoverUiState.Error -> StatePanel(
+                    title = state.title,
+                    copy = state.copy,
+                    actionLabel = state.actionLabel,
+                    onAction = onRetry.takeUnless {
+                        state.refreshAffordance == DiscoverRefreshAffordance.IN_PROGRESS
                     },
+                )
+                is DiscoverUiState.Empty -> StatePanel(
+                    title = state.title,
+                    copy = state.copy,
+                    actionLabel = state.actionLabel,
+                    onAction = onViewReadLater,
+                )
+                is DiscoverUiState.Card -> CardBody(
+                    state = state,
+                    onDismiss = onDismiss,
+                    onReadArticle = onReadArticle,
+                    onSave = onSave,
+                    onMarkRead = onMarkRead,
+                    onSwipeCommit = onSwipeCommit,
+                    reducedMotion = reducedMotion,
+                    modifier = Modifier
+                        .testTag(DiscoverLayoutTags.CARD)
+                        .onGloballyPositioned { coordinates ->
+                            cardTopOffset = coordinates.positionInParent().y.roundToInt()
+                            cardBottomOffset =
+                                (coordinates.positionInParent().y + coordinates.size.height).roundToInt()
+                        },
+                )
+            }
+
+            DiscoverOperationalBar(
+                availableCount = cardState?.availableCount,
+                contentFreshness = state.contentFreshness,
+                failedRefreshDisclosure = state.failedRefreshDisclosure,
+                degraded = degraded,
+                selectedCategory = selectedCategory,
+                onCategorySelected = onCategorySelected,
+                actionLabel = refreshActionLabel,
+                onAction = onRefreshAction,
+                modifier = Modifier.testTag(DiscoverLayoutTags.OPERATIONAL_BLOCK),
             )
         }
-
-        DiscoverOperationalBar(
-            availableCount = cardState?.availableCount,
-            contentFreshness = state.contentFreshness,
-            failedRefreshDisclosure = state.failedRefreshDisclosure,
-            degraded = degraded,
-            selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected,
-            actionLabel = refreshActionLabel,
-            onAction = onRefreshAction,
-            modifier = Modifier.testTag(DiscoverLayoutTags.OPERATIONAL_BLOCK),
-        )
     }
 }
 

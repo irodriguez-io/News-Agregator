@@ -73,7 +73,7 @@ class ReadingSurfacePresentationTest {
     @Test
     fun `the reading screens use the authored spacing scale and separate rows by the stack rhythm`() {
         listOf(readLaterScreenSource(), historyScreenSource()).forEach { source ->
-            assertTrue(source.contains("horizontal = spacing.mobileMargin"))
+            assertTrue(source.contains("horizontal = readingHorizontalPadding(maxWidth)"))
             assertTrue(source.contains("top = spacing.tabletMargin"))
             assertTrue(source.contains("Arrangement.spacedBy(spacing.stackGap)"))
         }

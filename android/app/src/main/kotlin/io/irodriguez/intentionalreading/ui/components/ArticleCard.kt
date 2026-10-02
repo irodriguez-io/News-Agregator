@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onPlaced
@@ -215,6 +216,7 @@ fun ArticleCard(
                 }
             }
             .graphicsLayer {
+                compositingStrategy = CompositingStrategy.ModulateAlpha
                 val entranceProgress = if (reducedMotionEnabled) 1f else gestureValues.entranceProgress.value
                 this.translationX = gestureValues.translationX.value
                 rotationZ = gestureValues.rotationDegrees.value
@@ -225,8 +227,8 @@ fun ArticleCard(
                 elevation = DeckCardShadowElevation,
                 shape = shapes.primaryCard,
                 clip = false,
-                ambientColor = MaterialTheme.colorScheme.surfaceTint,
-                spotColor = MaterialTheme.colorScheme.surfaceTint,
+                ambientColor = tokens.deckShadow,
+                spotColor = tokens.deckShadow,
             ),
         shape = shapes.primaryCard,
         color = tokens.card,

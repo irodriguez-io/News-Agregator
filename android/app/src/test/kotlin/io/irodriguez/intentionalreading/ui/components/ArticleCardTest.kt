@@ -236,19 +236,8 @@ class ArticleCardTest {
         assertEquals("card", assignedScale(articleCardSurface(), "color", "tokens"))
     }
 
-    @Test
-    fun `the deck card shadow uses the theme shadow tint for both shadow channels`() {
-        val surface = articleCardSurface()
-
-        assertTrue(
-            surface.contains("ambientColor = MaterialTheme.colorScheme.surfaceTint"),
-            "ambient shadow tint was absent",
-        )
-        assertTrue(
-            surface.contains("spotColor = MaterialTheme.colorScheme.surfaceTint"),
-            "spot shadow tint was absent",
-        )
-    }
+    // Shadow coverage now asserts rendered pixels in ShadowRenderingInstrumentedTest:
+    // cardShadowIsVisibleAndNavy_GivenLightDiscover_WhenCaptured_ThenPeakIsEightToTwelvePercentTertiary.
 
     @Test
     fun `the headline is the authored editorial headline style`() {
