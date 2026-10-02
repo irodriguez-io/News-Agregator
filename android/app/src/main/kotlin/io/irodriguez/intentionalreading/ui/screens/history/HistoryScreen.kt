@@ -1,6 +1,7 @@
 package io.irodriguez.intentionalreading.ui.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import io.irodriguez.intentionalreading.ui.components.historyGroupCount
 import io.irodriguez.intentionalreading.ui.components.knownReadingTimeValue
 import io.irodriguez.intentionalreading.ui.format.Labels
 import io.irodriguez.intentionalreading.ui.format.RelativeTime
+import io.irodriguez.intentionalreading.ui.layout.readingHorizontalPadding
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
 
@@ -42,90 +44,92 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val spacing = LocalIntentionalReadingSpacing.current
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = readingListContentPadding(
-            horizontal = spacing.mobileMargin,
-            top = spacing.tabletMargin,
-            bottom = spacing.sectionGap * 3,
-        ),
-        verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
-    ) {
-        item(key = "header") {
-            EditorialHeader(
-                eyebrow = stringResource(R.string.history_eyebrow),
-                title = stringResource(R.string.history),
-                description = stringResource(R.string.history_description),
-                actionLabel = stringResource(R.string.return_to_read_later),
-                onAction = onReadLater,
-                modifier = Modifier.padding(bottom = spacing.sectionGap - spacing.stackGap),
-            )
-        }
-
-        if (state.groups.isNotEmpty()) {
-            item(key = "overview") {
-                StatBand(
-                    stats = listOf(
-                        StatItem(stringResource(R.string.articles_read), state.aggregate.count.toString()),
-                        StatItem(
-                            stringResource(R.string.known_reading_time),
-                            knownReadingTimeValue(state.aggregate.knownReadingTimeMinutes),
-                        ),
-                        StatItem(
-                            stringResource(R.string.latest_topic),
-                            availableStatValue(state.aggregate.firstTagLabel),
-                        ),
-                    ),
+    BoxWithConstraints {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = readingListContentPadding(
+                horizontal = readingHorizontalPadding(maxWidth),
+                top = spacing.tabletMargin,
+                bottom = spacing.sectionGap * 3,
+            ),
+            verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
+        ) {
+            item(key = "header") {
+                EditorialHeader(
+                    eyebrow = stringResource(R.string.history_eyebrow),
+                    title = stringResource(R.string.history),
+                    description = stringResource(R.string.history_description),
+                    actionLabel = stringResource(R.string.return_to_read_later),
+                    onAction = onReadLater,
                     modifier = Modifier.padding(bottom = spacing.sectionGap - spacing.stackGap),
                 )
             }
-            state.groups.forEach { group ->
-                item(key = "heading-${group.period.name}") {
-                    HistoryGroupHeading(
-                        period = group.period,
-                        count = group.rows.size,
+
+            if (state.groups.isNotEmpty()) {
+                item(key = "overview") {
+                    StatBand(
+                        stats = listOf(
+                            StatItem(stringResource(R.string.articles_read), state.aggregate.count.toString()),
+                            StatItem(
+                                stringResource(R.string.known_reading_time),
+                                knownReadingTimeValue(state.aggregate.knownReadingTimeMinutes),
+                            ),
+                            StatItem(
+                                stringResource(R.string.latest_topic),
+                                availableStatValue(state.aggregate.firstTagLabel),
+                            ),
+                        ),
+                        modifier = Modifier.padding(bottom = spacing.sectionGap - spacing.stackGap),
                     )
                 }
-                group.rows.forEach { row ->
-                    item(key = row.article.id) {
-                        val article = row.article
-                        ArticleRow(
-                            articleTitle = article.title,
-                            position = row.readDateTime.ifEmpty {
-                                stringResource(R.string.read_date_unavailable)
-                            },
-                            positionDetail = null,
-                            kicker = buildList {
-                                Labels.categoryLabel(article.category.id).takeIf { it.isNotEmpty() }?.let {
-                                    add(ArticleKickerPart(it))
-                                }
-                                article.source.name.takeIf { it.isNotEmpty() }?.let {
-                                    add(ArticleKickerPart(it, emphasized = true))
-                                }
-                                article.contentType.label.takeIf { it.isNotEmpty() }?.let {
-                                    add(ArticleKickerPart(it))
-                                }
-                                RelativeTime.readingTime(article.readingTimeMinutes).takeIf { it.isNotEmpty() }?.let {
-                                    add(ArticleKickerPart(it))
-                                }
-                            },
-                            tags = emptyList(),
-                            actions = listOf(
-                                ArticleRowAction(stringResource(R.string.reopen_external)) { onReopen(article) },
-                                ArticleRowAction(stringResource(R.string.mark_unread)) { onMarkUnread(article) },
-                            ),
+                state.groups.forEach { group ->
+                    item(key = "heading-${group.period.name}") {
+                        HistoryGroupHeading(
+                            period = group.period,
+                            count = group.rows.size,
                         )
                     }
+                    group.rows.forEach { row ->
+                        item(key = row.article.id) {
+                            val article = row.article
+                            ArticleRow(
+                                articleTitle = article.title,
+                                position = row.readDateTime.ifEmpty {
+                                    stringResource(R.string.read_date_unavailable)
+                                },
+                                positionDetail = null,
+                                kicker = buildList {
+                                    Labels.categoryLabel(article.category.id).takeIf { it.isNotEmpty() }?.let {
+                                        add(ArticleKickerPart(it))
+                                    }
+                                    article.source.name.takeIf { it.isNotEmpty() }?.let {
+                                        add(ArticleKickerPart(it, emphasized = true))
+                                    }
+                                    article.contentType.label.takeIf { it.isNotEmpty() }?.let {
+                                        add(ArticleKickerPart(it))
+                                    }
+                                    RelativeTime.readingTime(article.readingTimeMinutes).takeIf { it.isNotEmpty() }?.let {
+                                        add(ArticleKickerPart(it))
+                                    }
+                                },
+                                tags = emptyList(),
+                                actions = listOf(
+                                    ArticleRowAction(stringResource(R.string.reopen_external)) { onReopen(article) },
+                                    ArticleRowAction(stringResource(R.string.mark_unread)) { onMarkUnread(article) },
+                                ),
+                            )
+                        }
+                    }
                 }
-            }
-        } else {
-            item(key = "empty") {
-                EmptyStatePanel(
-                    title = stringResource(R.string.history_empty_title),
-                    copy = stringResource(R.string.history_empty_copy),
-                    actionLabel = stringResource(R.string.go_to_discover),
-                    onAction = onDiscover,
-                )
+            } else {
+                item(key = "empty") {
+                    EmptyStatePanel(
+                        title = stringResource(R.string.history_empty_title),
+                        copy = stringResource(R.string.history_empty_copy),
+                        actionLabel = stringResource(R.string.go_to_discover),
+                        onAction = onDiscover,
+                    )
+                }
             }
         }
     }

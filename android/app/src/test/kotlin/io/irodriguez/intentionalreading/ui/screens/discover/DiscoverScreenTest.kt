@@ -10,7 +10,7 @@ class DiscoverScreenTest {
     @Test
     fun `discover layout uses the authored spacing and shape scales`() {
         assertTrue(screenSource.contains("val spacing = LocalIntentionalReadingSpacing.current"))
-        assertTrue(screenSource.contains(".padding(spacing.mobileMargin)"))
+        assertTrue(screenSource.contains("horizontal = readingHorizontalPadding(maxWidth)"))
         assertTrue(screenSource.contains("Arrangement.spacedBy(spacing.sectionGap)"))
         assertTrue(screenSource.contains("shape = shapes.smallContainer"))
         assertTrue(screenSource.contains("color = tokens.container"))
