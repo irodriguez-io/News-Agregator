@@ -70,7 +70,11 @@ triage control announcing one name that begins with its visible word.
   - `DiscoverScreenLayoutTest`, `assertLongDatasetCardFits` (`:509-532`): find dismiss by
     `"Skip, not interested"`. Add three checks at both widths:
     1. the `Skip`, `Save` and `Read article` text nodes each lay out on one line with no visual overflow
-       (`getTextLayoutResult`; `lineCount == 1 && !hasVisualOverflow`);
+       (`getTextLayoutResult`; `lineCount == 1`, `!isLineEllipsized(0)` and
+       `multiParagraph.maxIntrinsicWidth <= size.width`). **Not `hasVisualOverflow`:** on Compose 1.12.0 the
+       semantics action rebuilds the paragraph at the incoming max width but keeps the measured size, so
+       `didOverflowWidth` is true for every label at every width (owner-approved correction, 2026-10-01;
+       measurements in `evidence.md`);
     2. each triage control's node has exactly one `ContentDescription` and no `Text` in its merged
        semantics;
     3. each triage control's bounds are ≥ 48 dp in both dimensions.
