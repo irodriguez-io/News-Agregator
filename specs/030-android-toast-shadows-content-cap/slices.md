@@ -176,7 +176,7 @@ reduced motion and animate otherwise.
 - **Definition of done:** all four gates green, with counts; the mutation run's failure output is in the
   report; the production diff is empty, or is only the optional parameter.
 - **Stop and report if:** the scroll cannot be observed at all; either target is 0 at every test height.
-- **Status:** pending.
+- **Status:** done. Test `3d3b2ac`, no production change. The mutation run (both reduced-motion branches changed to `animateScrollTo`) failed both reduced-motion cases (expected 924 and 202 px, got 0) and was reverted. Gates 411 JVM / 78 instrumented, 1 skipped (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
