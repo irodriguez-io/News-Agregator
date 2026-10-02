@@ -104,7 +104,7 @@ triage control announcing one name that begins with its visible word.
 - **Stop and report if:** the row does not fit at 360 dp unless the primary control or the gaps change; any
   label wraps; any swipe test needs editing; TalkBack semantics need more than the one modifier;
   `CircularTriageControl` turns out to have a second caller.
-- **Status:** pending.
+- **Status:** done. RED `031e5e3`, fit-check correction `97dae9c`, GREEN `fc8190c`; slice-review fix (§38 focus) RED `28b43a9`, fix `826f06c`. Gates 405 JVM / 30 instrumented.
 
 ---
 
