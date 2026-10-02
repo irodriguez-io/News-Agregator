@@ -129,6 +129,12 @@ On Android 8.0 and 8.1 (API 26–27) the card shadow is drawn neutral grey, beca
 The M3 Standard curve is now declared twice: `Theme.kt:61` (`AppearanceStandardEasing`, private) and
 `ToastRegion.kt` (`ToastStandardEasing`). This is in addition to 023's two copies of the Emphasized curve.
 
-## 9. Owner walkthrough (signed release build)
+## 9. Owner walkthrough (signed release build of `bc4efcd`, 2026-10-02)
 
-*Pending.*
+- **Toast: pass.** *"The toast arrive and leave calmly."*
+- **Sheet: drop confirmed.** *"Settings page doesnt have a shadow, but … it's bottom reaches to the bottom
+  of the viewport so it will never show shadow, ther is just no space to show it."* Only the top edge could
+  cast one, and §2 measured that it does not render there.
+- **Card: defect found.** *"the card does stand of the page but in the first half a second when it arrives
+  the corners of the shadow are square, then they get rounded."* It is fixed in the slice 2 follow-up
+  (`slices.md`). The walkthrough is repeated for the card after the fix.

@@ -180,6 +180,38 @@ reduced motion and animate otherwise.
 
 ---
 
+## Slice 2 follow-up: the shadow keeps its rounded corners while the card fades
+
+**Found by the owner's walkthrough, 2026-10-02:** *"in the first half a second when it arrives the corners of
+the shadow are square, then they get rounded."* This is a defect slice 2 exposed: the shadow was invisible
+before. **Likely cause:** while the card's `graphicsLayer` alpha is below 1, during the §79.5 entrance and the
+swipe exit (`ArticleCard.kt:216-229`), Compose draws the card into an offscreen layer the size of its bounds.
+The shadow beyond the rounded outline is clipped to that rectangle, so the corners read square. At alpha 1
+there is no offscreen layer, and the corners come out round.
+
+- **Scenario:** while the card enters or leaves, its shadow keeps the card's 24 dp rounded corners, and it
+  fades with the card.
+- **Files, production:** `ui/components/ArticleCard.kt` (the card's layer and shadow modifiers at
+  `:212-231` only).
+- **Files, tests:** add cases to `ShadowRenderingInstrumentedTest.kt`. With the clock paused at about 50% of
+  the entrance and about 50% of the exit, capture pixels at a corner: just outside the rounded outline but
+  inside the card's bounding square, and just outside the bounding square. Neither may be darker than the
+  same pixel at rest by more than 2/255 per channel, and the shadow's peak below the card must be no
+  stronger than at rest, so the shadow fades with the card.
+- **Fix:** prefer `compositingStrategy = CompositingStrategy.ModulateAlpha` on the card's `graphicsLayer`,
+  which applies alpha without an offscreen buffer. If that cannot satisfy the test, report before trying
+  anything else. Do not move the shadow outside the alpha layer, because a full-strength shadow under a
+  transparent card is a new defect.
+- **RED:** the new cases fail at mid-entrance and mid-exit. **If they do not reproduce the square corners,
+  stop and report**, because the cause is then different from the one stated above.
+- **Must not touch:** everything outside the two files above. Slice 2's calibrated alpha (0.65), the
+  entrance and exit curves, and every swipe test (unedited).
+- **Definition of done:** all four gates green, with counts; every 008/013/015/023/024 swipe test and
+  `DiscoverScreenLayoutTest` passes unedited.
+- **Status:** pending.
+
+---
+
 ## Ship bookkeeping (orchestrator, not the implementer)
 
 - `spec.md` §5.2 screenshots and measurements, and §5.3 owner walkthrough, recorded in `evidence.md` with the
