@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import io.irodriguez.intentionalreading.R
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.ui.components.CategoryChipRow
@@ -34,6 +36,7 @@ fun DiscoverMasthead(modifier: Modifier = Modifier) {
         )
         Text(
             text = stringResource(R.string.discover),
+            modifier = Modifier.semantics { heading() },
             style = MaterialTheme.typography.headlineSmall,
             color = tokens.fg,
         )
@@ -72,7 +75,7 @@ fun DiscoverOperationalBar(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
                 shape = shapes.filledPrimaryButton,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg, disabledContentColor = tokens.muted),
             ) {
                 Text(actionLabel)
             }

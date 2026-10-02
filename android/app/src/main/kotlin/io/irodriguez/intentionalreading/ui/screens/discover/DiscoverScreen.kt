@@ -21,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.testTag
@@ -210,13 +212,13 @@ private fun StatePanel(
             modifier = Modifier.padding(spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
         ) {
-            Text(text = title, style = MaterialTheme.typography.headlineLarge)
+            Text(text = title, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
             Text(text = copy, style = MaterialTheme.typography.bodyLarge, color = tokens.muted)
             OutlinedButton(
                 onClick = { onAction?.invoke() },
                 enabled = onAction != null,
                 shape = shapes.filledPrimaryButton,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = tokens.fg, disabledContentColor = tokens.muted),
             ) {
                 Text(actionLabel)
             }

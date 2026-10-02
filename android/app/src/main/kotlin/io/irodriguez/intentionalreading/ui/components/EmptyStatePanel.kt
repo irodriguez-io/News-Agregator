@@ -9,6 +9,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingShapes
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingSpacing
 import io.irodriguez.intentionalreading.ui.theme.LocalIntentionalReadingTokens
@@ -34,7 +36,7 @@ fun EmptyStatePanel(
             modifier = Modifier.padding(spacing.sectionGap),
             verticalArrangement = Arrangement.spacedBy(spacing.stackGap),
         ) {
-            Text(text = title, style = MaterialTheme.typography.headlineLarge)
+            Text(text = title, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
             Text(text = copy, style = MaterialTheme.typography.bodyLarge, color = tokens.muted)
             FilledPrimaryControl(
                 onClick = onAction,
