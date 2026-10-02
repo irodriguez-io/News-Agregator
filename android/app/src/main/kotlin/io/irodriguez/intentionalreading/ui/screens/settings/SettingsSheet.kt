@@ -48,6 +48,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -165,6 +166,7 @@ fun SettingsSheet(
                     )
                     Text(
                         text = stringResource(R.string.settings),
+                        modifier = Modifier.semantics { heading() },
                         style = MaterialTheme.typography.displayLarge,
                         color = tokens.fg,
                     )
@@ -186,6 +188,7 @@ fun SettingsSheet(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.content_status),
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.headlineLarge,
                     color = tokens.fg,
                 )
@@ -204,6 +207,7 @@ fun SettingsSheet(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.appearance),
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.headlineLarge,
                     color = tokens.fg,
                 )
@@ -253,6 +257,7 @@ fun SettingsSheet(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.local_data),
+                    modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.headlineLarge,
                     color = tokens.fg,
                 )
