@@ -17,8 +17,10 @@ Slices 3 and 4 both touch Discover, so slice 4 runs after slice 3.
    `colorScheme.surfaceTint`, and no window-theme shadow attributes** (`design.md` D2).
 3. **Sheet shadow:** `shadow(8.dp, shapes.modalSheet, clip = false)` with the default colour. If it does not
    render, revert it and report: this is the owner's pre-approved drop (`design.md` D3).
-4. **Reading width:** `readingHorizontalPadding` exactly as `design.md` D4. The 600 dp threshold and the
-   680 dp cap come from `spacing`, not from literals.
+4. **Reading width:** `readingHorizontalPadding` exactly as `design.md` D4. Take the two margins and the
+   680 dp cap from `spacing`. `Spacing.kt` has no threshold, and it is out of bounds, so the 600 dp
+   threshold is one named constant in `ReadingWidth.kt` (corrected 2026-10-02, when slice 3's implementer
+   raised the conflict).
 5. **Every test asserts the rendered result**: pixels, laid-out bounds or scroll position, never source
    text. Where an animation is checked, pause the clock with `mainClock.autoAdvance = false` and step it.
 6. **Every animation this item adds ships its reduced-motion branch and its test in the same slice** (§48).
