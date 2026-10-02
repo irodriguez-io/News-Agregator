@@ -40,14 +40,14 @@ text on Android.** This item invents no new list.
 | `h2` / `h3` row titles (`read-later.js:49`, `history.js:36`) | Each Read Later and History row's title | `ArticleRow.kt:92-98` |
 | `h2` History group (`history.js:96`) | *"Today"*, *"Yesterday"*, *"Earlier"* | `HistoryScreen.kt:142-146` |
 | `h2` Settings, `h3` Appearance and Local data (`settings.js:235,58,243`) | *"Settings"*, *"Appearance"*, *"Local data"* | `SettingsSheet.kt:166`, `:205`, `:254` |
-| — (Android only) | *"Content status"* | `SettingsSheet.kt:187` |
+| — (Android only) | *"Content"* (string `content_status`) | `SettingsSheet.kt:187` |
 
 **Not headings, matching the browser:** eyebrows (*"A FINITE READING QUEUE"*, *"LOCAL PREFERENCES"*); the
 app bar's *"Intentional Reading"* (a `<p>` in `index.html:19`); the loading panel (`discover.js:66-69`
 renders no heading); StatBand labels, chips, tags, metadata, buttons and body copy.
 
 **Two readings, for approval at the plan gate:**
-- **"Content status"** has no browser counterpart, because the browser's Settings has no such section. On
+- **"Content"** (string `content_status`) has no browser counterpart, because the browser's Settings has no such section. On
   Android it is styled and placed as a peer of *"Appearance"* and *"Local data"*, so it is a heading.
 - **Heading levels and landmarks.** Android's accessibility model has headings but no levels and no
   landmark role; TalkBack navigates *"by heading"* as one flat list. The browser's `h1`/`h2`/`h3` therefore
@@ -85,7 +85,7 @@ Then *"Read Later"* and each row's title are headings
 Given History holds articles read today, yesterday and earlier
 Then *"History"*, *"Today"*, *"Yesterday"*, *"Earlier"* and each row's title are headings
 Given the Settings sheet is open
-Then *"Settings"*, *"Content status"*, *"Appearance"* and *"Local data"* are headings
+Then *"Settings"*, *"Content"*, *"Appearance"* and *"Local data"* are headings
 
 ### Scenario: state panels title themselves
 Given Discover cannot load the dataset
