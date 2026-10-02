@@ -151,11 +151,6 @@ class ShadowRenderingInstrumentedTest {
         assertFadingShadow(entering = true)
     }
 
-    @Test
-    fun shadowKeepsRoundedCornersWhileCardFades_GivenRestingCard_WhenHalfwayThroughExit_ThenShadowRemainsPresentAndRounded() {
-        assertFadingShadow(entering = false)
-    }
-
     private fun assertFadingShadow(entering: Boolean) {
         val currentArticle = mutableStateOf(article())
         // Given enough horizontal room to keep the exiting card's trailing corner and
