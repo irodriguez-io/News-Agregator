@@ -130,7 +130,7 @@ On Android 8.0 and 8.1 (API 26–27) the card shadow is drawn neutral grey, beca
 The M3 Standard curve is now declared twice: `Theme.kt:61` (`AppearanceStandardEasing`, private) and
 `ToastRegion.kt` (`ToastStandardEasing`). This is in addition to 023's two copies of the Emphasized curve.
 
-## 9. Owner walkthrough (signed release build of `bc4efcd`, 2026-10-02)
+## 9. Owner walkthrough (signed release builds of `bc4efcd`, then `daa6644`, 2026-10-02): pass
 
 - **Toast: pass.** *"The toast arrive and leave calmly."*
 - **Sheet: drop confirmed.** *"Settings page doesnt have a shadow, but … it's bottom reaches to the bottom
@@ -150,4 +150,4 @@ The M3 Standard curve is now declared twice: `Theme.kt:61` (`AppearanceStandardE
   - **After:** the recording shows a soft, rounded shadow mid-entrance
     (`walkthrough/030-shadow-corner-before-after.png`, before on the left, after on the right).
   - Gates: 411 JVM / 79 instrumented, 1 skipped.
-  - The card is re-checked by the owner on a new release build.
+  - **Owner re-check on the release build of `daa6644`: pass.** *"Card shadow is fixed."*
