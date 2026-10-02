@@ -307,14 +307,14 @@ class ArticleCardTest {
         val rail = articleActionRail()
 
         assertEquals(
-            listOf("CircularTriageControl", "FilledPrimaryControl", "CircularTriageControl"),
+            listOf("InlineTriageControl", "FilledPrimaryControl", "InlineTriageControl"),
             Regex(
-                """\b(CircularTriageControl|FilledPrimaryControl|RoundTriageAction|Button)\s*\(""",
+                """\b(InlineTriageControl|CircularTriageControl|FilledPrimaryControl|RoundTriageAction|Button)\s*\(""",
             ).findAll(rail).map { it.groupValues[1] }.toList(),
             "action rail control types",
         )
 
-        val controls = listOf("CircularTriageControl", "FilledPrimaryControl").flatMap { name ->
+        val controls = listOf("InlineTriageControl", "FilledPrimaryControl").flatMap { name ->
             callBlocks(rail, name)
         }.sortedBy(rail::indexOf)
         assertTrue(controls[0].contains("onClick = { onDismiss(article) }"))
@@ -324,13 +324,13 @@ class ArticleCardTest {
 
     @Test
     fun `the adopted triage controls keep compliant targets and accessible names`() {
-        val triageControls = callBlocks(articleActionRail(), "CircularTriageControl")
+        val triageControls = callBlocks(articleActionRail(), "InlineTriageControl")
         val layout = sharedControlLayout(IntentionalReadingSpacing, IntentionalReadingShapes)
 
-        assertEquals(2, triageControls.size, "circular triage control count")
-        assertTrue(layout.triageSize >= 48.dp, "triage target was smaller than 48 dp")
+        assertEquals(2, triageControls.size, "inline triage control count")
+        assertTrue(layout.minimumTouchTarget >= 48.dp, "triage target was smaller than 48 dp")
         assertEquals(
-            listOf("notInterestedLabel", "saveForLaterLabel"),
+            listOf("skipNotInterestedLabel", "saveForLaterLabel"),
             triageControls.map { assignedIdentifier(it, "accessibleName") },
             "triage accessible names",
         )

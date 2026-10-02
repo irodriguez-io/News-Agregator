@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -25,6 +27,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -507,6 +511,7 @@ class DiscoverScreenLayoutTest {
     }
 
     private fun assertLongDatasetCardFits(width: Dp, height: Dp) {
+        // Given the long dataset card at the supported handset width.
         val viewport = setDiscoverContent(width, height)
         val elements = listOf(
             "headline" to fullBounds(composeTestRule.onNodeWithText(LONG_DATASET_TITLE)),
@@ -514,8 +519,8 @@ class DiscoverScreenLayoutTest {
             "tags" to fullBounds(
                 composeTestRule.onNodeWithContentDescription(TOPICS_DESCRIPTION),
             ),
-            "Not interested" to fullBounds(
-                composeTestRule.onNodeWithContentDescription("Not interested"),
+            "Skip, not interested" to fullBounds(
+                composeTestRule.onNodeWithContentDescription("Skip, not interested"),
             ),
             "Read article" to fullBounds(
                 composeTestRule.onNodeWithContentDescription("Read article in the system browser"),
@@ -528,6 +533,31 @@ class DiscoverScreenLayoutTest {
         assertEquals(viewport.widthPx, rootBounds().width, PIXEL_TOLERANCE)
         elements.forEach { (name, bounds) ->
             assertWithinViewport(name, bounds, viewport.bottomPx)
+            assertTrue("Expected $name inside the viewport horizontally: $bounds", bounds.left >= 0f)
+            assertTrue("Expected $name inside the viewport horizontally: $bounds", bounds.right <= viewport.widthPx + PIXEL_TOLERANCE)
+        }
+
+        // Then each visible label stays on one line without visual overflow.
+        listOf("Skip", "Save", "Read article").forEach { label ->
+            val results = mutableListOf<TextLayoutResult>()
+            composeTestRule.onNodeWithText(label, useUnmergedTree = true)
+                .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { getTextLayoutResult ->
+                    assertTrue("Expected a text layout result for $label", getTextLayoutResult(results))
+                }
+            assertEquals("Expected one text layout result for $label", 1, results.size)
+            assertTrue("Expected $label on one line without visual overflow at $width", results.single().lineCount == 1 && !results.single().hasVisualOverflow)
+        }
+
+        // Then each triage control announces one name and has a target of at least 48 x 48 dp.
+        val minimumTargetPx = viewport.widthPx / width.value * 48f
+        listOf("Skip, not interested", "Save for later").forEach { name ->
+            val control = composeTestRule.onNodeWithContentDescription(name)
+            val semantics = control.fetchSemanticsNode().config
+            assertEquals(listOf(name), semantics[SemanticsProperties.ContentDescription])
+            assertTrue("Expected no merged Text for $name", !semantics.contains(SemanticsProperties.Text))
+            val bounds = fullBounds(control)
+            assertTrue("Expected $name at least 48 dp wide: $bounds", bounds.width >= minimumTargetPx)
+            assertTrue("Expected $name at least 48 dp high: $bounds", bounds.height >= minimumTargetPx)
         }
     }
 
