@@ -93,5 +93,5 @@ outline is visibly fainter than the enabled *"Refresh"*. Afterwards the emulator
 
 ## 6. Owner walkthrough (signed release build)
 
-*Pending.* With TalkBack on and its reading control set to *Headings*, swipe down through Discover, Read
-Later, History and Settings. Every stop should be a section title from `spec.md` §3, and nothing else.
+**Pass** (owner, 2026-10-02), on the release build of `e869c5f` signed with the release key (certificate SHA-256 `baf9fe55…4325`). With TalkBack on and its reading control set to *Headings*, swipe down through Discover, Read
+Later, History and Settings. Every stop was a section title from `spec.md` §3, and nothing else was a stop. The owner's verdict: *"pass"*.
