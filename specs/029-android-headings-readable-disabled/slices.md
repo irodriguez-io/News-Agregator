@@ -100,7 +100,7 @@ does.
 - **Stop and report if:** the resolved colour cannot be read from the text layout; the RED ratios differ
   from about 2.3 and 3.1 by more than 0.3, which would mean a different default than assumed; either
   control turns out to be drawn by something other than `OutlinedButton`.
-- **Status:** pending.
+- **Status:** done. RED `53132fa` (measured 1.94/1.91 light, 2.04/2.05 dark; the ratio stop condition was released by the orchestrator because Material's default is fainter than estimated), GREEN `9beec06`. Gates 405 JVM / 46 instrumented (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
