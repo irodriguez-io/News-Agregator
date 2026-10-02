@@ -195,9 +195,17 @@ there is no offscreen layer, and the corners come out round.
   `:212-231` only).
 - **Files, tests:** add cases to `ShadowRenderingInstrumentedTest.kt`. With the clock paused at about 50% of
   the entrance and about 50% of the exit, capture pixels at a corner: just outside the rounded outline but
-  inside the card's bounding square, and just outside the bounding square. Neither may be darker than the
-  same pixel at rest by more than 2/255 per channel, and the shadow's peak below the card must be no
-  stronger than at rest, so the shadow fades with the card.
+  inside the card's bounding square, and just outside the bounding square.
+  **Criterion, corrected 2026-10-02 after a device recording** (`walkthrough/030-shadow-corners-during-entrance.png`,
+  `screenrecord` at `animator_duration_scale` 5). Mid-fade, the shadow outside the card's bounds is *clipped
+  away*, and only the part inside the bounding square behind the rounded corners remains. The first run of
+  this test saw exactly that: a mid-entrance peak below the card of `#F7F9FD` (no shadow) against `#EAECF3` at
+  rest. So:
+  1. **Mid-entrance and mid-exit, the shadow below the card is present:** its peak is darker than `bg` by at
+     least a third of the rest darkening, on every channel;
+  2. **it does not exceed rest:** the peak is no darker than at rest;
+  3. **no square corner:** the pixel just outside the rounded outline but inside the bounding square is no
+     darker than the same pixel at rest by more than 2/255 per channel.
 - **Fix:** prefer `compositingStrategy = CompositingStrategy.ModulateAlpha` on the card's `graphicsLayer`,
   which applies alpha without an offscreen buffer. If that cannot satisfy the test, report before trying
   anything else. Do not move the shadow outside the alpha layer, because a full-strength shadow under a
