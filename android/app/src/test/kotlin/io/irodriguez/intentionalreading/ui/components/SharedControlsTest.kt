@@ -55,6 +55,24 @@ class SharedControlsTest {
     }
 
     @Test
+    fun `the inline triage control shows a visible focus indication`() {
+        // Given the inline triage control's function body.
+        val source = Path.of(
+            "src/main/kotlin/io/irodriguez/intentionalreading/ui/components/SharedControls.kt",
+        ).readText()
+        val body = source.substringAfter("fun InlineTriageControl(")
+            .substringAfter(") {")
+            .substringBefore("\n}")
+
+        // Then keyboard and D-pad focus retain the Material 3 indication.
+        assertFalse(body.contains("indication = null"), "InlineTriageControl disables its focus indication")
+        assertTrue(
+            Regex("""\.clickable\([^)]*\bindication\s*=\s*ripple\(""").containsMatchIn(body),
+            "InlineTriageControl must pass Material 3 ripple() as its clickable indication",
+        )
+    }
+
+    @Test
     fun `an inline triage control carries a non-empty accessible name`() {
         assertEquals("Save for later", triageAccessibleName("Save for later"))
         assertFailsWith<IllegalArgumentException> { triageAccessibleName(" ") }
