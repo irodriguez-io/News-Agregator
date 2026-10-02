@@ -11,7 +11,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,9 +52,8 @@ import io.irodriguez.intentionalreading.domain.model.Article
 import io.irodriguez.intentionalreading.domain.model.ArticleAction
 import io.irodriguez.intentionalreading.domain.validation.LocalStateResult
 import io.irodriguez.intentionalreading.ui.components.BottomNavigationBar
-import io.irodriguez.intentionalreading.ui.components.LiveStatusMessage
 import io.irodriguez.intentionalreading.ui.components.LocalStateRecoveryNotice
-import io.irodriguez.intentionalreading.ui.components.UndoToast
+import io.irodriguez.intentionalreading.ui.components.ToastRegion
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverScreen
 import io.irodriguez.intentionalreading.ui.screens.history.HistoryScreen
 import io.irodriguez.intentionalreading.ui.screens.readlater.ReadLaterScreen
@@ -336,23 +334,13 @@ fun IntentionalReadingApp(viewModel: AppViewModel) {
             }
 
             if (!settingsOpen) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 16.dp, vertical = 96.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (undoToastMessage != null) {
-                        UndoToast(
-                            message = undoToastMessage,
-                            onUndo = viewModel::launchUndo,
-                        )
-                    }
-                    if (announcementText != null) {
-                        LiveStatusMessage(message = announcementText)
-                    }
-                }
+                ToastRegion(
+                    undoToastMessage = undoToastMessage,
+                    announcementText = announcementText,
+                    onUndo = viewModel::launchUndo,
+                    reducedMotion = reducedMotion,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
             }
         }
 
