@@ -146,7 +146,7 @@ centred, on Discover, Read Later and History.
   layout test passes unedited.
 - **Stop and report if:** any 360 dp test changes result; the destination coverage test fails; a screen's
   scroll stops responding at its edges.
-- **Status:** pending.
+- **Status:** done. RED `ed00f1b`, GREEN `b4761ae`. Gates 411 JVM / 74 instrumented, 1 skipped (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
