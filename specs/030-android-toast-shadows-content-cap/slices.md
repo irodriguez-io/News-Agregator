@@ -106,7 +106,7 @@ shadow, or that part is dropped under the pre-approval.
   `AppearanceTransitionTest` pass unedited; the final alpha and the measured percentages are in the report.
 - **Stop and report if:** no light alpha up to 1.0 reaches 8%; reaching 8% needs a theme attribute; the dark
   shadow visibly changes; any existing test other than the one listed changes result.
-- **Status:** pending.
+- **Status:** done. RED `9af7d07` (card peak about 1%; sheet near/far pixels identical), GREEN `f5b3282`. Light `deckShadow` alpha **0.65**, rendered peak `#E1E4EB`, about 10.3% navy. **Sheet shadow dropped** under the owner's pre-approval: with the modifier in place the near and far scrim pixels were still identical. It was reverted, and test 3 carries the permitted `@Ignore`. Gates 404 JVM / 58 instrumented, 1 skipped (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
