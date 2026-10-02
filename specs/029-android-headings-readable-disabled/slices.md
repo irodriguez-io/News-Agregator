@@ -65,7 +65,7 @@ does.
   imports; the diff touches no file outside the lists above.
 - **Stop and report if:** a title sits inside a node that merges its descendants; a title is not a single
   `Text`; History's fixtures cannot produce all three groups; any existing test changes result.
-- **Status:** pending.
+- **Status:** done. RED `47b506d`, GREEN `e5e2952`. Gates 405 JVM / 38 instrumented (reviewer re-run with `--rerun-tasks`: green). Slice review: PASS.
 
 ---
 
