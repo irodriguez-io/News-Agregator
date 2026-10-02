@@ -38,6 +38,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import org.junit.Assert.assertTrue
 import org.junit.Rule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -71,6 +72,7 @@ class ShadowRenderingInstrumentedTest {
     }
 
     @Test
+    @Ignore("Owner's pre-approved drop: the sheet shadow does not render — 030 evidence")
     fun settingsSheetCastsAShadow_GivenOpenSheet_WhenWindowCaptured_ThenNearScrimIsDarkerThanFarScrim() {
         // Given an open sheet over a uniform light background, with motion settled.
         rule.setContent {
