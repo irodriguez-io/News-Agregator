@@ -15,6 +15,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -215,7 +216,7 @@ fun InlineTriageControl(
                     )
                     .clickable(
                         interactionSource = interactionSource,
-                        indication = null,
+                        indication = ripple(),
                         enabled = interactive,
                         role = Role.Button,
                         onClick = onClick,
