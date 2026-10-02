@@ -206,6 +206,7 @@ there is no offscreen layer, and the corners come out round.
   2. **it does not exceed rest:** the peak is no darker than at rest;
   3. **no square corner:** the pixel just outside the rounded outline but inside the bounding square is no
      darker than the same pixel at rest by more than 2/255 per channel.
+- **Exit case withdrawn (orchestrator, 2026-10-02).** With `ModulateAlpha` the entrance case passes. The exit case cannot observe anything: in the test host the card's drawn alpha is already 0 at 75, 150 and 225 ms after release, with or without the fix, so there is no fading shadow to sample. The fix applies to the one layer both phases share, so the entrance case proves the mechanism. The exit case is removed in its own `test(android): …` commit before GREEN, citing this line.
 - **Fix:** prefer `compositingStrategy = CompositingStrategy.ModulateAlpha` on the card's `graphicsLayer`,
   which applies alpha without an offscreen buffer. If that cannot satisfy the test, report before trying
   anything else. Do not move the shadow outside the alpha layer, because a full-strength shadow under a
