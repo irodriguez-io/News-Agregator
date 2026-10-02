@@ -101,4 +101,7 @@ TalkBack was then turned off. Hearing the announcement moves to the owner walkth
 
 ## 8. §6.4: owner walkthrough, signed release build
 
-Pending.
+2026-10-01. **Owner: pass**, and the PR was approved and merged (`d391b87`). The walkthrough was asked to
+judge whether borderless `← Skip` / `Save →` reads as tappable, whether the row still reads as one primary
+action and two secondary ones, whether the focus indication is obvious enough in dark, and how TalkBack
+speaks the two names. That closes §7's two open points.
