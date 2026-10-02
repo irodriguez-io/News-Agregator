@@ -1,20 +1,34 @@
 package io.irodriguez.intentionalreading
 
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.irodriguez.intentionalreading.domain.model.Appearance
@@ -24,6 +38,7 @@ import io.irodriguez.intentionalreading.domain.model.ArticleScore
 import io.irodriguez.intentionalreading.domain.model.ArticleSource
 import io.irodriguez.intentionalreading.domain.model.Category
 import io.irodriguez.intentionalreading.domain.model.ContentTypeId
+import io.irodriguez.intentionalreading.ui.components.ArticleCard
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverLayoutTags
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverRefreshAffordance
 import io.irodriguez.intentionalreading.ui.screens.discover.DiscoverScreen
@@ -129,6 +144,123 @@ class ShadowRenderingInstrumentedTest {
         println(measurement)
         // Then the shadow darkens each RGB channel immediately above the sheet.
         assertTrue(measurement, channels(near).zip(channels(far)).all { (close, distant) -> close < distant })
+    }
+
+    @Test
+    fun shadowKeepsRoundedCornersWhileCardFades_GivenRestingCard_WhenHalfwayThroughEntrance_ThenShadowRemainsPresentAndRounded() {
+        assertFadingShadow(entering = true)
+    }
+
+    @Test
+    fun shadowKeepsRoundedCornersWhileCardFades_GivenRestingCard_WhenHalfwayThroughExit_ThenShadowRemainsPresentAndRounded() {
+        assertFadingShadow(entering = false)
+    }
+
+    private fun assertFadingShadow(entering: Boolean) {
+        val currentArticle = mutableStateOf(article())
+        // Given enough horizontal room to keep the exiting card's trailing corner and
+        // bottom centre visible at 150 ms, without changing any production motion values.
+        rule.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(1200.dp, 1000.dp))) {
+                val configuration = Configuration(LocalConfiguration.current).apply { screenWidthDp = 1200 }
+                CompositionLocalProvider(LocalConfiguration provides configuration) {
+                    IntentionalReadingTheme(appearance = Appearance.LIGHT, reducedMotion = { false }) {
+                        tokens = LocalIntentionalReadingTokens.current
+                        density = LocalDensity.current.density
+                        Surface(Modifier.fillMaxSize(), color = tokens.bg) {
+                            Box(Modifier.padding(start = 24.dp, top = 80.dp)) {
+                                ArticleCard(
+                                    state = DiscoverUiState.Card(
+                                        article = currentArticle.value, publicationAge = "4d", availableCount = 1,
+                                        remainingCount = 0, isOpened = false, contentFreshness = null,
+                                        failedRefreshDisclosure = null,
+                                        refreshAffordance = DiscoverRefreshAffordance.HIDDEN,
+                                    ),
+                                    onDismiss = {}, onReadArticle = {}, onSave = {}, onMarkRead = {},
+                                    onSwipeCommit = { _, _, _ -> }, reducedMotion = { false },
+                                    modifier = Modifier.width(240.dp).testTag("fading-shadow-card"),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.mainClock.autoAdvance = false
+        val card = rule.onNodeWithTag("fading-shadow-card").fetchSemanticsNode().boundsInRoot
+        val title = rule.onNodeWithText(article().title, useUnmergedTree = true)
+        val restingAnchor = title.fetchSemanticsNode().layoutInfo.coordinates.localToRoot(Offset.Zero)
+        // Coordinates are relative to a child inside the card's transformed layer. This
+        // follows both the entrance translation and the exit translation/rotation, so
+        // each comparison addresses the same point of the card rather than empty space.
+        val cornerOffsets = buildList {
+            for (x in listOf(1f, 3f, 5f)) {
+                for (y in listOf(1f, 3f, 5f)) {
+                    add(Offset(card.left + x * density, card.bottom - y * density) - restingAnchor)
+                }
+            }
+            for (y in listOf(1f, 3f, 5f)) {
+                add(Offset(card.left - density, card.bottom - y * density) - restingAnchor)
+            }
+        }
+        val peakOffsets = (1..24).map { below ->
+            Offset(card.center.x, card.bottom + below * density) - restingAnchor
+        }
+        fun capture(): List<Color> {
+            rule.waitForIdle()
+            val coordinates = title.fetchSemanticsNode().layoutInfo.coordinates
+            val points = (cornerOffsets + peakOffsets).map { coordinates.localToRoot(it) }
+            val pixels = rule.onRoot().captureToImage().toPixelMap()
+            return points.map { point ->
+                val x = point.x.roundToInt()
+                val y = point.y.roundToInt()
+                assertTrue("Shadow sample must stay on screen: $point in ${pixels.width}x${pixels.height}",
+                    x in 0 until pixels.width && y in 0 until pixels.height)
+                pixels[x, y]
+            }
+        }
+        val rest = capture()
+        val restPeak = rest.drop(cornerOffsets.size).minBy { channels(it).sum() }
+        assertTrue("Resting reference must contain a visible shadow: ${hex(restPeak)}", restPeak.red < tokens.bg.red)
+
+        // When paused at roughly half of the unchanged 300 ms entrance or exit.
+        if (entering) {
+            rule.runOnUiThread { currentArticle.value = article().copy(id = "arriving-shadow-article") }
+            rule.mainClock.advanceTimeByFrame()
+        } else {
+            rule.onNodeWithTag("fading-shadow-card").performTouchInput {
+                down(center)
+                moveBy(Offset(100f * density, 0f))
+                up()
+            }
+        }
+        rule.mainClock.advanceTimeByFrame()
+        rule.mainClock.advanceTimeBy(150, ignoreFrameDuration = true)
+        val moving = capture()
+        val repeated = capture()
+        assertTrue("Paused-clock shadow samples must be stable", moving == repeated)
+        val movingPeak = moving.drop(cornerOffsets.size).minBy { channels(it).sum() }
+        val phase = if (entering) "entrance" else "exit"
+        val measurement = "$phase at 150ms: restPeak=${hex(restPeak)} movingPeak=${hex(movingPeak)} " +
+            "corners(rest/moving)=" + rest.take(cornerOffsets.size).zip(moving).joinToString { (a, b) ->
+                "${hex(a)}/${hex(b)}"
+            }
+        println(measurement)
+        // Then the shadow outside the bounding square retains at least a third of
+        // its resting darkening on every channel, rather than disappearing into bg.
+        assertTrue("Shadow below the card must remain present: $measurement",
+            channels(tokens.bg).zip(channels(restPeak)).zip(channels(movingPeak)).all { (reference, fading) ->
+                val (background, resting) = reference
+                background - fading >= (background - resting) / 3f
+            })
+        // Then neither the pixels outside the rounded outline but inside the square,
+        // nor those just outside that square, darken beyond the 2/255 tolerance.
+        assertTrue(measurement, rest.take(cornerOffsets.size).zip(moving).all { (a, b) ->
+            channels(a).zip(channels(b)).all { (resting, fading) -> resting - fading <= 2f / 255f }
+        })
+        assertTrue("Shadow peak must fade with the card: $measurement",
+            channels(restPeak).zip(channels(movingPeak)).all { (resting, fading) -> fading >= resting })
     }
 
     private fun captureCardShadow(appearance: Appearance): Color {
