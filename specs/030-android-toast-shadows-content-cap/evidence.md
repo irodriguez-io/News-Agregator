@@ -100,7 +100,8 @@ Each slice was re-run by the reviewer with `--rerun-tasks` on its GREEN head:
 | slice 1 `c98c3c2` | 405 | 55 |
 | slice 2 `f5b3282` | 404 | 58 (1 skipped: the sheet) |
 | slice 3 `b4761ae` | 411 | 74 (1 skipped) |
-| slice 4 `3d3b2ac` | 411 | **78 (1 skipped)** |
+| slice 4 `3d3b2ac` | 411 | 78 (1 skipped) |
+| slice 2 follow-up `5a8e397` | 411 | **79 (1 skipped)** |
 
 ## 6. On the emulator (orchestrator, debug build of `9c2eae5`)
 
@@ -136,5 +137,17 @@ The M3 Standard curve is now declared twice: `Theme.kt:61` (`AppearanceStandardE
   of the viewport so it will never show shadow, ther is just no space to show it."* Only the top edge could
   cast one, and §2 measured that it does not render there.
 - **Card: defect found.** *"the card does stand of the page but in the first half a second when it arrives
-  the corners of the shadow are square, then they get rounded."* It is fixed in the slice 2 follow-up
-  (`slices.md`). The walkthrough is repeated for the card after the fix.
+  the corners of the shadow are square, then they get rounded."* Fixed in the slice 2 follow-up:
+  - **Cause, confirmed on the device** (`screenrecord`, `animator_duration_scale` 5). While the card's layer
+    alpha is below 1, the card is drawn into an offscreen buffer the size of its bounds, so the shadow is
+    clipped to that rectangle. What remains is a hard square behind each rounded corner, and nothing below
+    the card.
+  - **RED `dc3fac8`:** mid-entrance, the peak below the card is `#F7F9FD` (no shadow) against `#EAECF3` at
+    rest.
+  - **Exit case withdrawn, `30fc586`:** in the test host the exiting card is already transparent at 75 ms.
+  - **GREEN `5a8e397`:** `compositingStrategy = CompositingStrategy.ModulateAlpha` on the card's layer, which
+    applies alpha without an offscreen buffer.
+  - **After:** the recording shows a soft, rounded shadow mid-entrance
+    (`walkthrough/030-shadow-corner-before-after.png`, before on the left, after on the right).
+  - Gates: 411 JVM / 79 instrumented, 1 skipped.
+  - The card is re-checked by the owner on a new release build.

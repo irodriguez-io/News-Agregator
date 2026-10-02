@@ -217,7 +217,7 @@ there is no offscreen layer, and the corners come out round.
   entrance and exit curves, and every swipe test (unedited).
 - **Definition of done:** all four gates green, with counts; every 008/013/015/023/024 swipe test and
   `DiscoverScreenLayoutTest` passes unedited.
-- **Status:** pending.
+- **Status:** done. RED `dc3fac8` (mid-fade peak below the card `#F7F9FD` against `#EAECF3` at rest), exit case withdrawn `30fc586`, GREEN `5a8e397` (`CompositingStrategy.ModulateAlpha`). Gates 411 JVM / 79 instrumented, 1 skipped (reviewer re-run with `--rerun-tasks`: green). Device recording at 5× confirms rounded corners mid-entrance (`walkthrough/030-shadow-corner-before-after.png`). Slice review: PASS.
 
 ---
 
