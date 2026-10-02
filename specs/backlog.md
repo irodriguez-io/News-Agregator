@@ -101,6 +101,8 @@ Recorded so they are not rediscovered as oversights; **not worked** until the ow
 - **Landscape and viewports above ~615 dp keep the old exit-to-entrance timing** (024 `spec.md` §4).
 - **R8 and a baseline profile**, the untried levers against first-use jank.
 - **Road 7's cosmetic and ambiguous findings** (2026-10-01): §37.2's pressed treatment on chips, outlined buttons, row actions and Settings buttons; §36's Reset *"active: ink fill"*; §46.2's control-transition values (instant pressed state; library controls on M3's default springs); §76.6's StatBand showing a truncated *"Unavail…"* (§54 allows *"unavailable"*); §64.2's *"surface-card toggles"*, invisible in light because `card` equals `surface`; off-scale 12 dp radii (`ResetConfirmation`, `ImportConfirmation`, `UndoToast`, `LocalStateMessages`); spacing literals outside `Spacing.kt`; the `28.sp` close glyph; `#FCFEFF` in `ic_launcher_foreground.xml`, a retired seed; raw `border` used as an outline in four pre-wave-E places; §27's first-3-tags rule at narrow widths (owner: accepted at 5); and unasserted §73.1 cases (row action on `container`, 3.91:1 light, passes but is untested).
+- **§16.2's Settings sheet drop shadow** (030, 2026-10-02). Dropped under the owner's pre-approval: with `shadow(8.dp, shapes.modalSheet)` on the sheet, the scrim pixels 4 dp and 48 dp above its top edge were identical, because Material's sheet draws in its own window. A future attempt needs a shadow drawn inside the sheet's window, not a modifier on it (`030/evidence.md` §2).
+- **The card shadow is neutral grey on Android 8.0 and 8.1** (API 26–27; coloured shadows need API 28). A known limitation, recorded in `030/evidence.md` §7.
 - **The Amendment Record at the end of `06-ui-ux.md` stops at Amendment 9**; 10–14 are recorded only in `docs/v1/README.md:136-144`. Docs only.
 - **Everything in Debt below**, absorbed only when something next edits the same file.
 - Everything already in **Parked**.
@@ -487,6 +489,7 @@ Deliberate non-goals, recorded so they are not rediscovered as oversights.
 
 Not items. Things a future item should absorb when it touches the same ground.
 
+- **The M3 Standard curve is declared twice** (030): `Theme.kt:61` (`AppearanceStandardEasing`, private) and `ToastRegion.kt` (`ToastStandardEasing`). Hoist one shared `internal` curve when either file is next edited, along with 023's two copies of the Emphasized curve.
 - **`DiscoverScreen` carries three scroll effects, and one of them was implicated in a real defect.**
   The reset on category and state-class change, D11's scroll-to-end when an article becomes opened, and
   D12's scroll-the-card-into-view when the deck advances. **This is no longer a tidiness note.** Item 013
