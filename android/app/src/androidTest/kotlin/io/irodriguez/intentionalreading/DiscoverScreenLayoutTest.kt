@@ -545,7 +545,14 @@ class DiscoverScreenLayoutTest {
                     assertTrue("Expected a text layout result for $label", getTextLayoutResult(results))
                 }
             assertEquals("Expected one text layout result for $label", 1, results.size)
-            assertTrue("Expected $label on one line without visual overflow at $width", results.single().lineCount == 1 && !results.single().hasVisualOverflow)
+            val result = results.single()
+            assertTrue(
+                "Expected $label on one line without visual overflow at $width: " +
+                    "lineCount=${result.lineCount}, maxIntrinsicWidth=${result.multiParagraph.maxIntrinsicWidth}, " +
+                    "size.width=${result.size.width}",
+                result.lineCount == 1 && !result.isLineEllipsized(0) &&
+                    result.multiParagraph.maxIntrinsicWidth <= result.size.width,
+            )
         }
 
         // Then each triage control announces one name and has a target of at least 48 x 48 dp.
