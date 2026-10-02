@@ -77,7 +77,7 @@ not count.
 | 3 | **Shipped — PR #13, 2026-10-01.** ~~**Close wave E, part 2: retire the 13 legacy token names** — still the first fields of `ui/theme/Tokens.kt` (`:15-27`).~~ Item 026. **Four retired, not thirteen:** `accent`, `accentSoft`, `quietInk`, `strongBorder`, the only names that duplicated another colour (`017/design.md` D1). The other nine have no twin and D1 marks them *"never"*; owner's decision, 2026-09-30. | item | Item 017 scoped their life to the wave; it ended. Two names for one colour is how a theme regresses. |
 | 4 | **Shipped — PR #14, 2026-10-01.** ~~**Stop destination transitions showing both tabs' text at once.** Moving between Read Later, Discover and History shows the outgoing and incoming labels together. **Not a defect under the freeze test** — §79.1 specifies the outgoing destination's *"fade to 0.8 opacity"* while the incoming one slides in — so the fix **needs an amendment to §79.1** before it can be built. Item 021's ground: `AnimatedContent` at `ui/IntentionalReadingApp.kt:280-310`.~~ Item 027, Amendment 13: **the incoming destination is opaque and covers the outgoing one**; §79.1's values unchanged (owner's choice, 2026-10-01). Cause: no destination drew a background (`027/spec.md` §1.2). | item + amendment | **Added by the owner by name, 2026-09-29** (`definition-of-done.md` §3). Found by 023's walkthrough. |
 | 5 | **Shipped — PR #15, 2026-10-01.** Item 028, Amendment 14: restored as short inline labels. ~~**Owner decision — 019's triage labels:** stay icon-only, or restore the visible text? §76.5 allows icon-only; §35 reads against it. If *restore*, it becomes an item, and whether the rail still fits at 360 dp must be measured.~~ One row, `← Skip` · `Read article ↗` · `Save →`; borderless, because full names or outlines do not fit at 360 dp (`028/spec.md` §1.3). Dismiss's accessible name becomes *"Skip, not interested"* so it contains the visible word (owner's choice). | decision → item + amendment | Deferred to wave close since 019. Done §2.5. |
-| 6 | **Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.** | decision | Done §2.5. |
+| 6 | **Decided 2026-10-01: not carried.** ~~**Owner decision — should the exit carry the swipe's release velocity?** Reachable, but §44.2 fixes the curve and duration, so building it needs an amendment. **Default if undecided: After done.**~~ The owner's words: the swipe card *"doesn't need to carry the swipe's speed"*. The exit stays §44.2's fixed-duration tween. There is no item and no amendment, and it is not deferred to After done. | decision | Done §2.5. |
 | 7 | **The second-edition sweep, bounded to one sitting.** §80 records sections *"split"* for the second edition; check whether any besides §44 was left unimplemented on Android. Findings go through the freeze test. | audit | Raised by 023. The card's curve was a real compliance gap nobody owned; there may be another. |
 | 8 | **Final acceptance pass**, on a signed release build: §73 at all five widths, §72, §75, §76, a **TalkBack** pass over Discover, Read Later, History, Settings and import/export (closes wave B's debt), §81, 002's three unobserved History checks, and 001's browser walkthrough (fetch `data/articles.json` from production first). SAF round trip on real hardware if a device is available; if not, recorded as a known limitation. | acceptance | Done §2.3, §2.4, §2.6. The last thing on the list. |
 
@@ -88,7 +88,6 @@ row 1.
 
 Recorded so they are not rediscovered as oversights; **not worked** until the owner opens a new version.
 
-- **The exit discards the gesture's release velocity** — unless row 6 decides otherwise.
 - **Landscape and viewports above ~615 dp keep the old exit-to-entrance timing** (024 `spec.md` §4).
 - **R8 and a baseline profile**, the untried levers against first-use jank.
 - **Everything in Debt below**, absorbed only when something next edits the same file.
@@ -443,7 +442,7 @@ undo, *"is the same lapse."* The design's prediction held — what remains is th
 
 Neither is numbered yet; numbers are allocated at design time.
 
-- **The exit discards the gesture's release velocity.** It is a fixed-duration `tween`, so a slow drag
+- **The exit discards the gesture's release velocity.** *Declined by the owner on 2026-10-01 (Road to done row 6): not wanted, so the exit stays as it is.* It is a fixed-duration `tween`, so a slow drag
   released at the threshold snaps to full speed; the owner wants *"a smooth movement for the card
   vanishing."* Reachable with `Animatable.animateDecay` or `animateTo` with an `initialVelocity`, but
   **§44.2 fixes the exit's curve and duration, so this needs an amendment** — an owner decision before it
